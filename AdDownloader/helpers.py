@@ -5,36 +5,54 @@ import numpy as np
 import requests
 import pandas as pd
 import os
+from datetime import datetime
+import openpyxl
 
-# function to fetch and process data based on url and params
-def fetch_data(url, params, page_ids, page_number, cat):
-    print("##### Starting reading page", page_number, "#####")
-    response = requests.get(url, params=params)
-    data = response.json()
-
-    # check if the output json file is empty and return
-    if not "data" in data:
-        print("No data on page", page_number)
-        return
-    if not bool(data["data"]):
-        print("Page", page_number, "is empty.")
-        return
+def is_valid_date(date_string, date_format='%Y-%m-%d'):
+    try:
+        datetime.strptime(date_string, date_format)
+        return True
+    except ValueError:
+        return False
     
-    folder_path = f"data\\json\\{cat}"
-    # Check if the folder exists
-    if not os.path.exists(folder_path):
-        # If it doesn't exist, create the folder
-        os.makedirs(folder_path)
 
-    # save the data to a JSON file
-    with open(f"{folder_path}\\{page_ids}_{page_number}.json", "w") as json_file:
-        json.dump(data, json_file, indent=4)
+def is_valid_country(countries):
+    country_codes = """ALL, BR, IN, GB, US, CA, AR, AU, AT, BE, CL, CN, CO, HR, DK, DO, EG, FI, FR, 
+                DE, GR, HK, ID, IE, IL, IT, JP, JO, KW, LB, MY, MX, NL, NZ, NG, NO, PK, PA, PE, PH, 
+                PL, RU, SA, RS, SG, ZA, KR, ES, SE, CH, TW, TH, TR, AE, VE, PT, LU, BG, CZ, SI, IS, 
+                SK, LT, TT, BD, LK, KE, HU, MA, CY, JM, EC, RO, BO, GT, CR, QA, SV, HN, NI, PY, UY, 
+                PR, BA, PS, TN, BH, VN, GH, MU, UA, MT, BS, MV, OM, MK, LV, EE, IQ, DZ, AL, NP, MO, 
+                ME, SN, GE, BN, UG, GP, BB, AZ, TZ, LY, MQ, CM, BW, ET, KZ, NA, MG, NC, MD, FJ, BY, 
+                JE, GU, YE, ZM, IM, HT, KH, AW, PF, AF, BM, GY, AM, MW, AG, RW, GG, GM, FO, LC, KY, 
+                BJ, AD, GD, VI, BZ, VC, MN, MZ, ML, AO, GF, UZ, DJ, BF, MC, TG, GL, GA, GI, CD, KG, 
+                PG, BT, KN, SZ, LS, LA, LI, MP, SR, SC, VG, TC, DM, MR, AX, SM, SL, NE, CG, AI, YT, 
+                CV, GN, TM, BI, TJ, VU, SB, ER, WS, AS, FK, GQ, TO, KM, PW, FM, CF, SO, MH, VA, TD, 
+                KI, ST, TV, NR, RE, LR, ZW, CI, MM, AN, AQ, BQ, BV, IO, CX, CC, CK, CW, TF, GW, HM, 
+                XK, MS, NU, NF, PN, BL, SH, MF, PM, SX, GS, SS, SJ, TL, TK, UM, WF, EH"""
+    country_codes = [code.strip() for code in country_codes.split(",")]
+    if not isinstance(countries, list):
+        countries = [countries]
+    valid_countries = [code for code in countries if code in country_codes]
+    
+    return valid_countries
 
-    # check if there is a next page and retrieve further data
-    if "paging" in data and "next" in data["paging"]:
-        next_page_url = data["paging"]["next"]
-        fetch_data(next_page_url, params, page_ids, page_number+1, cat)
+def is_valid_excel_file(file):
+    # check if the path exists and has an Excel file extension
+    path = os.path.join("data", file)
+    if not os.path.exists(path) or not path.lower().endswith(('.xlsx', '.xls', '.xlsm')):
+        print(f"Excel file not found.")
+        return False
+    # try to read the excel file
+    try:
+        pd.read_excel(path)
+        return True
+    except Exception as e:  # catches any exception when trying to read
+        print(f"Unable to read excel file: {e}.")
+        return False
 
+
+
+"""
 
 ########## JSON DATA PROCESSING
 def load_json(file_path):
@@ -136,3 +154,4 @@ def transform_data(folder_path, indiv = False):
     # better use column names
     return final_data
 
+"""
