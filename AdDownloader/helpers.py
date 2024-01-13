@@ -8,6 +8,7 @@ import os
 from datetime import datetime
 import openpyxl
 
+
 def is_valid_date(date_string, date_format='%Y-%m-%d'):
     try:
         datetime.strptime(date_string, date_format)
@@ -36,6 +37,7 @@ def is_valid_country(countries):
     
     return valid_countries
 
+
 def is_valid_excel_file(file):
     # check if the path exists and has an Excel file extension
     path = os.path.join("data", file)
@@ -51,65 +53,44 @@ def is_valid_excel_file(file):
         return False
 
 
-
-"""
-
-########## JSON DATA PROCESSING
-def load_json(file_path):
-    # open the JSON file and read the content as text
-    with open(file_path, 'r') as json_file:
-        json_data = json_file.read()
-    
-    # parse and extract the data
-    parsed_data = json.loads(json_data)
-    data_list = parsed_data.get('data', [])
-    len(data_list)
-    df = pd.DataFrame(data_list)
-    return df
-
-
 def load_json_from_folder(folder_path):
-    # Get a list of all files in the specified folder
+    # get a list of all files in the specified folder
     all_files = os.listdir(folder_path)
     
-    # Filter only files with a JSON extension
+    # filter only files with a JSON extension
     json_files = [file for file in all_files if file.endswith('.json')]
     dfs = []
-    # Loop through each JSON file
+    # loop through each JSON file
     for json_file in json_files:
-        # Construct the full file path
         file_path = os.path.join(folder_path, json_file)
 
-        # Open the JSON file and read the content as text
+        # open the JSON file and read the content
         with open(file_path, 'r') as file:
             json_data = file.read()
 
-        # Parse and extract the data
+        # parse and extract the data
         parsed_data = json.loads(json_data)
         data_list = parsed_data.get('data', [])
 
-        # Create a DataFrame from the current JSON data
         df = pd.DataFrame(data_list)
-
-        # Append the DataFrame to the list
         dfs.append(df)
 
-    # Concatenate all DataFrames in the list into a single DataFrame
+    # concatenate all data frames a single one
     result_df = pd.concat(dfs, ignore_index=True)
     return result_df
 
 
-# function that flattens the age_country_gender_reach_breakdown column 
-def flatten_age_country_gender(row):
+    # function that flattens the age_country_gender_reach_breakdown column 
+def flatten_age_country_gender(row, target_country):
     flattened_data = []
 
     # Check if the row is empty and remove it
     if isinstance(row, float) and pd.isna(row):
         return flattened_data
-    
+
     for entry in row:
-        country = entry.get('country') # get the country to keep only BE or NL
-        if country in ['BE', 'NL']: # maybe also adjust to take only the target country
+        country = entry.get('country')
+        if country in target_country: # take only the target country
             age_gender_data = entry.get('age_gender_breakdowns', [])
             for age_gender_entry in age_gender_data:
                 # exclude entries with 'Unknown' age range
@@ -125,15 +106,21 @@ def flatten_age_country_gender(row):
                     flattened_data.append(flattened_entry)
     return flattened_data
 
+
 # indiv - procss only one file or entire folder
-def transform_data(folder_path, indiv = False):
-    if indiv:
-        df = load_json(folder_path)
-    else:
-        df = load_json_from_folder(folder_path)
+def transform_data(project_name, country):
+    folder_path = f'output\\{project_name}\\json'
+    df = load_json_from_folder(folder_path)
+
+    # save original data
+    data_path = f'output\\{project_name}\\ads_data'
+    # check if the folder exists
+    if not os.path.exists(data_path):
+        os.makedirs(data_path)
+    df.to_excel(f'{data_path}\\original_data.xlsx', index=False)
 
     # flatten the age_country_gender_breakdown for each ad
-    df['flattened_data'] = df['age_country_gender_reach_breakdown'].apply(flatten_age_country_gender)
+    df['flattened_data'] = df['age_country_gender_reach_breakdown'].apply(flatten_age_country_gender, target_country=country)
     # create a new DataFrame from the flattened data
     flattened_df = pd.DataFrame(df['flattened_data'].sum()) 
 
@@ -150,8 +137,29 @@ def transform_data(folder_path, indiv = False):
     wide_df.reset_index(inplace=True)
 
     # keep only the relevant columns and save data to csv
-    final_data = df.iloc[:, :14].merge(wide_df, on="id")
+    #TODO: remove index slicing here!!!
+    final_data = df.iloc[:, :15].merge(wide_df, on="id")
+    # fill the NAs in the reach columns
+    selected_columns = [col for col in final_data.columns if col.startswith(('female', 'male', 'unknown'))]
+    final_data[selected_columns] = final_data[selected_columns].fillna(0)
+
+    final_data.to_excel(f'{data_path}\\processed_data.xlsx', index=False)
     # better use column names
     return final_data
+
+
+"""
+########## JSON DATA PROCESSING
+def load_json(file_path):
+    # open the JSON file and read the content as text
+    with open(file_path, 'r') as json_file:
+        json_data = json_file.read()
+    
+    # parse and extract the data
+    parsed_data = json.loads(json_data)
+    data_list = parsed_data.get('data', [])
+    len(data_list)
+    df = pd.DataFrame(data_list)
+    return df
 
 """

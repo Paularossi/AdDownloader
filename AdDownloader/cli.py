@@ -213,6 +213,7 @@ def intro_messages():
         rprint("[yellow]Please enter a name for your project. All created folders will use this name:[yellow]")
         project_name = input()
         run_task_A(project_name, answers)
+        # for some reason it doesn't start ad downloading
         run_task_B(project_name, answers)
         
 
@@ -229,6 +230,7 @@ app = typer.Typer() # create the app
 
 @app.command("run-analysis")
 def run_analysis():
+    #TODO: add logging tracking
     while True:
         intro_messages()
 
