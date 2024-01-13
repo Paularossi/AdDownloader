@@ -32,10 +32,9 @@ class AdLibAPI:
             print("Page", page_number, "is empty.")
             return
         
-        folder_path = f"output\\json\\{self.project_name}"
-        # Check if the folder exists
+        folder_path = f"output\\{self.project_name}\\json"
+        # check if the folder exists
         if not os.path.exists(folder_path):
-            # If it doesn't exist, create the folder
             os.makedirs(folder_path)
 
         # save the data to a JSON file
@@ -74,8 +73,7 @@ class AdLibAPI:
         
         # countries
         countries = is_valid_country(countries)
-
-
+        
         # page ids - the file must contain at least one column called page_id
         if page_ids is not None:
             if is_valid_excel_file(page_ids):
@@ -132,35 +130,11 @@ class AdLibAPI:
         return(self.request_parameters)
     
     def get_fields(self):
-        return("id", "ad_creation_time", "ad_delivery_stop_time", "ad_creative_bodies", "ad_creative_link_captions", 
-               "ad_creative_link_descriptions", "ad_creative_link_titles", "ad_snapshot_url", "page_id", "page_name", 
-               "target_ages", "target_gender", "target_locations", "eu_total_reach", "age_country_gender_reach_breakdown")
+        return("id, ad_creation_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown")
 
 
 """
 ####### put everything below in a loop to go through all categories:
-    
-
-    
-
-    # load the data from the saved json files
-    folder_path = f'data\\json\\{categories[j]}'
-    final_data = transform_data(folder_path) 
-
-    # Get all columns that start with 'female', 'male', or 'unknown'
-    selected_columns = [col for col in final_data.columns if col.startswith(('female', 'male', 'unknown'))]
-
-    final_data[selected_columns] = final_data[selected_columns].fillna(0)
-
-    final_data.head(5)
-    len(final_data)
-
-    #final_data.to_csv(f'data\\ads\\{categories[0]}.csv', index=False)
-    final_data.to_excel(f'data\\ads\\{categories[j]}.xlsx', index=False)
-    print(f"Done fetching and saving ads data for {categories[j]}. Starting downloading media content.")
-
-    # start media downloading here
-    start_media_download(all_brands[j], is_file=True) # some bug here
 
 
 # alcohol nl: [882849606601570,306533725582037,2629981837151638,811933024017255]
@@ -181,18 +155,7 @@ ads_data = pd.read_excel(file_path_ads)
 len(ads_data)
 ads_data.head(5)
 
-# count total nr of ads in all excel files
-n = 0
-for cat in all_brands:
-    print(cat)
-    file_path_ads = f'data\\ads\\{cat}'
-    ads_data = pd.read_excel(file_path_ads)
-    n += len(ads_data)
-    print(len(ads_data))
 
-print(f"Total number of ads collected is {n}.")
-
-print(ads_data['ad_snapshot_url'][3])
 # update access token before downloading images
 new_token = input("New access token:")
 ads_data['ad_snapshot_url'] = ads_data['ad_snapshot_url'].str.replace(r'access_token=.*$', f'access_token={new_token}', regex=True)
