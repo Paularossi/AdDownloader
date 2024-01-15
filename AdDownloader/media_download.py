@@ -8,7 +8,6 @@ from selenium.common.exceptions import NoSuchElementException
 import pandas as pd
 import requests
 import os
-import random
 
 
 def download_media(media_url, media_type, ad_id, media_folder):
@@ -30,7 +29,8 @@ def download_media(media_url, media_type, ad_id, media_folder):
             media_file.write(response.content)
 
         print(f"{media_type} of ad with id {ad_id} downloaded successfully to {file_path}")
-     # catch any possible exceptions
+
+    # catch any possible exceptions
     except requests.exceptions.RequestException as e:
         print(f"Error during the request: {e}")
 
@@ -47,23 +47,15 @@ def accept_cookies(driver):
         # Wait up to 10 seconds for the accept cookies element to be present
         cookies = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='cookie-policy-manage-dialog-accept-button']")))
-        # cookies = driver.find_element(By.CSS_SELECTOR, "[data-testid='cookie-policy-manage-dialog-accept-button']")
         cookies.click()
         print("Cookies accepted.")
     except NoSuchElementException:
         print("Cookies already accepted.")
 
+
 # media download by category
 # j - index of the current category, is_last - is it the last category to download, if yes then close the session
-def start_media_download(project_name, nr_ads, data=[]): 
-    # first read the data and open a driver
-    """if file_name is not None:
-        file_path = f'output\\{project_name}\\ads_data\\{file_name}.xlsx'
-    else:
-        file_path = f'output\\{project_name}\\ads_data\\original_data.xlsx'
-    
-    data = pd.read_excel(file_path)"""
-    
+def start_media_download(project_name, nr_ads, data=[]):     
     # check if the nr of ads to download is within the length of the data
     if nr_ads > len(data):
         nr_ads = len(data)
@@ -95,7 +87,7 @@ def start_media_download(project_name, nr_ads, data=[]):
     data = data.reset_index(drop=True)
 
     driver.get(data['ad_snapshot_url'][0]) # start from here to accept cookies
-    accept_cookies(driver)
+    accept_cookies(driver)    
 
     # for each ad in the dataset download the media
     for i in range(0, nr_ads): #TODO: randomize the ads to download

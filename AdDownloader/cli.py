@@ -171,7 +171,6 @@ def run_task_B(project_name, file_name=None):
         elif answers_down["nr_ads"] == 'C - 200':
             nr_ads = 200
         else:
-            # check if it's a valid nr
             nr_ads = int(answers_down["custom_ads_nr"])
         start_media_download(project_name, nr_ads=nr_ads, data=data)
     except Exception:
@@ -229,7 +228,6 @@ def intro_messages():
         rprint("[yellow]Please enter a name for your project. All created folders will use this name:[yellow]")
         project_name = input()
         run_task_A(project_name, answers)
-        # for some reason it doesn't start ad downloading
         run_task_B(project_name)
         
 
