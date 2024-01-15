@@ -23,6 +23,7 @@ import time
 import pandas as pd
 import logging
 
+# global style for the cmd
 default_style = style_from_dict({
     Token.QuestionMark: '#E91E63 bold',
     Token.Selected: '#673AB7 bold',
@@ -30,6 +31,7 @@ default_style = style_from_dict({
     Token.Answer: '#2196f3 bold',
     Token.Question: '#FFD700 bold',
 })
+
 
 def request_params_task_AC():
     add_questions = [
@@ -108,18 +110,7 @@ def run_task_A(project_name, answers):
     elapsed_time = end_time - start_time
     minutes = int(elapsed_time // 60)
     seconds = int(elapsed_time % 60)
-    print(f"Download finished in {minutes} minutes and {seconds} seconds.")
-        
-    rprint("[yellow]Data processing will start now.[yellow]")
-
-    # load the data from the saved json files and process it
-    try:
-        final_data = transform_data(project_name, country=add_answers['countries']) 
-        total_ads = len(final_data)
-        print(f"Done processing and saving ads data for {total_ads} ads for project {project_name}.")
-
-    except Exception:
-        print("No data was downloaded. Please try a new request.")
+    print(f"Download finished in {minutes} minutes and {seconds} seconds.")    
 
 
 def run_task_B(project_name, file_name=None):
@@ -175,6 +166,7 @@ def run_task_B(project_name, file_name=None):
         start_media_download(project_name, nr_ads=nr_ads, data=data)
     except Exception:
         pass # do nothing if no data has been downloaded
+
 
 def intro_messages():
     questions = [
@@ -237,6 +229,7 @@ def intro_messages():
 
 app = typer.Typer() # create the app
 
+
 @app.command("run-analysis")
 def run_analysis():
     #TODO: add logging tracking?
@@ -253,88 +246,3 @@ def run_analysis():
 # need this to run the app
 if __name__ == "__main__":
     app()   
-
-"""
-
-
-@app.callback()
-def main(
-    version: Optional[bool] = typer.Option(
-        None,
-        "--version",
-        "-v",
-        help="Show the application's version and exit.",
-        callback=_version_callback,
-        is_eager=True,
-    )
-) -> None:
-    return
-
-@main.command()
-@click.argument('datafile')
-def init(datafile):
-    A command to initiate the AdDownloader project
-
-    Paramters
-    ---------
-    datafile: xlsx
-        Should be output data from the Facebook Ad Library
-    
-    """ """
-    # creating project structure
-    folders = ['temp', 'output']
-    
-    for folder in folders:
-        print("Creating %s-folder" % folder)
-        if os.path.exists('./%s' % folder):
-            click.echo(click.style("%s-folder already exists" % folder, fg = 'yellow'))
-        else:
-            try:
-                os.mkdir(folder)
-            except OSError:
-                click.echo(click.style("Creation of the directory %s failed" % folders, fg = 'red'))
-            else:
-                #print(Fore.GREEN + "Succesfully created %s-folder" % folder)
-                click.echo(click.style("Succesfully created %s-folder" % folder, fg = "green"))
-        
-      
-    if os.path.isfile('facebookAccessToken.txt'):
-        click.echo(click.style("Warning! Credentials-file already exists", fg = "yellow"))
-    else:
-        print('Creating credentials-file: facebookAccessToken.txt')
-        with open("facebookAccessToken.txt", 'w') as writer:
-            writer.write("")
-        writer.close()
-        click.echo(click.style("Succesfully created credentials-file", fg = "green"))
-        
-        
-    if os.path.isfile('metadata.txt'):
-        click.echo(click.style("Warning! Metadata-file already exists", fg = "yellow"))   
-    else:
-        print('Creating metadata-file')
-        with open("metadata.txt", 'w') as writer:
-            writer.write("link, adid, content_type")
-        writer.close()
-        click.echo(click.style("Succesfully created metadata-file", fg = "green")) 
-
-
-    # creating lists
-    print('Creating internal data')
-    data = pd.read_excel(str(datafile))
-    adid_list = list(data['adlib_id'])
-    url_list = list(data['ad_snapshot_url'])
-    click.echo(click.style('Succesfully creating internal data', fg = "green")) 
-    
-    
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    with open("temp/url_list_" + timestamp + ".txt", 'w') as filehandle:
-        for listitem in url_list:
-            filehandle.write('%s\n' % listitem)
-    
-    with open("temp/adid_list_" + timestamp + ".txt", 'w') as filehandle:
-        for listitem in adid_list:
-            filehandle.write('%s\n' % listitem)
-
-
-
-"""

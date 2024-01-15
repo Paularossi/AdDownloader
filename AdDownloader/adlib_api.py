@@ -70,6 +70,12 @@ class AdLibAPI:
             "access_token": self.access_token
         }
 
+        #TODO: accept additional parameters through kwargs**
+        # kwargs.update(fields = fields)
+        # headers = kwargs
+        # headers += ["&{key}={value}".format(key = str(key), value = str(value)) for key, value in kwargs.items()]
+        # print(f"you added the following params: {headers}")
+
         # page ids - the file must contain at least one column called page_id
         if page_ids is not None:
             if is_valid_excel_file(page_ids):
@@ -85,8 +91,6 @@ class AdLibAPI:
 
         else:
             print('You need to specify either pages ids or search terms.')
-
-        print(f"here are the params: {params}")
             
     
     def start_download(self, params=None):
@@ -106,13 +110,26 @@ class AdLibAPI:
                 # call the function with the initial API endpoint and parameters
                 self.fetch_data(self.base_url, params, page_ids=f"[{i},{end_index}]", page_number=1)
         
-        print(f"Done downloading json files for the given parameters.")
+        print("Done downloading json files for the given parameters.")
+        print("Data processing will start now.")
+
+        # process into excel files:
+        try:
+            final_data = transform_data(self.project_name, country=params["ad_reached_countries"]) 
+            total_ads = len(final_data)
+            print(f"Done processing and saving ads data for {total_ads} ads for project {self.project_name}.")
+            return(final_data)
+
+        except Exception:
+            print("No data was downloaded. Please try a new request.")
 
 
     def get_parameters(self):
         return(self.request_parameters)
     
     def get_fields(self):
+        #TODO: add different fields based on political ads (impressions, total_spend, etc.)
+        # for available fields visit: https://developers.facebook.com/docs/marketing-api/reference/archived-ad/
         return("id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown")
 
 
