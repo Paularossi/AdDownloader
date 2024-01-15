@@ -5,40 +5,51 @@ Created on January 11, 2024
 @author: Paula G
 """
 
-# to run the tool: open a cmd and go to the directory 'cd My Documents\AdDownloader'
+# to run the tool: open a cmd and go to the directory of the project 'cd My Documents\AdDownloader'
 # activate the virtual environment with 'venv\Scripts\activate.bat'
 # then start the app with 'python -m AdDownloader.cli'
 
 #from typing import Optional
 import typer
-from PyInquirer import prompt, print_json, Separator
+from PyInquirer import prompt, style_from_dict, Token
+from prompt_toolkit.styles import Style
 from rich import print as rprint
 
 #from AdDownloader import __app_name__, __version__
 from AdDownloader.adlib_api import *
 from AdDownloader.media_download import *
-from AdDownloader.helpers import is_valid_excel_file
-import os
+from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator
 import time
 import pandas as pd
 import logging
+
+default_style = style_from_dict({
+    Token.QuestionMark: '#E91E63 bold',
+    Token.Selected: '#673AB7 bold',
+    Token.Instruction: '',  # default
+    Token.Answer: '#2196f3 bold',
+    Token.Question: '#FFD700 bold',
+})
 
 def request_params_task_AC():
     add_questions = [
         {
             'type': 'input',
             'name': 'countries',
-            'message': 'What reached countries do you want? (Provide the code, default is "NL")'
+            'message': 'What reached countries do you want? (Provide the code, default is "NL")',
+            'validate': CountryValidator
         },
         {
             'type': 'input',
             'name': 'start_date',
-            'message': 'What is the minimum ad delivery date you want? (default is "2023-01-01")'
+            'message': 'What is the minimum ad delivery date you want? (default is "2023-01-01")',
+            'validate': DateValidator
         },
         {
             'type': 'input',
             'name': 'end_date',
-            'message': 'What is the maximum ad delivery date you want? (default is today\'s date)'
+            'message': 'What is the maximum ad delivery date you want? (default is today\'s date)',
+            'validate': DateValidator
         },
         {
             'type': 'list',
@@ -50,7 +61,7 @@ def request_params_task_AC():
             'type': 'input',
             'name': 'pages_id_path',
             'message': 'Please provide the name of your Excel file with pages ID (needs to be inside the data folder)',
-            'when': lambda answers: answers['search_by'] == 'Pages ID'
+            'when': lambda answers: answers['search_by'] == 'Pages ID',
         },
         {
             'type': 'input',
@@ -69,7 +80,7 @@ def request_params_task_AC():
         },
     """
 
-    answers = prompt(add_questions)
+    answers = prompt(add_questions, style=default_style)
     return answers
 
 
@@ -94,66 +105,77 @@ def run_task_A(project_name, answers):
     start_time = time.time()
     ads.start_download()
     end_time = time.time()
-    print(f"Download finished in {end_time - start_time} seconds.")
+    elapsed_time = end_time - start_time
+    minutes = int(elapsed_time // 60)
+    seconds = int(elapsed_time % 60)
+    print(f"Download finished in {minutes} minutes and {seconds} seconds.")
         
     rprint("[yellow]Data processing will start now.[yellow]")
+
     # load the data from the saved json files and process it
-    final_data = transform_data(project_name, country=add_answers['countries']) 
+    try:
+        final_data = transform_data(project_name, country=add_answers['countries']) 
+        total_ads = len(final_data)
+        print(f"Done processing and saving ads data for {total_ads} ads for project {project_name}.")
 
-    total_ads = len(final_data)
-    print(f"Done processing and saving ads data for {total_ads} ads for project {project_name}.")
+    except Exception:
+        print("No data was downloaded. Please try a new request.")
 
 
-def run_task_B(project_name, answers, file_name=None):
-    print("Starting downloading media content.")
-    if file_name is not None:
-        file_path = f'output\\{project_name}\\ads_data\\{file_name}.xlsx'
-    else:
-        file_path = f'output\\{project_name}\\ads_data\\original_data.xlsx'
-    
-    data = pd.read_excel(file_path)
-    total_ads = len(data)
+def run_task_B(project_name, file_name=None):
+    try:
+        if file_name is not None:
+            file_path = f'output\\{project_name}\\ads_data\\{file_name}.xlsx'
+        else:
+            file_path = f'output\\{project_name}\\ads_data\\original_data.xlsx'
+        
+        data = pd.read_excel(file_path)
+        total_ads = len(data)
 
-    # if task C was chosen - continue with downloading media content
-    questions_down = [
-        {
-            'type': 'list',
-            'name': 'nr_ads',
-            'message': f'You currently have {total_ads} ads in your search. For how many do you want to download media content?',
-            'choices': [
-                        {
-                            'name': 'A - 50',
-                        },
-                        {
-                            'name': 'B - 100',
-                        },
-                        {
-                            'name': 'C - 200',
-                        },
-                        {
-                            'name': 'D - insert a custom number',
-                        },
-            ]
-        },
-        { # if the user wants a custom number of media content
-            'type': 'input',
-            'name': 'custom_ads_nr',
-            'message': 'Please provide the number of ads you want to download media content for',
-            'when': lambda answers: answers['nr_ads'] == 'D - insert a custom number'
-        }
-    ]
-    answers_down = prompt(questions_down)
-    if answers_down["nr_ads"] == 'A - 50':
-        nr_ads = 50
-    elif answers_down["nr_ads"] == 'B - 100':
-        nr_ads = 100
-    elif answers_down["nr_ads"] == 'C - 200':
-        nr_ads = 200
-    else:
-        # check if it's a valid nr
-        nr_ads = int(answers_down["custom_ads_nr"])
-    start_media_download(project_name, nr_ads=nr_ads, data=data)
+        print("Starting downloading media content.")
 
+        # if task C was chosen - continue with downloading media content
+        questions_down = [
+            {
+                'type': 'list',
+                'name': 'nr_ads',
+                'message': f'You currently have {total_ads} ads in your search. For how many do you want to download media content?',
+                'choices': [
+                            {
+                                'name': 'A - 50',
+                            },
+                            {
+                                'name': 'B - 100',
+                            },
+                            {
+                                'name': 'C - 200',
+                            },
+                            {
+                                'name': 'D - insert a custom number',
+                            },
+                ]
+            },
+            { # if the user wants a custom number of media content
+                'type': 'input',
+                'name': 'custom_ads_nr',
+                'message': 'Please provide the number of ads you want to download media content for',
+                'when': lambda answers: answers['nr_ads'] == 'D - insert a custom number',
+                'validate': NumberValidator
+            }
+        ]
+        answers_down = prompt(questions_down, style=default_style)
+        if answers_down["nr_ads"] == 'A - 50':
+            nr_ads = 50
+        elif answers_down["nr_ads"] == 'B - 100':
+            nr_ads = 100
+        elif answers_down["nr_ads"] == 'C - 200':
+            nr_ads = 200
+        else:
+            # check if it's a valid nr
+            nr_ads = int(answers_down["custom_ads_nr"])
+        start_media_download(project_name, nr_ads=nr_ads, data=data)
+    except Exception:
+        pass # do nothing if no data has been downloaded
 
 def intro_messages():
     questions = [
@@ -180,12 +202,6 @@ def intro_messages():
             'when': lambda answers: answers['task'] == 'A - download ads data only' or 
                                     answers['task'] == 'C - download both ads data and media content'
         },
-        { # if the user wants to download images
-            'type': 'input',
-            'name': 'data_path',
-            'message': 'Please provide the path to your Excel file with ad data',
-            'when': lambda answers: answers['task'] == 'B - download ads media content only'
-        },
         {
             'type': 'confirm',
             'name': 'start',
@@ -193,11 +209,11 @@ def intro_messages():
         }
     ]
 
-    answers = prompt(questions)
+    answers = prompt(questions, style=default_style)
 
     rprint(f"[green bold]You have chosen task {answers['task']}.[green bold]")
 
-    if answers['task'] == 'A - download ads data only' or answers['task'] == 'C - download both ads data and media content':
+    if answers['task'] == 'A - download ads data only':
         rprint("[yellow]Please enter a name for your project. All created folders will use this name:[yellow]")
         project_name = input()
         run_task_A(project_name, answers)
@@ -207,30 +223,25 @@ def intro_messages():
         project_name = input()
         rprint("[yellow]Please enter the name of the excel file containing ads data.\n The data needs to be in the output\project_name\\ads_data folder.[yellow]")
         file_name = input()
-        run_task_B(project_name, answers, file_name)
+        run_task_B(project_name, file_name)
 
     if answers['task'] == 'C - download both ads data and media content':
         rprint("[yellow]Please enter a name for your project. All created folders will use this name:[yellow]")
         project_name = input()
         run_task_A(project_name, answers)
         # for some reason it doesn't start ad downloading
-        run_task_B(project_name, answers)
+        run_task_B(project_name)
         
 
 
     rprint("[yellow]=============================================[yello]")
     rprint("Finished.")
-    #rprint("[green bold]Enter folder name :[green bold]")
-    #folder_name = input()
-
-
-    #subprocess.run(f"mkdir {folder_name}_created_by_{username['username']}", shell=True)
 
 app = typer.Typer() # create the app
 
 @app.command("run-analysis")
 def run_analysis():
-    #TODO: add logging tracking
+    #TODO: add logging tracking?
     while True:
         intro_messages()
 

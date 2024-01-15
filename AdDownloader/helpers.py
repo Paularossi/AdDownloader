@@ -1,24 +1,34 @@
 """This module provides different helper functions for the AdDownloader."""
 
 import json
-import numpy as np
-import requests
 import pandas as pd
 import os
 from datetime import datetime
+from prompt_toolkit.validation import Validator, ValidationError
 import openpyxl
 
 
-def is_valid_date(date_string, date_format='%Y-%m-%d'):
-    try:
-        datetime.strptime(date_string, date_format)
-        return True
-    except ValueError:
-        return False
-    
+class NumberValidator(Validator):
+    def validate(self, document):
+        try:
+            int(document.text)
+        except ValueError:
+            raise ValidationError(
+                message='Please enter a number',
+                cursor_position=len(document.text))  # Move cursor to end
+        
+class DateValidator(Validator):
+    def validate(self, document):
+        try:
+            datetime.strptime(document.text, '%Y-%m-%d')
+        except ValueError:
+            raise ValidationError(
+                message='Please enter a valid date',
+                cursor_position=len(document.text))  # Move cursor to end
 
-def is_valid_country(countries):
-    country_codes = """ALL, BR, IN, GB, US, CA, AR, AU, AT, BE, CL, CN, CO, HR, DK, DO, EG, FI, FR, 
+class CountryValidator(Validator):
+    def validate(self, document):
+        country_codes = """ALL, BR, IN, GB, US, CA, AR, AU, AT, BE, CL, CN, CO, HR, DK, DO, EG, FI, FR, 
                 DE, GR, HK, ID, IE, IL, IT, JP, JO, KW, LB, MY, MX, NL, NZ, NG, NO, PK, PA, PE, PH, 
                 PL, RU, SA, RS, SG, ZA, KR, ES, SE, CH, TW, TH, TR, AE, VE, PT, LU, BG, CZ, SI, IS, 
                 SK, LT, TT, BD, LK, KE, HU, MA, CY, JM, EC, RO, BO, GT, CR, QA, SV, HN, NI, PY, UY, 
@@ -30,26 +40,25 @@ def is_valid_country(countries):
                 CV, GN, TM, BI, TJ, VU, SB, ER, WS, AS, FK, GQ, TO, KM, PW, FM, CF, SO, MH, VA, TD, 
                 KI, ST, TV, NR, RE, LR, ZW, CI, MM, AN, AQ, BQ, BV, IO, CX, CC, CK, CW, TF, GW, HM, 
                 XK, MS, NU, NF, PN, BL, SH, MF, PM, SX, GS, SS, SJ, TL, TK, UM, WF, EH"""
-    country_codes = [code.strip() for code in country_codes.split(",")]
-    if not isinstance(countries, list):
-        countries = [countries]
-    valid_countries = [code for code in countries if code in country_codes]
-    
-    return valid_countries
+        country_codes = [code.strip() for code in country_codes.split(",")]
+        ok = document.text in country_codes
+        if not ok:
+            raise ValidationError(
+                message='Please enter a valid country code.',
+                cursor_position=len(document.text))
 
 
 def is_valid_excel_file(file):
-    # check if the path exists and has an Excel file extension
-    path = os.path.join("data", file)
-    if not os.path.exists(path) or not path.lower().endswith(('.xlsx', '.xls', '.xlsm')):
-        print(f"Excel file not found.")
-        return False
-    # try to read the excel file
     try:
+        # check if the path exists and has an Excel file extension
+        path = os.path.join("data", file)
+        if not os.path.exists(path) or not path.lower().endswith(('.xlsx', '.xls', '.xlsm')):
+            print(f"Excel file not found.")
+            return False
+        # try to read the excel file
         pd.read_excel(path)
         return True
     except Exception as e:  # catches any exception when trying to read
-        print(f"Unable to read excel file: {e}.")
         return False
 
 
@@ -149,6 +158,26 @@ def transform_data(project_name, country):
 
 
 """
+def is_valid_country(countries):
+    country_codes = ""ALL, BR, IN, GB, US, CA, AR, AU, AT, BE, CL, CN, CO, HR, DK, DO, EG, FI, FR, 
+                DE, GR, HK, ID, IE, IL, IT, JP, JO, KW, LB, MY, MX, NL, NZ, NG, NO, PK, PA, PE, PH, 
+                PL, RU, SA, RS, SG, ZA, KR, ES, SE, CH, TW, TH, TR, AE, VE, PT, LU, BG, CZ, SI, IS, 
+                SK, LT, TT, BD, LK, KE, HU, MA, CY, JM, EC, RO, BO, GT, CR, QA, SV, HN, NI, PY, UY, 
+                PR, BA, PS, TN, BH, VN, GH, MU, UA, MT, BS, MV, OM, MK, LV, EE, IQ, DZ, AL, NP, MO, 
+                ME, SN, GE, BN, UG, GP, BB, AZ, TZ, LY, MQ, CM, BW, ET, KZ, NA, MG, NC, MD, FJ, BY, 
+                JE, GU, YE, ZM, IM, HT, KH, AW, PF, AF, BM, GY, AM, MW, AG, RW, GG, GM, FO, LC, KY, 
+                BJ, AD, GD, VI, BZ, VC, MN, MZ, ML, AO, GF, UZ, DJ, BF, MC, TG, GL, GA, GI, CD, KG, 
+                PG, BT, KN, SZ, LS, LA, LI, MP, SR, SC, VG, TC, DM, MR, AX, SM, SL, NE, CG, AI, YT, 
+                CV, GN, TM, BI, TJ, VU, SB, ER, WS, AS, FK, GQ, TO, KM, PW, FM, CF, SO, MH, VA, TD, 
+                KI, ST, TV, NR, RE, LR, ZW, CI, MM, AN, AQ, BQ, BV, IO, CX, CC, CK, CW, TF, GW, HM, 
+                XK, MS, NU, NF, PN, BL, SH, MF, PM, SX, GS, SS, SJ, TL, TK, UM, WF, EH""
+    country_codes = [code.strip() for code in country_codes.split(",")]
+    if not isinstance(countries, list):
+        countries = [countries]
+    valid_countries = [code for code in countries if code in country_codes]
+    
+    return valid_countries
+
 ########## JSON DATA PROCESSING
 def load_json(file_path):
     # open the JSON file and read the content as text
