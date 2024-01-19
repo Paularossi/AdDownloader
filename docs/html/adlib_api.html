@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdLibAPI Module &mdash; AdDownloader 0.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=938c9ccc"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Media Download Module" href="media_download.html" />
+    <link rel="prev" title="Helpers module" href="helpers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            AdDownloader
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">AdLibAPI Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#AdDownloader.adlib_api.AdLibAPI"><code class="docutils literal notranslate"><span class="pre">AdLibAPI</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.adlib_api.AdLibAPI.add_parameters"><code class="docutils literal notranslate"><span class="pre">AdLibAPI.add_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.adlib_api.AdLibAPI.fetch_data"><code class="docutils literal notranslate"><span class="pre">AdLibAPI.fetch_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.adlib_api.AdLibAPI.get_fields"><code class="docutils literal notranslate"><span class="pre">AdLibAPI.get_fields()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.adlib_api.AdLibAPI.get_parameters"><code class="docutils literal notranslate"><span class="pre">AdLibAPI.get_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.adlib_api.AdLibAPI.start_download"><code class="docutils literal notranslate"><span class="pre">AdLibAPI.start_download()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#adlibapi-init-method">AdLibAPI.__init__ Method</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.adlib_api.AdLibAPI.__init__"><code class="docutils literal notranslate"><span class="pre">AdLibAPI.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#adlibapi-fetch-data-method">AdLibAPI.fetch_data Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adlibapi-add-parameters-method">AdLibAPI.add_parameters Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adlibapi-start-download-method">AdLibAPI.start_download Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adlibapi-get-parameters-method">AdLibAPI.get_parameters Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adlibapi-get-fields-method">AdLibAPI.get_fields Method</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="media_download.html">Media Download Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Client module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AdDownloader</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">AdLibAPI Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/adlib_api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-AdDownloader.adlib_api">
+<span id="adlibapi-module"></span><h1>AdLibAPI Module<a class="headerlink" href="#module-AdDownloader.adlib_api" title="Link to this heading"></a></h1>
+<p>This module provides the call to the Meta Ad Library API for ad data retrieval.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="AdDownloader.adlib_api.AdLibAPI">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AdDownloader.adlib_api.</span></span><span class="sig-name descname"><span class="pre">AdLibAPI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">access_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'v18.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/adlib_api.html#AdLibAPI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.adlib_api.AdLibAPI" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class representing the Meta Online Ad Library API connection point.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="AdDownloader.adlib_api.AdLibAPI.add_parameters">
+<span class="sig-name descname"><span class="pre">add_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">countries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NL'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2023-01-01'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2024-01-19'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_terms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'20240119181821'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/adlib_api.html#AdLibAPI.add_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.adlib_api.AdLibAPI.add_parameters" title="Link to this definition"></a></dt>
+<dd><p>Add parameters for the API request.
+See available parameters here: <a class="reference external" href="https://developers.facebook.com/docs/marketing-api/reference/ads_archive/">https://developers.facebook.com/docs/marketing-api/reference/ads_archive/</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fields</strong> (<em>str</em>) – The fields to include in the API response. Default is None, fields are retrieved from the created AdLibApi object.</p></li>
+<li><p><strong>countries</strong> (<em>str</em>) – The country for ad targeting. Default is ‘NL’.</p></li>
+<li><p><strong>start_date</strong> (<em>str</em>) – The start date for ad delivery. Default is “2023-01-01”.</p></li>
+<li><p><strong>end_date</strong> (<em>str</em>) – The end date for ad delivery. Default is the current date.</p></li>
+<li><p><strong>page_ids</strong> (<em>str</em>) – The file containing page IDs. Default is None. Complementary with search_terms.</p></li>
+<li><p><strong>search_terms</strong> (<em>str</em>) – The search terms for ad filtering. Default is None. Complementary with page_ids.</p></li>
+<li><p><strong>project_name</strong> (<em>str</em>) – The name of the project. Default is the current date and time.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AdDownloader.adlib_api.AdLibAPI.fetch_data">
+<span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/adlib_api.html#AdLibAPI.fetch_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.adlib_api.AdLibAPI.fetch_data" title="Link to this definition"></a></dt>
+<dd><p>Fetch and process data based on the provided URL and parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> (<em>str</em>) – The URL for making the API request.</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – The parameters to include in the API request.</p></li>
+<li><p><strong>page_ids</strong> (<em>str</em>) – Page IDs for naming output files. Default is None.</p></li>
+<li><p><strong>page_number</strong> (<em>int</em>) – The page number for tracking the progress. Default is 1.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AdDownloader.adlib_api.AdLibAPI.get_fields">
+<span class="sig-name descname"><span class="pre">get_fields</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/adlib_api.html#AdLibAPI.get_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.adlib_api.AdLibAPI.get_fields" title="Link to this definition"></a></dt>
+<dd><p>Get the default fields for the API request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A string containing the fields for the API request.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AdDownloader.adlib_api.AdLibAPI.get_parameters">
+<span class="sig-name descname"><span class="pre">get_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/adlib_api.html#AdLibAPI.get_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.adlib_api.AdLibAPI.get_parameters" title="Link to this definition"></a></dt>
+<dd><p>Get the parameters used for the API request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary containing the parameters for the API request.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AdDownloader.adlib_api.AdLibAPI.start_download">
+<span class="sig-name descname"><span class="pre">start_download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/adlib_api.html#AdLibAPI.start_download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.adlib_api.AdLibAPI.start_download" title="Link to this definition"></a></dt>
+<dd><p>Start the download process from the Meta Ad Library API based on the provided parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – The parameters for the API request. Default is None, parameters are retrieved from the created AdLibApi object.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dataframe containing the downloaded and processed ad data from the Meta Online Ad Library.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.Dataframe</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<section id="adlibapi-init-method">
+<h2>AdLibAPI.__init__ Method<a class="headerlink" href="#adlibapi-init-method" title="Link to this heading"></a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="AdDownloader.adlib_api.AdLibAPI.__init__">
+<span class="sig-prename descclassname"><span class="pre">AdLibAPI.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">access_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'v18.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/adlib_api.html#AdLibAPI.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.adlib_api.AdLibAPI.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize the AdLibAPI object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>access_token</strong> (<em>str</em>) – The access token for authentication.</p></li>
+<li><p><strong>version</strong> (<em>str</em>) – The version of the Meta Ad Library API. Default is “v18.0”.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">AdDownloader</span> <span class="kn">import</span> <span class="n">adlib_api</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">access_token</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span> <span class="c1"># your fb-access-token-here</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ads_api</span> <span class="o">=</span> <span class="n">adlib_api</span><span class="o">.</span><span class="n">AdLibAPI</span><span class="p">(</span><span class="n">access_token</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="adlibapi-fetch-data-method">
+<h2>AdLibAPI.fetch_data Method<a class="headerlink" href="#adlibapi-fetch-data-method" title="Link to this heading"></a></h2>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">AdLibAPI.</span></span><span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/adlib_api.html#AdLibAPI.fetch_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Fetch and process data based on the provided URL and parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> (<em>str</em>) – The URL for making the API request.</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – The parameters to include in the API request.</p></li>
+<li><p><strong>page_ids</strong> (<em>str</em>) – Page IDs for naming output files. Default is None.</p></li>
+<li><p><strong>page_number</strong> (<em>int</em>) – The page number for tracking the progress. Default is 1.</p></li>
+</ul>
+</dd>
+</dl>
+<dl>
+<dt>Example::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://graph.facebook.com/v18.0/ads_archive&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">params</span> <span class="o">=</span> <span class="n">ads_api</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">api</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="adlibapi-add-parameters-method">
+<h2>AdLibAPI.add_parameters Method<a class="headerlink" href="#adlibapi-add-parameters-method" title="Link to this heading"></a></h2>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">AdLibAPI.</span></span><span class="sig-name descname"><span class="pre">add_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">countries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NL'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2023-01-01'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2024-01-19'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_terms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'20240119181821'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/adlib_api.html#AdLibAPI.add_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Add parameters for the API request.
+See available parameters here: <a class="reference external" href="https://developers.facebook.com/docs/marketing-api/reference/ads_archive/">https://developers.facebook.com/docs/marketing-api/reference/ads_archive/</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fields</strong> (<em>str</em>) – The fields to include in the API response. Default is None, fields are retrieved from the created AdLibApi object.</p></li>
+<li><p><strong>countries</strong> (<em>str</em>) – The country for ad targeting. Default is ‘NL’.</p></li>
+<li><p><strong>start_date</strong> (<em>str</em>) – The start date for ad delivery. Default is “2023-01-01”.</p></li>
+<li><p><strong>end_date</strong> (<em>str</em>) – The end date for ad delivery. Default is the current date.</p></li>
+<li><p><strong>page_ids</strong> (<em>str</em>) – The file containing page IDs. Default is None. Complementary with search_terms.</p></li>
+<li><p><strong>search_terms</strong> (<em>str</em>) – The search terms for ad filtering. Default is None. Complementary with page_ids.</p></li>
+<li><p><strong>project_name</strong> (<em>str</em>) – The name of the project. Default is the current date and time.</p></li>
+</ul>
+</dd>
+</dl>
+<dl>
+<dt>Example::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ads_api</span><span class="o">.</span><span class="n">add_parameters</span><span class="p">(</span><span class="n">countries</span> <span class="o">=</span> <span class="s1">&#39;NL&#39;</span><span class="p">,</span> <span class="n">start_date</span> <span class="o">=</span> <span class="s2">&quot;2023-09-01&quot;</span><span class="p">,</span> <span class="n">end_date</span> <span class="o">=</span> <span class="s2">&quot;2023-09-02&quot;</span><span class="p">,</span> <span class="n">search_terms</span> <span class="o">=</span> <span class="s2">&quot;pizza&quot;</span><span class="p">,</span> <span class="n">project_name</span> <span class="o">=</span> <span class="s2">&quot;test1&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="adlibapi-start-download-method">
+<h2>AdLibAPI.start_download Method<a class="headerlink" href="#adlibapi-start-download-method" title="Link to this heading"></a></h2>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">AdLibAPI.</span></span><span class="sig-name descname"><span class="pre">start_download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/adlib_api.html#AdLibAPI.start_download"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Start the download process from the Meta Ad Library API based on the provided parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – The parameters for the API request. Default is None, parameters are retrieved from the created AdLibApi object.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dataframe containing the downloaded and processed ad data from the Meta Online Ad Library.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.Dataframe</p>
+</dd>
+</dl>
+<dl>
+<dt>Example::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">ads_api</span><span class="o">.</span><span class="n">start_download</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">      id ad_delivery_start_time ad_delivery_stop_time  ... unknown_45-54 unknown_55-64 unknown_65+</span>
+<span class="go">0  11111             2023-06-30            2024-01-09  ...          21.0           5.0        11.0</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="adlibapi-get-parameters-method">
+<h2>AdLibAPI.get_parameters Method<a class="headerlink" href="#adlibapi-get-parameters-method" title="Link to this heading"></a></h2>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">AdLibAPI.</span></span><span class="sig-name descname"><span class="pre">get_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/adlib_api.html#AdLibAPI.get_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Get the parameters used for the API request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary containing the parameters for the API request.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+<dl>
+<dt>Example::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ads_api</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">()</span>
+<span class="go">{&#39;fields&#39;: &#39;id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown&#39;, &#39;ad_reached_countries&#39;: &#39;BE&#39;, &#39;search_page_ids&#39;: None, &#39;search_terms&#39;: &#39;pizza&#39;, &#39;ad_delivery_date_min&#39;: &#39;2023-09-01&#39;, &#39;ad_delivery_date_max&#39;: &#39;2023-09-02&#39;, &#39;limit&#39;: &#39;300&#39;, &#39;access_token&#39;: &#39;XX&#39;}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="adlibapi-get-fields-method">
+<h2>AdLibAPI.get_fields Method<a class="headerlink" href="#adlibapi-get-fields-method" title="Link to this heading"></a></h2>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">AdLibAPI.</span></span><span class="sig-name descname"><span class="pre">get_fields</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/adlib_api.html#AdLibAPI.get_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Get the default fields for the API request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A string containing the fields for the API request.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+<dl>
+<dt>Example::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ads_api</span><span class="o">.</span><span class="n">get_fields</span><span class="p">()</span>
+<span class="go">&#39;id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url,</span>
+<span class="go">page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown&#39;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="helpers.html" class="btn btn-neutral float-left" title="Helpers module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="media_download.html" class="btn btn-neutral float-right" title="Media Download Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Paula-Alexandra Gitu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

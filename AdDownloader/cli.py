@@ -4,15 +4,26 @@ Created on January 11, 2024
 
 @author: Paula G
 """
-
+########
 # to run the tool: open a cmd and go to the directory of the project 'cd My Documents\AdDownloader'
+# inside your directory, create a virtual environment with 'python -m venv venv'
 # activate the virtual environment with 'venv\Scripts\activate.bat'
 # then start the app with 'python -m AdDownloader.cli'
+
+# to build new distributions (new versions), in the cmd inside the venv run 'python -m build'
+# then, to upload the dist archives to TestPyPi, run 'python -m twine upload --repository testpypi dist/*'
+
+# to install the test version, inside the directory with venv run: 'python -m pip install --index-url https://test.pypi.org/simple/ AdDownloader'
+
+# any time you change the source of your project or the configuration in your setup.py file, 
+# you need to rebuild these files again before you can distribute the changes to PyPI.
+
+# to generate the sphinx documentation run 'sphinx-build -M html docs/source docs'
+########
 
 #from typing import Optional
 import typer
 from PyInquirer import prompt, style_from_dict, Token
-from prompt_toolkit.styles import Style
 from rich import print as rprint
 
 #from AdDownloader import __app_name__, __version__
@@ -34,6 +45,12 @@ default_style = style_from_dict({
 
 
 def request_params_task_AC():
+    """
+    Prompt user for additional parameters for the API request in tasks A and C that involve ad data download from the Meta Ad Library.
+
+    :returns: User-provided parameters.
+    :rtype: dict
+    """
     add_questions = [
         {
             'type': 'input',
@@ -87,6 +104,14 @@ def request_params_task_AC():
 
 
 def run_task_A(project_name, answers):
+    """
+    Run task A: Download ads data from the Meta Online Ad Library based on user-provided parameters.
+
+    :param project_name: The name of the current project.
+    :type project_name: str
+    :param answers: User's answers from the initial questions for tasks A/C regarding desired parameters.
+    :type answers: dict
+    """
     ads = AdLibAPI(f"{answers['access_token']}")
     # ask for search parameters
     add_answers = request_params_task_AC()
@@ -114,6 +139,14 @@ def run_task_A(project_name, answers):
 
 
 def run_task_B(project_name, file_name=None):
+    """
+    Run task B: Download ads media content based on user's choices.
+
+    :param project_name: The name of the current project.
+    :type project_name: str
+    :param file_name: Name of the Excel file containing ads data. If none is provided data is taken from 'output/project_name/ads/data/original_data.xlsx'
+    :type file_name: str
+    """
     try:
         if file_name is not None:
             file_path = f'output\\{project_name}\\ads_data\\{file_name}.xlsx'
@@ -169,6 +202,10 @@ def run_task_B(project_name, file_name=None):
 
 
 def intro_messages():
+    """
+    Display introductory messages and gather user input and Meta developer access token for selected task.
+    After selecting the task, the respective function will be run.
+    """
     questions = [
         {
             'type': 'list',
@@ -232,6 +269,9 @@ app = typer.Typer() # create the app
 
 @app.command("run-analysis")
 def run_analysis():
+    """
+    Main function to run the AdDownloader tool until the user stops the analysis.
+    """
     #TODO: add logging tracking?
     while True:
         intro_messages()

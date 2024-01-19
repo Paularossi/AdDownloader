@@ -2,7 +2,7 @@ from AdDownloader import adlib_api
 from AdDownloader.media_download import start_media_download
 
 access_token = input() # your fb-access-token-here
-ads = adlib_api.AdLibAPI(access_token)
+ads_api = adlib_api.AdLibAPI(access_token)
 
 # add parameters for your search
 # For available parameters, visit https://developers.facebook.com/docs/graph-api/reference/ads_archive/
@@ -11,13 +11,13 @@ ads = adlib_api.AdLibAPI(access_token)
 #                    search_terms = "Biden")
 
 # either search_terms OR search_pages_ids
-ads.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza", project_name = "test1")
+ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza", project_name = "test1")
 
 # check the parameters
-ads.get_parameters()
+ads_api.get_parameters()
 
 # start the download
-data = ads.start_download()
+data = ads_api.start_download()
 
 # if you want to download media
 start_media_download(project_name = "test1", nr_ads = 20, data = data)

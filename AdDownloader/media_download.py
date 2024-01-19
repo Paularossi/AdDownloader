@@ -1,4 +1,4 @@
-"""This module provides the functionality of media content download of the AdDownloader."""
+"""This module provides the functionality of media content download of the AdDownloader using Selenium."""
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -11,6 +11,18 @@ import os
 
 
 def download_media(media_url, media_type, ad_id, media_folder):
+    """
+    Download media content for an ad given its ID.
+
+    :param media_url: The url address for accessing the media content.
+    :type media_url: str
+    :param media_type: The type of the media content to download, can be 'image' or 'videos'.
+    :type media_type: str
+    :param ad_id: The ID of the ad for which media content is downloaded.
+    :type ad_id: str
+    :param media_folder: The path to the folder where media content will be saved.
+    :type media_folder: str
+    """
     # once we got the url of the media, try to download it
     try:
         response = requests.get(media_url, stream=True)
@@ -42,6 +54,12 @@ def download_media(media_url, media_type, ad_id, media_folder):
 
 
 def accept_cookies(driver):
+    """
+    Accept the cookies in a running Chrome webdriver. Only needs to be done once when the webdriver is open.
+
+    :param driver: A running Chrome webdriver.
+    :type driver: webdriver.Chrome
+    """
     # accept the cookies if needed
     try:
         # Wait up to 10 seconds for the accept cookies element to be present
@@ -53,9 +71,18 @@ def accept_cookies(driver):
         print("Cookies already accepted.")
 
 
-# media download by category
-# j - index of the current category, is_last - is it the last category to download, if yes then close the session
-def start_media_download(project_name, nr_ads, data=[]):     
+def start_media_download(project_name, nr_ads, data=[]):
+    """
+    Start media content download for a given project and desired number of ads. 
+    The ads media are saved in the output folder with the project_name.
+
+    :param project_name: A running Chrome webdriver.
+    :type project_name: str
+    :param nr_ads: The desired number of ads for which media content should be downloaded.
+    :type nr_ads: int
+    :param data: A dataframe containing a ad_snapshot_url column.
+    :type data: pd.DataFrame
+    """
     # check if the nr of ads to download is within the length of the data
     if nr_ads > len(data):
         nr_ads = len(data)

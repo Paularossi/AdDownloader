@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Media Download Module &mdash; AdDownloader 0.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=938c9ccc"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Client module" href="cli.html" />
+    <link rel="prev" title="AdLibAPI Module" href="adlib_api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            AdDownloader
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adlib_api.html">AdLibAPI Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Media Download Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#download-media-function">download_media Function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.media_download.download_media"><code class="docutils literal notranslate"><span class="pre">download_media()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#accept-cookies-function">accept_cookies Function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.media_download.accept_cookies"><code class="docutils literal notranslate"><span class="pre">accept_cookies()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#start-media-download-function">start_media_download Function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.media_download.start_media_download"><code class="docutils literal notranslate"><span class="pre">start_media_download()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Client module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AdDownloader</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Media Download Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/media_download.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-AdDownloader.media_download">
+<span id="media-download-module"></span><h1>Media Download Module<a class="headerlink" href="#module-AdDownloader.media_download" title="Link to this heading"></a></h1>
+<section id="download-media-function">
+<h2>download_media Function<a class="headerlink" href="#download-media-function" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="AdDownloader.media_download.download_media">
+<span class="sig-prename descclassname"><span class="pre">AdDownloader.media_download.</span></span><span class="sig-name descname"><span class="pre">download_media</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">media_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">media_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ad_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">media_folder</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/media_download.html#download_media"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.media_download.download_media" title="Link to this definition"></a></dt>
+<dd><p>Download media content for an ad given its ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>media_url</strong> (<em>str</em>) – The url address for accessing the media content.</p></li>
+<li><p><strong>media_type</strong> (<em>str</em>) – The type of the media content to download, can be ‘image’ or ‘videos’.</p></li>
+<li><p><strong>ad_id</strong> (<em>str</em>) – The ID of the ad for which media content is downloaded.</p></li>
+<li><p><strong>media_folder</strong> (<em>str</em>) – The path to the folder where media content will be saved.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">driver</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;ad_snapshot_url&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">img_element</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">find_element</span><span class="p">(</span><span class="n">By</span><span class="o">.</span><span class="n">XPATH</span><span class="p">,</span> <span class="n">img_xpath</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">media_url</span> <span class="o">=</span> <span class="n">img_element</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;src&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">media_type</span> <span class="o">=</span> <span class="s1">&#39;image&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">download_media</span><span class="p">(</span><span class="n">media_url</span><span class="p">,</span> <span class="n">media_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]),</span> <span class="n">folder_path_img</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="accept-cookies-function">
+<h2>accept_cookies Function<a class="headerlink" href="#accept-cookies-function" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="AdDownloader.media_download.accept_cookies">
+<span class="sig-prename descclassname"><span class="pre">AdDownloader.media_download.</span></span><span class="sig-name descname"><span class="pre">accept_cookies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">driver</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/media_download.html#accept_cookies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.media_download.accept_cookies" title="Link to this definition"></a></dt>
+<dd><p>Accept the cookies in a running Chrome webdriver. Only needs to be done once when the webdriver is open.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>driver</strong> (<em>webdriver.Chrome</em>) – A running Chrome webdriver.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">driver</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">Chrome</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">driver</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;ad_snapshot_url&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="c1"># start from here to accept cookies</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">accept_cookies</span><span class="p">(</span><span class="n">driver</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="start-media-download-function">
+<h2>start_media_download Function<a class="headerlink" href="#start-media-download-function" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="AdDownloader.media_download.start_media_download">
+<span class="sig-prename descclassname"><span class="pre">AdDownloader.media_download.</span></span><span class="sig-name descname"><span class="pre">start_media_download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nr_ads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/media_download.html#start_media_download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.media_download.start_media_download" title="Link to this definition"></a></dt>
+<dd><p>Start media content download for a given project and desired number of ads.
+The ads media are saved in the output folder with the project_name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_name</strong> (<em>str</em>) – A running Chrome webdriver.</p></li>
+<li><p><strong>nr_ads</strong> (<em>int</em>) – The desired number of ads for which media content should be downloaded.</p></li>
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – A dataframe containing a ad_snapshot_url column.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">start_media_download</span><span class="p">(</span><span class="n">project_name</span> <span class="o">=</span> <span class="s2">&quot;test1&quot;</span><span class="p">,</span> <span class="n">nr_ads</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="adlib_api.html" class="btn btn-neutral float-left" title="AdLibAPI Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cli.html" class="btn btn-neutral float-right" title="Client module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Paula-Alexandra Gitu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

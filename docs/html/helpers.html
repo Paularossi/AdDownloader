@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Helpers module &mdash; AdDownloader 0.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=938c9ccc"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="AdLibAPI Module" href="adlib_api.html" />
+    <link rel="prev" title="Welcome to AdDownloader’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            AdDownloader
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Helpers module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#numbervalidator-class">NumberValidator Class</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.helpers.NumberValidator"><code class="docutils literal notranslate"><span class="pre">NumberValidator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#AdDownloader.helpers.NumberValidator.validate"><code class="docutils literal notranslate"><span class="pre">NumberValidator.validate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#datevalidator-class">DateValidator Class</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.helpers.DateValidator"><code class="docutils literal notranslate"><span class="pre">DateValidator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#AdDownloader.helpers.DateValidator.validate"><code class="docutils literal notranslate"><span class="pre">DateValidator.validate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#countryvalidator-class">CountryValidator Class</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.helpers.CountryValidator"><code class="docutils literal notranslate"><span class="pre">CountryValidator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#AdDownloader.helpers.CountryValidator.validate"><code class="docutils literal notranslate"><span class="pre">CountryValidator.validate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#is-valid-excel-file-function">is_valid_excel_file Function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.helpers.is_valid_excel_file"><code class="docutils literal notranslate"><span class="pre">is_valid_excel_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#load-json-from-folder-function">load_json_from_folder Function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.helpers.load_json_from_folder"><code class="docutils literal notranslate"><span class="pre">load_json_from_folder()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#flatten-age-country-gender-function">flatten_age_country_gender Function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.helpers.flatten_age_country_gender"><code class="docutils literal notranslate"><span class="pre">flatten_age_country_gender()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#transform-data-function">transform_data Function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.helpers.transform_data"><code class="docutils literal notranslate"><span class="pre">transform_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="adlib_api.html">AdLibAPI Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="media_download.html">Media Download Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Client module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AdDownloader</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Helpers module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/helpers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-AdDownloader.helpers">
+<span id="helpers-module"></span><h1>Helpers module<a class="headerlink" href="#module-AdDownloader.helpers" title="Link to this heading"></a></h1>
+<section id="numbervalidator-class">
+<h2>NumberValidator Class<a class="headerlink" href="#numbervalidator-class" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="AdDownloader.helpers.NumberValidator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AdDownloader.helpers.</span></span><span class="sig-name descname"><span class="pre">NumberValidator</span></span><a class="reference internal" href="_modules/AdDownloader/helpers.html#NumberValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.helpers.NumberValidator" title="Link to this definition"></a></dt>
+<dd><p>A class representing a number validator.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="AdDownloader.helpers.NumberValidator.validate">
+<span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">document</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/helpers.html#NumberValidator.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.helpers.NumberValidator.validate" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the input is a valid number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>document</strong> (<em>document</em>) – A document representing user’s number input.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the text of the document represents a valid number, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="datevalidator-class">
+<h2>DateValidator Class<a class="headerlink" href="#datevalidator-class" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="AdDownloader.helpers.DateValidator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AdDownloader.helpers.</span></span><span class="sig-name descname"><span class="pre">DateValidator</span></span><a class="reference internal" href="_modules/AdDownloader/helpers.html#DateValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.helpers.DateValidator" title="Link to this definition"></a></dt>
+<dd><p>A class representing a date validator.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="AdDownloader.helpers.DateValidator.validate">
+<span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">document</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/helpers.html#DateValidator.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.helpers.DateValidator.validate" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the input is a valid date in the format Y-m-d (e.g. “2023-12-31”).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>document</strong> (<em>document</em>) – A document representing user’s date input.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the text of the document represents a valid date, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="countryvalidator-class">
+<h2>CountryValidator Class<a class="headerlink" href="#countryvalidator-class" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="AdDownloader.helpers.CountryValidator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AdDownloader.helpers.</span></span><span class="sig-name descname"><span class="pre">CountryValidator</span></span><a class="reference internal" href="_modules/AdDownloader/helpers.html#CountryValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.helpers.CountryValidator" title="Link to this definition"></a></dt>
+<dd><p>A class representing a country code validator.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="AdDownloader.helpers.CountryValidator.validate">
+<span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">document</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/helpers.html#CountryValidator.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.helpers.CountryValidator.validate" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the input is a valid country code.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>document</strong> (<em>document</em>) – A document representing user’s country code input.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the text of the document represents a valid country code, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="is-valid-excel-file-function">
+<h2>is_valid_excel_file Function<a class="headerlink" href="#is-valid-excel-file-function" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="AdDownloader.helpers.is_valid_excel_file">
+<span class="sig-prename descclassname"><span class="pre">AdDownloader.helpers.</span></span><span class="sig-name descname"><span class="pre">is_valid_excel_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/helpers.html#is_valid_excel_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.helpers.is_valid_excel_file" title="Link to this definition"></a></dt>
+<dd><p>Initialize the AdLibAPI object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file</strong> (<em>str</em>) – A path to an excel file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the string represents a valid path to an excel file, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">is_valid_excel_file</span><span class="p">(</span><span class="s2">&quot;example.xlsx&quot;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="load-json-from-folder-function">
+<h2>load_json_from_folder Function<a class="headerlink" href="#load-json-from-folder-function" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="AdDownloader.helpers.load_json_from_folder">
+<span class="sig-prename descclassname"><span class="pre">AdDownloader.helpers.</span></span><span class="sig-name descname"><span class="pre">load_json_from_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/helpers.html#load_json_from_folder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.helpers.load_json_from_folder" title="Link to this definition"></a></dt>
+<dd><p>Load all the JSON files from the specified folder and merge then into a dataframe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file</strong> (<em>str</em>) – A path to a folder containing JSON files with ad data.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dataframe containing information retrieved from all JSON files of the folder.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">folder_path</span> <span class="o">=</span> <span class="s1">&#39;path/to/json/folder&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">loaded_data</span> <span class="o">=</span> <span class="n">load_json_from_folder</span><span class="p">(</span><span class="n">folder_path</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">loaded_data</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="flatten-age-country-gender-function">
+<h2>flatten_age_country_gender Function<a class="headerlink" href="#flatten-age-country-gender-function" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="AdDownloader.helpers.flatten_age_country_gender">
+<span class="sig-prename descclassname"><span class="pre">AdDownloader.helpers.</span></span><span class="sig-name descname"><span class="pre">flatten_age_country_gender</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_country</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/helpers.html#flatten_age_country_gender"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.helpers.flatten_age_country_gender" title="Link to this definition"></a></dt>
+<dd><p>Flatten an entry row containing the age_country_gender_reach_breakdown by putting it into wide format for a given target country.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>row</strong> (<em>list</em>) – A row in JSON format containing age_country_gender_reach_breakdown data.</p></li>
+<li><p><strong>target_country</strong> (<em>str</em>) – The target country for which the reach data will be processed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list with the processed age_gender_reach data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">row_example</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;country&quot;</span><span class="p">:</span> <span class="s2">&quot;NL&quot;</span><span class="p">,</span> <span class="s2">&quot;age_gender_breakdowns&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;age_range&quot;</span><span class="p">:</span> <span class="s2">&quot;18-24&quot;</span><span class="p">,</span> <span class="s2">&quot;male&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s2">&quot;female&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">}]}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">target_country_example</span> <span class="o">=</span> <span class="s2">&quot;NL&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">flattened_data</span> <span class="o">=</span> <span class="n">flatten_age_country_gender</span><span class="p">(</span><span class="n">row_example</span><span class="p">,</span> <span class="n">target_country_example</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">flattened_data</span><span class="p">)</span>
+<span class="go">[{&#39;country&#39;: &#39;NL&#39;, &#39;age_range&#39;: &#39;18-24&#39;, &#39;male&#39;: 100, &#39;female&#39;: 50, &#39;unknown&#39;: 10}]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="transform-data-function">
+<h2>transform_data Function<a class="headerlink" href="#transform-data-function" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="AdDownloader.helpers.transform_data">
+<span class="sig-prename descclassname"><span class="pre">AdDownloader.helpers.</span></span><span class="sig-name descname"><span class="pre">transform_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">country</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/helpers.html#transform_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.helpers.transform_data" title="Link to this definition"></a></dt>
+<dd><p>Transform all the data from a given project with a target country by flattening its age_country_gender_reach_breakdown column.
+This function will work if there exists a folder ‘output/{project_name/json}’ containing raw downloaded data in JSON format.
+The transformed data is saved inside ‘output/{project_name}/ads_data’, where original_data.xlsx is the original downloaded data and processed_data.xlsx contains flattened age_country_gender_reach_breakdown columns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_name</strong> – The name of the current project.</p></li>
+<li><p><strong>country</strong> (<em>str</em>) – The target country for which the data will be transformed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dataframe with the processed age_gender_reach data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">project_name_example</span> <span class="o">=</span> <span class="s2">&quot;example_project&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">country_example</span> <span class="o">=</span> <span class="s2">&quot;NL&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transformed_data</span> <span class="o">=</span> <span class="n">transform_data</span><span class="p">(</span><span class="n">project_name_example</span><span class="p">,</span> <span class="n">country_example</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">transformed_data</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+<span class="go">      id ad_delivery_start_time ad_delivery_stop_time  ... unknown_45-54 unknown_55-64 unknown_65+</span>
+<span class="go">0  11111             2023-12-21            2023-12-21  ...           0.0           0.0         0.0</span>
+
+<span class="go">[1 rows x 33 columns]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to AdDownloader’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="adlib_api.html" class="btn btn-neutral float-right" title="AdLibAPI Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Paula-Alexandra Gitu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

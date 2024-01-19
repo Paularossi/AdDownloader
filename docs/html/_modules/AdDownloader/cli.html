@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdDownloader.cli &mdash; AdDownloader 0.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            AdDownloader
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../helpers.html">Helpers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../adlib_api.html">AdLibAPI Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../media_download.html">Media Download Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Client module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">AdDownloader</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">AdDownloader.cli</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for AdDownloader.cli</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module provides the AdDownloader CLI.&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on January 11, 2024</span>
+
+<span class="sd">@author: Paula G</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1">########</span>
+<span class="c1"># to run the tool: open a cmd and go to the directory of the project &#39;cd My Documents\AdDownloader&#39;</span>
+<span class="c1"># inside your directory, create a virtual environment with &#39;python -m venv venv&#39;</span>
+<span class="c1"># activate the virtual environment with &#39;venv\Scripts\activate.bat&#39;</span>
+<span class="c1"># then start the app with &#39;python -m AdDownloader.cli&#39;</span>
+
+<span class="c1"># to build new distributions (new versions), in the cmd inside the venv run &#39;python -m build&#39;</span>
+<span class="c1"># then, to upload the dist archives to TestPyPi, run &#39;python -m twine upload --repository testpypi dist/*&#39;</span>
+
+<span class="c1"># to install the test version, inside the directory with venv run: &#39;python -m pip install --index-url https://test.pypi.org/simple/ AdDownloader&#39;</span>
+
+<span class="c1"># any time you change the source of your project or the configuration in your setup.py file, </span>
+<span class="c1"># you need to rebuild these files again before you can distribute the changes to PyPI.</span>
+
+<span class="c1"># to generate the sphinx documentation r</span>
+<span class="c1">########</span>
+
+<span class="c1">#from typing import Optional</span>
+<span class="kn">import</span> <span class="nn">typer</span>
+<span class="kn">from</span> <span class="nn">PyInquirer</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">style_from_dict</span><span class="p">,</span> <span class="n">Token</span>
+<span class="kn">from</span> <span class="nn">rich</span> <span class="kn">import</span> <span class="nb">print</span> <span class="k">as</span> <span class="n">rprint</span>
+
+<span class="c1">#from AdDownloader import __app_name__, __version__</span>
+<span class="kn">from</span> <span class="nn">AdDownloader.adlib_api</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">AdDownloader.media_download</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">AdDownloader.helpers</span> <span class="kn">import</span> <span class="n">NumberValidator</span><span class="p">,</span> <span class="n">DateValidator</span><span class="p">,</span> <span class="n">CountryValidator</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="c1"># global style for the cmd</span>
+<span class="n">default_style</span> <span class="o">=</span> <span class="n">style_from_dict</span><span class="p">({</span>
+    <span class="n">Token</span><span class="o">.</span><span class="n">QuestionMark</span><span class="p">:</span> <span class="s1">&#39;#E91E63 bold&#39;</span><span class="p">,</span>
+    <span class="n">Token</span><span class="o">.</span><span class="n">Selected</span><span class="p">:</span> <span class="s1">&#39;#673AB7 bold&#39;</span><span class="p">,</span>
+    <span class="n">Token</span><span class="o">.</span><span class="n">Instruction</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>  <span class="c1"># default</span>
+    <span class="n">Token</span><span class="o">.</span><span class="n">Answer</span><span class="p">:</span> <span class="s1">&#39;#2196f3 bold&#39;</span><span class="p">,</span>
+    <span class="n">Token</span><span class="o">.</span><span class="n">Question</span><span class="p">:</span> <span class="s1">&#39;#FFD700 bold&#39;</span><span class="p">,</span>
+<span class="p">})</span>
+
+
+<div class="viewcode-block" id="request_params_task_AC">
+<a class="viewcode-back" href="../../cli.html#AdDownloader.cli.request_params_task_AC">[docs]</a>
+<span class="k">def</span> <span class="nf">request_params_task_AC</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prompt user for additional parameters for the API request in tasks A and C that involve ad data download from the Meta Ad Library.</span>
+
+<span class="sd">    :returns: User-provided parameters.</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">add_questions</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;input&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;countries&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;What reached countries do you want? (Provide the code, default is &quot;NL&quot;)&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;validate&#39;</span><span class="p">:</span> <span class="n">CountryValidator</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;input&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;start_date&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;What is the minimum ad delivery date you want? (default is &quot;2023-01-01&quot;)&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;validate&#39;</span><span class="p">:</span> <span class="n">DateValidator</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;input&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;end_date&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;What is the maximum ad delivery date you want? (default is today</span><span class="se">\&#39;</span><span class="s1">s date)&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;validate&#39;</span><span class="p">:</span> <span class="n">DateValidator</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;search_by&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Do you want to search by pages ID or by search terms?&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;choices&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Pages ID&#39;</span><span class="p">,</span> <span class="s1">&#39;Search Terms&#39;</span><span class="p">]</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;input&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;pages_id_path&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Please provide the name of your Excel file with pages ID (needs to be inside the data folder)&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;when&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">answers</span><span class="p">:</span> <span class="n">answers</span><span class="p">[</span><span class="s1">&#39;search_by&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Pages ID&#39;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;input&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;search_terms&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Please provide one or more search terms, separated by a comma&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;when&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">answers</span><span class="p">:</span> <span class="n">answers</span><span class="p">[</span><span class="s1">&#39;search_by&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Search Terms&#39;</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+    <span class="c1">#TODO: check if the excel file is valid</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        {</span>
+<span class="sd">            &#39;type&#39;: &#39;input&#39;,</span>
+<span class="sd">            &#39;name&#39;: &#39;pages_id_path&#39;,</span>
+<span class="sd">            &#39;message&#39;: &#39;Excel file not found or unable to open. Please provide a new path&#39;,</span>
+<span class="sd">            &#39;when&#39;: lambda answers: (not is_valid_excel_file(answers[&#39;pages_id_path&#39;])) and answers[&#39;search_by&#39;] == &#39;Pages ID&#39;</span>
+<span class="sd">        },</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">answers</span> <span class="o">=</span> <span class="n">prompt</span><span class="p">(</span><span class="n">add_questions</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">default_style</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">answers</span></div>
+
+
+
+<div class="viewcode-block" id="run_task_A">
+<a class="viewcode-back" href="../../cli.html#AdDownloader.cli.run_task_A">[docs]</a>
+<span class="k">def</span> <span class="nf">run_task_A</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">answers</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run task A: Download ads data from the Meta Online Ad Library based on user-provided parameters.</span>
+
+<span class="sd">    :param project_name: The name of the current project.</span>
+<span class="sd">    :type project_name: str</span>
+<span class="sd">    :param answers: User&#39;s answers from the initial questions for tasks A/C regarding desired parameters.</span>
+<span class="sd">    :type answers: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ads</span> <span class="o">=</span> <span class="n">AdLibAPI</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">answers</span><span class="p">[</span><span class="s1">&#39;access_token&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># ask for search parameters</span>
+    <span class="n">add_answers</span> <span class="o">=</span> <span class="n">request_params_task_AC</span><span class="p">()</span>
+    <span class="n">search_by</span> <span class="o">=</span> <span class="n">add_answers</span><span class="p">[</span><span class="s1">&#39;search_by&#39;</span><span class="p">]</span>
+    <span class="n">ads</span><span class="o">.</span><span class="n">add_parameters</span><span class="p">(</span>
+        <span class="n">countries</span> <span class="o">=</span> <span class="n">add_answers</span><span class="p">[</span><span class="s1">&#39;countries&#39;</span><span class="p">],</span> 
+        <span class="n">start_date</span> <span class="o">=</span> <span class="n">add_answers</span><span class="p">[</span><span class="s1">&#39;start_date&#39;</span><span class="p">],</span> 
+        <span class="n">end_date</span> <span class="o">=</span> <span class="n">add_answers</span><span class="p">[</span><span class="s1">&#39;end_date&#39;</span><span class="p">],</span> 
+        <span class="n">page_ids</span> <span class="o">=</span> <span class="n">add_answers</span><span class="p">[</span><span class="s1">&#39;pages_id_path&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">search_by</span> <span class="o">==</span> <span class="s1">&#39;Pages ID&#39;</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">search_terms</span> <span class="o">=</span> <span class="n">add_answers</span><span class="p">[</span><span class="s1">&#39;search_terms&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">search_by</span> <span class="o">==</span> <span class="s1">&#39;Search Terms&#39;</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">project_name</span> <span class="o">=</span> <span class="n">project_name</span>
+    <span class="p">)</span>
+        
+    <span class="n">rprint</span><span class="p">(</span><span class="s2">&quot;[yellow]Let&#39;s check the parameters you provided:[yellow]&quot;</span><span class="p">)</span>
+    <span class="n">rprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[green bold]</span><span class="si">{</span><span class="n">ads</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">()</span><span class="si">}</span><span class="s2">.[green bold]&quot;</span><span class="p">)</span>
+
+    <span class="n">rprint</span><span class="p">(</span><span class="s2">&quot;[yellow]Ad data download will begin now.[yellow]&quot;</span><span class="p">)</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">ads</span><span class="o">.</span><span class="n">start_download</span><span class="p">()</span>
+    <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
+    <span class="n">minutes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elapsed_time</span> <span class="o">//</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elapsed_time</span> <span class="o">%</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Download finished in </span><span class="si">{</span><span class="n">minutes</span><span class="si">}</span><span class="s2"> minutes and </span><span class="si">{</span><span class="n">seconds</span><span class="si">}</span><span class="s2"> seconds.&quot;</span><span class="p">)</span>    </div>
+
+
+
+<div class="viewcode-block" id="run_task_B">
+<a class="viewcode-back" href="../../cli.html#AdDownloader.cli.run_task_B">[docs]</a>
+<span class="k">def</span> <span class="nf">run_task_B</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run task B: Download ads media content based on user&#39;s choices.</span>
+
+<span class="sd">    :param project_name: The name of the current project.</span>
+<span class="sd">    :type project_name: str</span>
+<span class="sd">    :param file_name: Name of the Excel file containing ads data. If none is provided data is taken from &#39;output/project_name/ads/data/original_data.xlsx&#39;</span>
+<span class="sd">    :type file_name: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;output</span><span class="se">\\</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="se">\\</span><span class="s1">ads_data</span><span class="se">\\</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s1">.xlsx&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;output</span><span class="se">\\</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="se">\\</span><span class="s1">ads_data</span><span class="se">\\</span><span class="s1">original_data.xlsx&#39;</span>
+        
+        <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="n">total_ads</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting downloading media content.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># if task C was chosen - continue with downloading media content</span>
+        <span class="n">questions_down</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;nr_ads&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;You currently have </span><span class="si">{</span><span class="n">total_ads</span><span class="si">}</span><span class="s1"> ads in your search. For how many do you want to download media content?&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;choices&#39;</span><span class="p">:</span> <span class="p">[</span>
+                            <span class="p">{</span>
+                                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;A - 50&#39;</span><span class="p">,</span>
+                            <span class="p">},</span>
+                            <span class="p">{</span>
+                                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;B - 100&#39;</span><span class="p">,</span>
+                            <span class="p">},</span>
+                            <span class="p">{</span>
+                                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;C - 200&#39;</span><span class="p">,</span>
+                            <span class="p">},</span>
+                            <span class="p">{</span>
+                                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;D - insert a custom number&#39;</span><span class="p">,</span>
+                            <span class="p">},</span>
+                <span class="p">]</span>
+            <span class="p">},</span>
+            <span class="p">{</span> <span class="c1"># if the user wants a custom number of media content</span>
+                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;input&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;custom_ads_nr&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Please provide the number of ads you want to download media content for&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;when&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">answers</span><span class="p">:</span> <span class="n">answers</span><span class="p">[</span><span class="s1">&#39;nr_ads&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;D - insert a custom number&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;validate&#39;</span><span class="p">:</span> <span class="n">NumberValidator</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+        <span class="n">answers_down</span> <span class="o">=</span> <span class="n">prompt</span><span class="p">(</span><span class="n">questions_down</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">default_style</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">answers_down</span><span class="p">[</span><span class="s2">&quot;nr_ads&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;A - 50&#39;</span><span class="p">:</span>
+            <span class="n">nr_ads</span> <span class="o">=</span> <span class="mi">50</span>
+        <span class="k">elif</span> <span class="n">answers_down</span><span class="p">[</span><span class="s2">&quot;nr_ads&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;B - 100&#39;</span><span class="p">:</span>
+            <span class="n">nr_ads</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="k">elif</span> <span class="n">answers_down</span><span class="p">[</span><span class="s2">&quot;nr_ads&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;C - 200&#39;</span><span class="p">:</span>
+            <span class="n">nr_ads</span> <span class="o">=</span> <span class="mi">200</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nr_ads</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">answers_down</span><span class="p">[</span><span class="s2">&quot;custom_ads_nr&quot;</span><span class="p">])</span>
+        <span class="n">start_media_download</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">nr_ads</span><span class="o">=</span><span class="n">nr_ads</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">pass</span> <span class="c1"># do nothing if no data has been downloaded</span></div>
+
+
+
+<div class="viewcode-block" id="intro_messages">
+<a class="viewcode-back" href="../../cli.html#AdDownloader.cli.intro_messages">[docs]</a>
+<span class="k">def</span> <span class="nf">intro_messages</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Display introductory messages and gather user input and Meta developer access token for selected task.</span>
+<span class="sd">    After selecting the task, the respective function will be run.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">questions</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;task&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Welcome to the AdDownloader! Select the task you want to perform: &#39;</span><span class="p">,</span>
+            <span class="s1">&#39;choices&#39;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;A - download ads data only&#39;</span><span class="p">,</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;B - download ads media content only&#39;</span><span class="p">,</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;C - download both ads data and media content&#39;</span><span class="p">,</span>
+                        <span class="p">},</span>
+            <span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span> <span class="c1"># if the user wants to download ad data</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;password&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;access_token&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Please provide your access token&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;when&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">answers</span><span class="p">:</span> <span class="n">answers</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;A - download ads data only&#39;</span> <span class="ow">or</span> 
+                                    <span class="n">answers</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;C - download both ads data and media content&#39;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;confirm&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;start&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Are you sure you want to proceed?&#39;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+
+    <span class="n">answers</span> <span class="o">=</span> <span class="n">prompt</span><span class="p">(</span><span class="n">questions</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">default_style</span><span class="p">)</span>
+
+    <span class="n">rprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[green bold]You have chosen task </span><span class="si">{</span><span class="n">answers</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.[green bold]&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">answers</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;A - download ads data only&#39;</span><span class="p">:</span>
+        <span class="n">rprint</span><span class="p">(</span><span class="s2">&quot;[yellow]Please enter a name for your project. All created folders will use this name:[yellow]&quot;</span><span class="p">)</span>
+        <span class="n">project_name</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span>
+        <span class="n">run_task_A</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">answers</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">answers</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;B - download ads media content only&#39;</span><span class="p">:</span>
+        <span class="n">rprint</span><span class="p">(</span><span class="s2">&quot;[yellow]Please enter the name of the project you have ads data for.</span><span class="se">\n</span><span class="s2"> The data needs to be in the output\project_name</span><span class="se">\\</span><span class="s2">ads_data folder.[yellow]&quot;</span><span class="p">)</span>
+        <span class="n">project_name</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span>
+        <span class="n">rprint</span><span class="p">(</span><span class="s2">&quot;[yellow]Please enter the name of the excel file containing ads data.</span><span class="se">\n</span><span class="s2"> The data needs to be in the output\project_name</span><span class="se">\\</span><span class="s2">ads_data folder.[yellow]&quot;</span><span class="p">)</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span>
+        <span class="n">run_task_B</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">answers</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;C - download both ads data and media content&#39;</span><span class="p">:</span>
+        <span class="n">rprint</span><span class="p">(</span><span class="s2">&quot;[yellow]Please enter a name for your project. All created folders will use this name:[yellow]&quot;</span><span class="p">)</span>
+        <span class="n">project_name</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span>
+        <span class="n">run_task_A</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">answers</span><span class="p">)</span>
+        <span class="n">run_task_B</span><span class="p">(</span><span class="n">project_name</span><span class="p">)</span>
+        
+
+
+    <span class="n">rprint</span><span class="p">(</span><span class="s2">&quot;[yellow]=============================================[yello]&quot;</span><span class="p">)</span>
+    <span class="n">rprint</span><span class="p">(</span><span class="s2">&quot;Finished.&quot;</span><span class="p">)</span></div>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Typer</span><span class="p">()</span> <span class="c1"># create the app</span>
+
+
+<div class="viewcode-block" id="run_analysis">
+<a class="viewcode-back" href="../../cli.html#AdDownloader.cli.run_analysis">[docs]</a>
+<span class="nd">@app</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="s2">&quot;run-analysis&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">run_analysis</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main function to run the AdDownloader tool until the user stops the analysis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#TODO: add logging tracking?</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">intro_messages</span><span class="p">()</span>
+
+        <span class="c1"># Prompt to ask if the user wants to perform another analysis</span>
+        <span class="n">rerun</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">confirm</span><span class="p">(</span><span class="s2">&quot;Do you want to perform a new analysis?&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rerun</span><span class="p">:</span>
+            <span class="n">rprint</span><span class="p">(</span><span class="s2">&quot;[yellow]=============================================[yello]&quot;</span><span class="p">)</span>
+            <span class="n">rprint</span><span class="p">(</span><span class="s2">&quot;[yellow]Analysis completed. Thank you for using AdDownloader! [yello]&quot;</span><span class="p">)</span>
+            <span class="k">break</span></div>
+
+
+<span class="c1"># need this to run the app</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">app</span><span class="p">()</span>   
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Paula-Alexandra Gitu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

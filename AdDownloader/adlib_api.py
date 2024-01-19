@@ -7,8 +7,18 @@ from datetime import datetime
 from AdDownloader.helpers import *
 
 class AdLibAPI:
+    """A class representing the Meta Online Ad Library API connection point."""
 
     def __init__(self, access_token, version = "v18.0"):
+        """
+        Initialize the AdLibAPI object.
+
+        :param access_token: The access token for authentication.
+        :type access_token: str
+        :param version: The version of the Meta Ad Library API. Default is "v18.0".
+        :type version: str
+        """
+        
         self.version = version
         self.access_token = access_token
         self.base_url = "https://graph.facebook.com/{version}/ads_archive".format(version = self.version)
@@ -18,6 +28,18 @@ class AdLibAPI:
 
     # function to fetch and process data based on url and params
     def fetch_data(self, url, params, page_ids = None, page_number = 1):
+        """
+        Fetch and process data based on the provided URL and parameters.
+
+        :param url: The URL for making the API request.
+        :type url: str
+        :param params: The parameters to include in the API request.
+        :type params: dict
+        :param page_ids: Page IDs for naming output files. Default is None.
+        :type page_ids: str
+        :param page_number: The page number for tracking the progress. Default is 1.
+        :type page_number: int
+        """
         print("##### Starting reading page", page_number, "#####")
         response = requests.get(url, params=params)
         data = response.json()
@@ -53,7 +75,25 @@ class AdLibAPI:
     
     def add_parameters(self, fields = None, countries = 'NL', start_date = "2023-01-01", end_date = datetime.today().strftime('%Y-%m-%d'),
                        page_ids = None, search_terms = None, project_name = datetime.now().strftime("%Y%m%d%H%M%S")):
-        # see available parameters here: https://developers.facebook.com/docs/marketing-api/reference/ads_archive/
+        """
+        Add parameters for the API request.
+        See available parameters here: https://developers.facebook.com/docs/marketing-api/reference/ads_archive/
+
+        :param fields: The fields to include in the API response. Default is None, fields are retrieved from the created AdLibApi object.
+        :type fields: str
+        :param countries: The country for ad targeting. Default is 'NL'.
+        :type countries: str
+        :param start_date: The start date for ad delivery. Default is "2023-01-01".
+        :type start_date: str
+        :param end_date: The end date for ad delivery. Default is the current date.
+        :type end_date: str
+        :param page_ids: The file containing page IDs. Default is None. Complementary with search_terms.
+        :type page_ids: str
+        :param search_terms: The search terms for ad filtering. Default is None. Complementary with page_ids.
+        :type search_terms: str
+        :param project_name: The name of the project. Default is the current date and time.
+        :type project_name: str
+        """
         if fields is None:
             fields = self.get_fields()
 
@@ -94,6 +134,14 @@ class AdLibAPI:
             
     
     def start_download(self, params=None):
+        """
+        Start the download process from the Meta Ad Library API based on the provided parameters.
+
+        :param params: The parameters for the API request. Default is None, parameters are retrieved from the created AdLibApi object.
+        :type params: dict
+        :returns: A dataframe containing the downloaded and processed ad data from the Meta Online Ad Library.
+        :rtype: pd.Dataframe
+        """
         if params is None:
             params = self.request_parameters
 
@@ -125,9 +173,22 @@ class AdLibAPI:
 
 
     def get_parameters(self):
+        """
+        Get the parameters used for the API request.
+
+        :returns: A dictionary containing the parameters for the API request.
+        :rtype: dict
+        """
+
         return(self.request_parameters)
     
     def get_fields(self):
+        """
+        Get the default fields for the API request.
+
+        :returns: A string containing the fields for the API request.
+        :rtype: str
+        """
         #TODO: add different fields based on political ads (impressions, total_spend, etc.)
         # for available fields visit: https://developers.facebook.com/docs/marketing-api/reference/archived-ad/
         return("id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown")

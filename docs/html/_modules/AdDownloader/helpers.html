@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdDownloader.helpers &mdash; AdDownloader 0.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            AdDownloader
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../helpers.html">Helpers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../adlib_api.html">AdLibAPI Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../media_download.html">Media Download Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Client module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">AdDownloader</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">AdDownloader.helpers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for AdDownloader.helpers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module provides different helper functions for the AdDownloader.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">prompt_toolkit.validation</span> <span class="kn">import</span> <span class="n">Validator</span><span class="p">,</span> <span class="n">ValidationError</span>
+<span class="kn">import</span> <span class="nn">openpyxl</span>
+
+
+<div class="viewcode-block" id="NumberValidator">
+<a class="viewcode-back" href="../../helpers.html#AdDownloader.helpers.NumberValidator">[docs]</a>
+<span class="k">class</span> <span class="nc">NumberValidator</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class representing a number validator.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="NumberValidator.validate">
+<a class="viewcode-back" href="../../helpers.html#AdDownloader.helpers.NumberValidator.validate">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">document</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks whether the input is a valid number.</span>
+
+<span class="sd">        :param document: A document representing user&#39;s number input.</span>
+<span class="sd">        :type document: document</span>
+<span class="sd">        :returns: True if the text of the document represents a valid number, False otherwise.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">document</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="s1">&#39;Please enter a number&#39;</span><span class="p">,</span>
+                <span class="n">cursor_position</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">document</span><span class="o">.</span><span class="n">text</span><span class="p">))</span>  <span class="c1"># Move cursor to end</span></div>
+</div>
+
+        
+<div class="viewcode-block" id="DateValidator">
+<a class="viewcode-back" href="../../helpers.html#AdDownloader.helpers.DateValidator">[docs]</a>
+<span class="k">class</span> <span class="nc">DateValidator</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class representing a date validator.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="DateValidator.validate">
+<a class="viewcode-back" href="../../helpers.html#AdDownloader.helpers.DateValidator.validate">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">document</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks whether the input is a valid date in the format Y-m-d (e.g. &quot;2023-12-31&quot;).</span>
+
+<span class="sd">        :param document: A document representing user&#39;s date input.</span>
+<span class="sd">        :type document: document</span>
+<span class="sd">        :returns: True if the text of the document represents a valid date, False otherwise.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">document</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="s1">&#39;Please enter a valid date&#39;</span><span class="p">,</span>
+                <span class="n">cursor_position</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">document</span><span class="o">.</span><span class="n">text</span><span class="p">))</span>  <span class="c1"># Move cursor to end</span></div>
+</div>
+
+
+<div class="viewcode-block" id="CountryValidator">
+<a class="viewcode-back" href="../../helpers.html#AdDownloader.helpers.CountryValidator">[docs]</a>
+<span class="k">class</span> <span class="nc">CountryValidator</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class representing a country code validator.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="CountryValidator.validate">
+<a class="viewcode-back" href="../../helpers.html#AdDownloader.helpers.CountryValidator.validate">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">document</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks whether the input is a valid country code.</span>
+
+<span class="sd">        :param document: A document representing user&#39;s country code input.</span>
+<span class="sd">        :type document: document</span>
+<span class="sd">        :returns: True if the text of the document represents a valid country code, False otherwise.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">country_codes</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;ALL, BR, IN, GB, US, CA, AR, AU, AT, BE, CL, CN, CO, HR, DK, DO, EG, FI, FR, </span>
+<span class="s2">                DE, GR, HK, ID, IE, IL, IT, JP, JO, KW, LB, MY, MX, NL, NZ, NG, NO, PK, PA, PE, PH, </span>
+<span class="s2">                PL, RU, SA, RS, SG, ZA, KR, ES, SE, CH, TW, TH, TR, AE, VE, PT, LU, BG, CZ, SI, IS, </span>
+<span class="s2">                SK, LT, TT, BD, LK, KE, HU, MA, CY, JM, EC, RO, BO, GT, CR, QA, SV, HN, NI, PY, UY, </span>
+<span class="s2">                PR, BA, PS, TN, BH, VN, GH, MU, UA, MT, BS, MV, OM, MK, LV, EE, IQ, DZ, AL, NP, MO, </span>
+<span class="s2">                ME, SN, GE, BN, UG, GP, BB, AZ, TZ, LY, MQ, CM, BW, ET, KZ, NA, MG, NC, MD, FJ, BY, </span>
+<span class="s2">                JE, GU, YE, ZM, IM, HT, KH, AW, PF, AF, BM, GY, AM, MW, AG, RW, GG, GM, FO, LC, KY, </span>
+<span class="s2">                BJ, AD, GD, VI, BZ, VC, MN, MZ, ML, AO, GF, UZ, DJ, BF, MC, TG, GL, GA, GI, CD, KG, </span>
+<span class="s2">                PG, BT, KN, SZ, LS, LA, LI, MP, SR, SC, VG, TC, DM, MR, AX, SM, SL, NE, CG, AI, YT, </span>
+<span class="s2">                CV, GN, TM, BI, TJ, VU, SB, ER, WS, AS, FK, GQ, TO, KM, PW, FM, CF, SO, MH, VA, TD, </span>
+<span class="s2">                KI, ST, TV, NR, RE, LR, ZW, CI, MM, AN, AQ, BQ, BV, IO, CX, CC, CK, CW, TF, GW, HM, </span>
+<span class="s2">                XK, MS, NU, NF, PN, BL, SH, MF, PM, SX, GS, SS, SJ, TL, TK, UM, WF, EH&quot;&quot;&quot;</span>
+        <span class="n">country_codes</span> <span class="o">=</span> <span class="p">[</span><span class="n">code</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">code</span> <span class="ow">in</span> <span class="n">country_codes</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
+        <span class="n">ok</span> <span class="o">=</span> <span class="n">document</span><span class="o">.</span><span class="n">text</span> <span class="ow">in</span> <span class="n">country_codes</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ok</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="s1">&#39;Please enter a valid country code.&#39;</span><span class="p">,</span>
+                <span class="n">cursor_position</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">document</span><span class="o">.</span><span class="n">text</span><span class="p">))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="is_valid_excel_file">
+<a class="viewcode-back" href="../../helpers.html#AdDownloader.helpers.is_valid_excel_file">[docs]</a>
+<span class="k">def</span> <span class="nf">is_valid_excel_file</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialize the AdLibAPI object.</span>
+
+<span class="sd">    :param file: A path to an excel file.</span>
+<span class="sd">    :type file: str</span>
+<span class="sd">    :returns: True if the string represents a valid path to an excel file, False otherwise.</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># check if the path exists and has an Excel file extension</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s1">&#39;.xlsx&#39;</span><span class="p">,</span> <span class="s1">&#39;.xls&#39;</span><span class="p">,</span> <span class="s1">&#39;.xlsm&#39;</span><span class="p">)):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Excel file not found.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># try to read the excel file</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># catches any exception when trying to read</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="load_json_from_folder">
+<a class="viewcode-back" href="../../helpers.html#AdDownloader.helpers.load_json_from_folder">[docs]</a>
+<span class="k">def</span> <span class="nf">load_json_from_folder</span><span class="p">(</span><span class="n">folder_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load all the JSON files from the specified folder and merge then into a dataframe.</span>
+
+<span class="sd">    :param file: A path to a folder containing JSON files with ad data.</span>
+<span class="sd">    :type file: str</span>
+<span class="sd">    :returns: A dataframe containing information retrieved from all JSON files of the folder.</span>
+<span class="sd">    :rtype: pd.DataFrame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># get a list of all files in the specified folder</span>
+    <span class="n">all_files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">folder_path</span><span class="p">)</span>
+    
+    <span class="c1"># filter only files with a JSON extension</span>
+    <span class="n">json_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">file</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">all_files</span> <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span><span class="p">)]</span>
+    <span class="n">dfs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># loop through each JSON file</span>
+    <span class="k">for</span> <span class="n">json_file</span> <span class="ow">in</span> <span class="n">json_files</span><span class="p">:</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">json_file</span><span class="p">)</span>
+
+        <span class="c1"># open the JSON file and read the content</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">json_data</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="c1"># parse and extract the data</span>
+        <span class="n">parsed_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_data</span><span class="p">)</span>
+        <span class="n">data_list</span> <span class="o">=</span> <span class="n">parsed_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="p">[])</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data_list</span><span class="p">)</span>
+        <span class="n">dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+    <span class="c1"># concatenate all data frames a single one</span>
+    <span class="n">result_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dfs</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result_df</span></div>
+
+
+
+<span class="c1"># function that flattens the age_country_gender_reach_breakdown column </span>
+<div class="viewcode-block" id="flatten_age_country_gender">
+<a class="viewcode-back" href="../../helpers.html#AdDownloader.helpers.flatten_age_country_gender">[docs]</a>
+<span class="k">def</span> <span class="nf">flatten_age_country_gender</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">target_country</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Flatten an entry row containing the age_country_gender_reach_breakdown by putting it into wide format for a given target country.</span>
+
+<span class="sd">    :param row: A row in JSON format containing age_country_gender_reach_breakdown data.</span>
+<span class="sd">    :type row: list</span>
+<span class="sd">    :param target_country: The target country for which the reach data will be processed.</span>
+<span class="sd">    :type target_country: str</span>
+<span class="sd">    :returns: A list with the processed age_gender_reach data.</span>
+<span class="sd">    :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">flattened_data</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Check if the row is empty and remove it</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">flattened_data</span>
+
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+        <span class="n">country</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;country&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">country</span> <span class="ow">in</span> <span class="n">target_country</span><span class="p">:</span> <span class="c1"># take only the target country</span>
+            <span class="n">age_gender_data</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;age_gender_breakdowns&#39;</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="k">for</span> <span class="n">age_gender_entry</span> <span class="ow">in</span> <span class="n">age_gender_data</span><span class="p">:</span>
+                <span class="c1"># exclude entries with &#39;Unknown&#39; age range</span>
+                <span class="k">if</span> <span class="n">age_gender_entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;age_range&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;unknown&#39;</span><span class="p">:</span>
+                    <span class="c1"># extract each field and flatten it together</span>
+                    <span class="n">flattened_entry</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s1">&#39;country&#39;</span><span class="p">:</span> <span class="n">country</span><span class="p">,</span>
+                        <span class="s1">&#39;age_range&#39;</span><span class="p">:</span> <span class="n">age_gender_entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;age_range&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                        <span class="s1">&#39;male&#39;</span><span class="p">:</span> <span class="n">age_gender_entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;male&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                        <span class="s1">&#39;female&#39;</span><span class="p">:</span> <span class="n">age_gender_entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;female&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                        <span class="s1">&#39;unknown&#39;</span><span class="p">:</span> <span class="n">age_gender_entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;unknown&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="p">}</span>
+                    <span class="n">flattened_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flattened_entry</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">flattened_data</span></div>
+
+
+
+<div class="viewcode-block" id="transform_data">
+<a class="viewcode-back" href="../../helpers.html#AdDownloader.helpers.transform_data">[docs]</a>
+<span class="k">def</span> <span class="nf">transform_data</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">country</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform all the data from a given project with a target country by flattening its age_country_gender_reach_breakdown column.</span>
+<span class="sd">    This function will work if there exists a folder &#39;output/{project_name/json}&#39; containing raw downloaded data in JSON format.</span>
+<span class="sd">    The transformed data is saved inside &#39;output/{project_name}/ads_data&#39;, where original_data.xlsx is the original downloaded data and processed_data.xlsx contains flattened age_country_gender_reach_breakdown columns. </span>
+
+<span class="sd">    :param project_name: The name of the current project.</span>
+<span class="sd">    :type file: str</span>
+<span class="sd">    :param country: The target country for which the data will be transformed.</span>
+<span class="sd">    :type country: str</span>
+<span class="sd">    :returns: A dataframe with the processed age_gender_reach data.</span>
+<span class="sd">    :rtype: pd.DataFrame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">folder_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;output</span><span class="se">\\</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="se">\\</span><span class="s1">json&#39;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">load_json_from_folder</span><span class="p">(</span><span class="n">folder_path</span><span class="p">)</span>
+
+    <span class="c1"># save original data</span>
+    <span class="n">data_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;output</span><span class="se">\\</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="se">\\</span><span class="s1">ads_data&#39;</span>
+    <span class="c1"># check if the folder exists</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="se">\\</span><span class="s1">original_data.xlsx&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># flatten the age_country_gender_breakdown for each ad</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;flattened_data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;age_country_gender_reach_breakdown&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">flatten_age_country_gender</span><span class="p">,</span> <span class="n">target_country</span><span class="o">=</span><span class="n">country</span><span class="p">)</span>
+    <span class="c1"># create a new DataFrame from the flattened data</span>
+    <span class="n">flattened_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;flattened_data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> 
+
+    <span class="c1"># create a list of ids for the flattened data</span>
+    <span class="n">id_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">id_list</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;flattened_data&#39;</span><span class="p">]))</span>
+    <span class="n">flattened_df</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">id_list</span>
+
+    <span class="c1"># convert to wide format</span>
+    <span class="n">wide_df</span> <span class="o">=</span> <span class="n">flattened_df</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="s1">&#39;age_range&#39;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;male&#39;</span><span class="p">,</span> <span class="s1">&#39;female&#39;</span><span class="p">,</span> <span class="s1">&#39;unknown&#39;</span><span class="p">],</span> <span class="n">aggfunc</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">)</span>
+    <span class="c1"># change the column names and reset the index</span>
+    <span class="n">wide_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">wide_df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+    <span class="n">wide_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># keep only the relevant columns and save data to csv</span>
+    <span class="c1">#TODO: remove index slicing here!!!</span>
+    <span class="n">final_data</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">15</span><span class="p">]</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">wide_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+    <span class="c1"># fill the NAs in the reach columns</span>
+    <span class="n">selected_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">final_data</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s1">&#39;female&#39;</span><span class="p">,</span> <span class="s1">&#39;male&#39;</span><span class="p">,</span> <span class="s1">&#39;unknown&#39;</span><span class="p">))]</span>
+    <span class="n">final_data</span><span class="p">[</span><span class="n">selected_columns</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_data</span><span class="p">[</span><span class="n">selected_columns</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">final_data</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="se">\\</span><span class="s1">processed_data.xlsx&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="c1"># better use column names</span>
+    <span class="k">return</span> <span class="n">final_data</span></div>
+
+
+<span class="n">project_name_example</span> <span class="o">=</span> <span class="s2">&quot;qq&quot;</span>
+<span class="n">country_example</span> <span class="o">=</span> <span class="s2">&quot;BE&quot;</span>
+<span class="n">transformed_data</span> <span class="o">=</span> <span class="n">transform_data</span><span class="p">(</span><span class="n">project_name_example</span><span class="p">,</span> <span class="n">country_example</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">transformed_data</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">########## JSON DATA PROCESSING</span>
+<span class="sd">def load_json(file_path):</span>
+<span class="sd">    # open the JSON file and read the content as text</span>
+<span class="sd">    with open(file_path, &#39;r&#39;) as json_file:</span>
+<span class="sd">        json_data = json_file.read()</span>
+<span class="sd">    </span>
+<span class="sd">    # parse and extract the data</span>
+<span class="sd">    parsed_data = json.loads(json_data)</span>
+<span class="sd">    data_list = parsed_data.get(&#39;data&#39;, [])</span>
+<span class="sd">    len(data_list)</span>
+<span class="sd">    df = pd.DataFrame(data_list)</span>
+<span class="sd">    return df</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Paula-Alexandra Gitu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

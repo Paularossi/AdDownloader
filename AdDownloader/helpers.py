@@ -9,7 +9,16 @@ import openpyxl
 
 
 class NumberValidator(Validator):
+    """A class representing a number validator."""
     def validate(self, document):
+        """
+        Checks whether the input is a valid number.
+
+        :param document: A document representing user's number input.
+        :type document: document
+        :returns: True if the text of the document represents a valid number, False otherwise.
+        :rtype: bool
+        """
         try:
             int(document.text)
         except ValueError:
@@ -18,7 +27,16 @@ class NumberValidator(Validator):
                 cursor_position=len(document.text))  # Move cursor to end
         
 class DateValidator(Validator):
+    """A class representing a date validator."""
     def validate(self, document):
+        """
+        Checks whether the input is a valid date in the format Y-m-d (e.g. "2023-12-31").
+
+        :param document: A document representing user's date input.
+        :type document: document
+        :returns: True if the text of the document represents a valid date, False otherwise.
+        :rtype: bool
+        """
         try:
             datetime.strptime(document.text, '%Y-%m-%d')
         except ValueError:
@@ -27,7 +45,17 @@ class DateValidator(Validator):
                 cursor_position=len(document.text))  # Move cursor to end
 
 class CountryValidator(Validator):
+    """A class representing a country code validator."""
     def validate(self, document):
+        """
+        Checks whether the input is a valid country code.
+
+        :param document: A document representing user's country code input.
+        :type document: document
+        :returns: True if the text of the document represents a valid country code, False otherwise.
+        :rtype: bool
+        """
+        
         country_codes = """ALL, BR, IN, GB, US, CA, AR, AU, AT, BE, CL, CN, CO, HR, DK, DO, EG, FI, FR, 
                 DE, GR, HK, ID, IE, IL, IT, JP, JO, KW, LB, MY, MX, NL, NZ, NG, NO, PK, PA, PE, PH, 
                 PL, RU, SA, RS, SG, ZA, KR, ES, SE, CH, TW, TH, TR, AE, VE, PT, LU, BG, CZ, SI, IS, 
@@ -49,6 +77,14 @@ class CountryValidator(Validator):
 
 
 def is_valid_excel_file(file):
+    """
+    Initialize the AdLibAPI object.
+
+    :param file: A path to an excel file.
+    :type file: str
+    :returns: True if the string represents a valid path to an excel file, False otherwise.
+    :rtype: bool
+    """
     try:
         # check if the path exists and has an Excel file extension
         path = os.path.join("data", file)
@@ -63,6 +99,14 @@ def is_valid_excel_file(file):
 
 
 def load_json_from_folder(folder_path):
+    """
+    Load all the JSON files from the specified folder and merge then into a dataframe.
+
+    :param file: A path to a folder containing JSON files with ad data.
+    :type file: str
+    :returns: A dataframe containing information retrieved from all JSON files of the folder.
+    :rtype: pd.DataFrame
+    """
     # get a list of all files in the specified folder
     all_files = os.listdir(folder_path)
     
@@ -89,8 +133,18 @@ def load_json_from_folder(folder_path):
     return result_df
 
 
-    # function that flattens the age_country_gender_reach_breakdown column 
+# function that flattens the age_country_gender_reach_breakdown column 
 def flatten_age_country_gender(row, target_country):
+    """
+    Flatten an entry row containing the age_country_gender_reach_breakdown by putting it into wide format for a given target country.
+
+    :param row: A row in JSON format containing age_country_gender_reach_breakdown data.
+    :type row: list
+    :param target_country: The target country for which the reach data will be processed.
+    :type target_country: str
+    :returns: A list with the processed age_gender_reach data.
+    :rtype: list
+    """
     flattened_data = []
 
     # Check if the row is empty and remove it
@@ -116,8 +170,20 @@ def flatten_age_country_gender(row, target_country):
     return flattened_data
 
 
-# indiv - procss only one file or entire folder
 def transform_data(project_name, country):
+    """
+    Transform all the data from a given project with a target country by flattening its age_country_gender_reach_breakdown column.
+    This function will work if there exists a folder 'output/{project_name/json}' containing raw downloaded data in JSON format.
+    The transformed data is saved inside 'output/{project_name}/ads_data', where original_data.xlsx is the original downloaded data and processed_data.xlsx contains flattened age_country_gender_reach_breakdown columns. 
+
+    :param project_name: The name of the current project.
+    :type file: str
+    :param country: The target country for which the data will be transformed.
+    :type country: str
+    :returns: A dataframe with the processed age_gender_reach data.
+    :rtype: pd.DataFrame
+    """
+    
     folder_path = f'output\\{project_name}\\json'
     df = load_json_from_folder(folder_path)
 
@@ -156,28 +222,13 @@ def transform_data(project_name, country):
     # better use column names
     return final_data
 
+project_name_example = "qq"
+country_example = "BE"
+transformed_data = transform_data(project_name_example, country_example)
+print(transformed_data.head(1))
+
 
 """
-def is_valid_country(countries):
-    country_codes = ""ALL, BR, IN, GB, US, CA, AR, AU, AT, BE, CL, CN, CO, HR, DK, DO, EG, FI, FR, 
-                DE, GR, HK, ID, IE, IL, IT, JP, JO, KW, LB, MY, MX, NL, NZ, NG, NO, PK, PA, PE, PH, 
-                PL, RU, SA, RS, SG, ZA, KR, ES, SE, CH, TW, TH, TR, AE, VE, PT, LU, BG, CZ, SI, IS, 
-                SK, LT, TT, BD, LK, KE, HU, MA, CY, JM, EC, RO, BO, GT, CR, QA, SV, HN, NI, PY, UY, 
-                PR, BA, PS, TN, BH, VN, GH, MU, UA, MT, BS, MV, OM, MK, LV, EE, IQ, DZ, AL, NP, MO, 
-                ME, SN, GE, BN, UG, GP, BB, AZ, TZ, LY, MQ, CM, BW, ET, KZ, NA, MG, NC, MD, FJ, BY, 
-                JE, GU, YE, ZM, IM, HT, KH, AW, PF, AF, BM, GY, AM, MW, AG, RW, GG, GM, FO, LC, KY, 
-                BJ, AD, GD, VI, BZ, VC, MN, MZ, ML, AO, GF, UZ, DJ, BF, MC, TG, GL, GA, GI, CD, KG, 
-                PG, BT, KN, SZ, LS, LA, LI, MP, SR, SC, VG, TC, DM, MR, AX, SM, SL, NE, CG, AI, YT, 
-                CV, GN, TM, BI, TJ, VU, SB, ER, WS, AS, FK, GQ, TO, KM, PW, FM, CF, SO, MH, VA, TD, 
-                KI, ST, TV, NR, RE, LR, ZW, CI, MM, AN, AQ, BQ, BV, IO, CX, CC, CK, CW, TF, GW, HM, 
-                XK, MS, NU, NF, PN, BL, SH, MF, PM, SX, GS, SS, SJ, TL, TK, UM, WF, EH""
-    country_codes = [code.strip() for code in country_codes.split(",")]
-    if not isinstance(countries, list):
-        countries = [countries]
-    valid_countries = [code for code in countries if code in country_codes]
-    
-    return valid_countries
-
 ########## JSON DATA PROCESSING
 def load_json(file_path):
     # open the JSON file and read the content as text

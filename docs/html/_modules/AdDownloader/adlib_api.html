@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdDownloader.adlib_api &mdash; AdDownloader 0.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            AdDownloader
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../helpers.html">Helpers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../adlib_api.html">AdLibAPI Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../media_download.html">Media Download Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Client module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">AdDownloader</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">AdDownloader.adlib_api</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for AdDownloader.adlib_api</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module provides the call to the Meta Ad Library API for ad data retrieval.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">AdDownloader.helpers</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="AdLibAPI">
+<a class="viewcode-back" href="../../adlib_api.html#AdDownloader.adlib_api.AdLibAPI">[docs]</a>
+<span class="k">class</span> <span class="nc">AdLibAPI</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class representing the Meta Online Ad Library API connection point.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AdLibAPI.__init__">
+<a class="viewcode-back" href="../../adlib_api.html#AdDownloader.adlib_api.AdLibAPI.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">access_token</span><span class="p">,</span> <span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;v18.0&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the AdLibAPI object.</span>
+
+<span class="sd">        :param access_token: The access token for authentication.</span>
+<span class="sd">        :type access_token: str</span>
+<span class="sd">        :param version: The version of the Meta Ad Library API. Default is &quot;v18.0&quot;.</span>
+<span class="sd">        :type version: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">access_token</span> <span class="o">=</span> <span class="n">access_token</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span> <span class="o">=</span> <span class="s2">&quot;https://graph.facebook.com/</span><span class="si">{version}</span><span class="s2">/ads_archive&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fields</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">request_parameters</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="c1"># function to fetch and process data based on url and params</span>
+<div class="viewcode-block" id="AdLibAPI.fetch_data">
+<a class="viewcode-back" href="../../adlib_api.html#AdDownloader.adlib_api.AdLibAPI.fetch_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">fetch_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">page_ids</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">page_number</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetch and process data based on the provided URL and parameters.</span>
+
+<span class="sd">        :param url: The URL for making the API request.</span>
+<span class="sd">        :type url: str</span>
+<span class="sd">        :param params: The parameters to include in the API request.</span>
+<span class="sd">        :type params: dict</span>
+<span class="sd">        :param page_ids: Page IDs for naming output files. Default is None.</span>
+<span class="sd">        :type page_ids: str</span>
+<span class="sd">        :param page_number: The page number for tracking the progress. Default is 1.</span>
+<span class="sd">        :type page_number: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;##### Starting reading page&quot;</span><span class="p">,</span> <span class="n">page_number</span><span class="p">,</span> <span class="s2">&quot;#####&quot;</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+
+        <span class="c1"># check if the output json file is empty and return</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s2">&quot;data&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No data on page&quot;</span><span class="p">,</span> <span class="n">page_number</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Page&quot;</span><span class="p">,</span> <span class="n">page_number</span><span class="p">,</span> <span class="s2">&quot;is empty.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        
+        <span class="n">folder_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;output</span><span class="se">\\</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="se">\\</span><span class="s2">json&quot;</span>
+        <span class="c1"># check if the folder exists</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">folder_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">folder_path</span><span class="p">)</span>
+
+        <span class="c1"># save the data to a JSON file</span>
+        <span class="k">if</span> <span class="n">page_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">folder_path</span><span class="si">}</span><span class="se">\\</span><span class="si">{</span><span class="n">page_number</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">json_file</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">folder_path</span><span class="si">}</span><span class="se">\\</span><span class="si">{</span><span class="n">page_ids</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">page_number</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">json_file</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        
+
+        <span class="c1"># check if there is a next page and retrieve further data</span>
+        <span class="k">if</span> <span class="s2">&quot;paging&quot;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="s2">&quot;next&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;paging&quot;</span><span class="p">]:</span>
+            <span class="n">next_page_url</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;paging&quot;</span><span class="p">][</span><span class="s2">&quot;next&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">(</span><span class="n">next_page_url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">page_ids</span><span class="p">,</span> <span class="n">page_number</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+
+    
+<div class="viewcode-block" id="AdLibAPI.add_parameters">
+<a class="viewcode-back" href="../../adlib_api.html#AdDownloader.adlib_api.AdLibAPI.add_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fields</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">countries</span> <span class="o">=</span> <span class="s1">&#39;NL&#39;</span><span class="p">,</span> <span class="n">start_date</span> <span class="o">=</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">,</span> <span class="n">end_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">),</span>
+                       <span class="n">page_ids</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">search_terms</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">project_name</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">)):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add parameters for the API request.</span>
+<span class="sd">        See available parameters here: https://developers.facebook.com/docs/marketing-api/reference/ads_archive/</span>
+
+<span class="sd">        :param fields: The fields to include in the API response. Default is None, fields are retrieved from the created AdLibApi object.</span>
+<span class="sd">        :type fields: str</span>
+<span class="sd">        :param countries: The country for ad targeting. Default is &#39;NL&#39;.</span>
+<span class="sd">        :type countries: str</span>
+<span class="sd">        :param start_date: The start date for ad delivery. Default is &quot;2023-01-01&quot;.</span>
+<span class="sd">        :type start_date: str</span>
+<span class="sd">        :param end_date: The end date for ad delivery. Default is the current date.</span>
+<span class="sd">        :type end_date: str</span>
+<span class="sd">        :param page_ids: The file containing page IDs. Default is None. Complementary with search_terms.</span>
+<span class="sd">        :type page_ids: str</span>
+<span class="sd">        :param search_terms: The search terms for ad filtering. Default is None. Complementary with page_ids.</span>
+<span class="sd">        :type search_terms: str</span>
+<span class="sd">        :param project_name: The name of the project. Default is the current date and time.</span>
+<span class="sd">        :type project_name: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">fields</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fields</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span> <span class="o">=</span> <span class="n">project_name</span>
+
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="n">fields</span><span class="p">,</span>
+            <span class="s2">&quot;ad_reached_countries&quot;</span><span class="p">:</span> <span class="n">countries</span><span class="p">,</span>
+            <span class="s2">&quot;search_page_ids&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;search_terms&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;ad_delivery_date_min&quot;</span><span class="p">:</span> <span class="n">start_date</span><span class="p">,</span>
+            <span class="s2">&quot;ad_delivery_date_max&quot;</span><span class="p">:</span> <span class="n">end_date</span><span class="p">,</span>
+            <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="s2">&quot;300&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;access_token&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">access_token</span>
+        <span class="p">}</span>
+
+        <span class="c1">#TODO: accept additional parameters through kwargs**</span>
+        <span class="c1"># kwargs.update(fields = fields)</span>
+        <span class="c1"># headers = kwargs</span>
+        <span class="c1"># headers += [&quot;&amp;{key}={value}&quot;.format(key = str(key), value = str(value)) for key, value in kwargs.items()]</span>
+        <span class="c1"># print(f&quot;you added the following params: {headers}&quot;)</span>
+
+        <span class="c1"># page ids - the file must contain at least one column called page_id</span>
+        <span class="k">if</span> <span class="n">page_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_valid_excel_file</span><span class="p">(</span><span class="n">page_ids</span><span class="p">):</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="n">page_ids</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                <span class="n">search_page_ids_list</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;page_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search_page_ids&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search_page_ids_list</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">request_parameters</span> <span class="o">=</span> <span class="n">params</span>
+
+        <span class="k">elif</span> <span class="n">search_terms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search_terms&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search_terms</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">request_parameters</span> <span class="o">=</span> <span class="n">params</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;You need to specify either pages ids or search terms.&#39;</span><span class="p">)</span></div>
+
+            
+    
+<div class="viewcode-block" id="AdLibAPI.start_download">
+<a class="viewcode-back" href="../../adlib_api.html#AdDownloader.adlib_api.AdLibAPI.start_download">[docs]</a>
+    <span class="k">def</span> <span class="nf">start_download</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start the download process from the Meta Ad Library API based on the provided parameters.</span>
+
+<span class="sd">        :param params: The parameters for the API request. Default is None, parameters are retrieved from the created AdLibApi object.</span>
+<span class="sd">        :type params: dict</span>
+<span class="sd">        :returns: A dataframe containing the downloaded and processed ad data from the Meta Online Ad Library.</span>
+<span class="sd">        :rtype: pd.Dataframe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_parameters</span>
+
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search_terms&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">page_number</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search_page_ids&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">search_page_ids_list</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search_page_ids&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">search_page_ids_list</span><span class="p">),</span> <span class="mi">10</span><span class="p">):</span>
+                <span class="n">end_index</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">9</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">search_page_ids_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fetching data starting for indexes [</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">end_index</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+                <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search_page_ids&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">search_page_ids_list</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">end_index</span><span class="p">])</span>
+
+                <span class="c1"># call the function with the initial API endpoint and parameters</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">page_ids</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">end_index</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">,</span> <span class="n">page_number</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done downloading json files for the given parameters.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Data processing will start now.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># process into excel files:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">final_data</span> <span class="o">=</span> <span class="n">transform_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span> <span class="n">country</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;ad_reached_countries&quot;</span><span class="p">])</span> 
+            <span class="n">total_ads</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">final_data</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Done processing and saving ads data for </span><span class="si">{</span><span class="n">total_ads</span><span class="si">}</span><span class="s2"> ads for project </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">final_data</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No data was downloaded. Please try a new request.&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="AdLibAPI.get_parameters">
+<a class="viewcode-back" href="../../adlib_api.html#AdDownloader.adlib_api.AdLibAPI.get_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the parameters used for the API request.</span>
+
+<span class="sd">        :returns: A dictionary containing the parameters for the API request.</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request_parameters</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="AdLibAPI.get_fields">
+<a class="viewcode-back" href="../../adlib_api.html#AdDownloader.adlib_api.AdLibAPI.get_fields">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the default fields for the API request.</span>
+
+<span class="sd">        :returns: A string containing the fields for the API request.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#TODO: add different fields based on political ads (impressions, total_spend, etc.)</span>
+        <span class="c1"># for available fields visit: https://developers.facebook.com/docs/marketing-api/reference/archived-ad/</span>
+        <span class="k">return</span><span class="p">(</span><span class="s2">&quot;id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd"># alcohol nl: [882849606601570,306533725582037,2629981837151638,811933024017255]</span>
+<span class="sd"># 882849606601570 - //*[@id=&quot;content&quot;]/div/div/div/div/div/div/div[2]/div[2]/img</span>
+<span class="sd"># 306533725582037 - //*[@id=&quot;content&quot;]/div/div/div/div/div/div/div[2]/div[2]/img</span>
+<span class="sd"># 2629981837151638 - //*[@id=&quot;content&quot;]/div/div/div/div/div/div/div[2]/a/div[1]/img</span>
+<span class="sd"># 811933024017255 </span>
+
+
+<span class="sd"># 315337970888155, 942331563502762 for drinks be, //*[@id=&quot;content&quot;]/div/div/div/div/div/div/div[2]/div[1]/video</span>
+<span class="sd"># 186811847833644, 886890406228902 for drinks nl</span>
+<span class="sd"># 737451568226648 - the weird fanta page</span>
+
+
+<span class="sd"># update access token before downloading images</span>
+<span class="sd">new_token = input(&quot;New access token:&quot;)</span>
+<span class="sd">ads_data[&#39;ad_snapshot_url&#39;] = ads_data[&#39;ad_snapshot_url&#39;].str.replace(r&#39;access_token=.*$&#39;, f&#39;access_token={new_token}&#39;, regex=True)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Paula-Alexandra Gitu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
