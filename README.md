@@ -81,6 +81,7 @@ python -m AdDownloader.cli
 ```
 Once the tool is running, more instructions and questions will appear in the cmd/terminal 
 
+For further help see the [documentation](https://addownloader.readthedocs.io/en/latest/index.html). 
 
 ## License
 
