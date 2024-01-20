@@ -43,8 +43,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../helpers.html">Helpers module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../adlib_api.html">AdLibAPI Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../helpers.html">Helpers Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../media_download.html">Media Download Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../cli.html">Client module</a></li>
 </ul>
@@ -328,10 +328,25 @@
     <span class="k">return</span> <span class="n">final_data</span></div>
 
 
-<span class="n">project_name_example</span> <span class="o">=</span> <span class="s2">&quot;qq&quot;</span>
-<span class="n">country_example</span> <span class="o">=</span> <span class="s2">&quot;BE&quot;</span>
-<span class="n">transformed_data</span> <span class="o">=</span> <span class="n">transform_data</span><span class="p">(</span><span class="n">project_name_example</span><span class="p">,</span> <span class="n">country_example</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">transformed_data</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+<div class="viewcode-block" id="update_access_token">
+<a class="viewcode-back" href="../../helpers.html#AdDownloader.helpers.update_access_token">[docs]</a>
+<span class="k">def</span> <span class="nf">update_access_token</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">new_access_token</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Update the ad_snapshot_url with a new access token given ad data. </span>
+
+<span class="sd">    :param data: A dataframe containing a column ad_snapshot_url.</span>
+<span class="sd">    :type data: pd.DataFrame</span>
+<span class="sd">    :param new_access_token: The new access token, optional. If none is given, user will be prompted for inputting it.</span>
+<span class="sd">    :type new_access_token: str</span>
+<span class="sd">    :returns: A dataframe with the processed age_gender_reach data.</span>
+<span class="sd">    :rtype: pd.DataFrame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">new_access_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">new_access_token</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Please provide an update access token: &quot;</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s1">&#39;ad_snapshot_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;ad_snapshot_url&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;access_token=.*$&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;access_token=</span><span class="si">{</span><span class="n">new_access_token</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
 
 
 <span class="sd">&quot;&quot;&quot;</span>

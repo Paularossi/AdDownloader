@@ -222,10 +222,22 @@ def transform_data(project_name, country):
     # better use column names
     return final_data
 
-project_name_example = "qq"
-country_example = "BE"
-transformed_data = transform_data(project_name_example, country_example)
-print(transformed_data.head(1))
+
+def update_access_token(data, new_access_token=None):
+    """
+    Update the ad_snapshot_url with a new access token given ad data. 
+
+    :param data: A dataframe containing a column ad_snapshot_url.
+    :type data: pd.DataFrame
+    :param new_access_token: The new access token, optional. If none is given, user will be prompted for inputting it.
+    :type new_access_token: str
+    :returns: A dataframe with the processed age_gender_reach data.
+    :rtype: pd.DataFrame
+    """
+    if new_access_token is None:
+        new_access_token = input("Please provide an update access token: ")
+    data['ad_snapshot_url'] = data['ad_snapshot_url'].str.replace(r'access_token=.*$', f'access_token={new_access_token}', regex=True)
+    return data
 
 
 """

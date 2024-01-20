@@ -1,8 +1,10 @@
-Helpers module
+Helpers Module
 ==============
 
 .. module:: AdDownloader.helpers
    :synopsis: Provides different helper functions for the AdDownloader.
+
+   This module provides different helper functions for the AdLibAPI object, such as validation and data processing tasks.
 
 NumberValidator Class
 ---------------------
@@ -71,3 +73,14 @@ transform_data Function
       0  11111             2023-12-21            2023-12-21  ...           0.0           0.0         0.0
 
       [1 rows x 33 columns]
+
+update_access_token Function
+----------------------------
+
+.. autofunction:: update_access_token
+
+   Example::
+
+      >>> data = pd.read_excel('path/to/your/data.xlsx')
+      >>> new_access_token = input("Provide an updated access token: ")
+      >>> data = update_access_token(data, new_access_token)

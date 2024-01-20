@@ -43,8 +43,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../helpers.html">Helpers module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../adlib_api.html">AdLibAPI Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../helpers.html">Helpers Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../media_download.html">Media Download Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../cli.html">Client module</a></li>
 </ul>
@@ -81,7 +81,6 @@
 <span class="kn">from</span> <span class="nn">selenium.webdriver.support.ui</span> <span class="kn">import</span> <span class="n">WebDriverWait</span>
 <span class="kn">from</span> <span class="nn">selenium.webdriver.support</span> <span class="kn">import</span> <span class="n">expected_conditions</span> <span class="k">as</span> <span class="n">EC</span>
 <span class="kn">from</span> <span class="nn">selenium.common.exceptions</span> <span class="kn">import</span> <span class="n">NoSuchElementException</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">import</span> <span class="nn">os</span>
 
@@ -136,7 +135,7 @@
 <a class="viewcode-back" href="../../media_download.html#AdDownloader.media_download.accept_cookies">[docs]</a>
 <span class="k">def</span> <span class="nf">accept_cookies</span><span class="p">(</span><span class="n">driver</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Accept the cookies in a running Chrome webdriver. Only needs to be done once when the webdriver is open.</span>
+<span class="sd">    Accept the cookies in a running Chrome webdriver. Only needs to be done once, when openning the webdriver.</span>
 
 <span class="sd">    :param driver: A running Chrome webdriver.</span>
 <span class="sd">    :type driver: webdriver.Chrome</span>
@@ -167,6 +166,7 @@
 <span class="sd">    :param data: A dataframe containing a ad_snapshot_url column.</span>
 <span class="sd">    :type data: pd.DataFrame</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="c1"># check if the nr of ads to download is within the length of the data</span>
     <span class="k">if</span> <span class="n">nr_ads</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
         <span class="n">nr_ads</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>

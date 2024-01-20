@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Helpers module &mdash; AdDownloader 0.2.0 documentation</title>
+  <title>Helpers Module &mdash; AdDownloader 0.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -21,8 +21,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="AdLibAPI Module" href="adlib_api.html" />
-    <link rel="prev" title="Welcome to AdDownloader’s documentation!" href="index.html" /> 
+    <link rel="next" title="Media Download Module" href="media_download.html" />
+    <link rel="prev" title="AdLibAPI Module" href="adlib_api.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -46,7 +46,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Helpers module</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="adlib_api.html">AdLibAPI Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Helpers Module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#numbervalidator-class">NumberValidator Class</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#AdDownloader.helpers.NumberValidator"><code class="docutils literal notranslate"><span class="pre">NumberValidator</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#AdDownloader.helpers.NumberValidator.validate"><code class="docutils literal notranslate"><span class="pre">NumberValidator.validate()</span></code></a></li>
@@ -84,9 +85,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#AdDownloader.helpers.transform_data"><code class="docutils literal notranslate"><span class="pre">transform_data()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#update-access-token-function">update_access_token Function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AdDownloader.helpers.update_access_token"><code class="docutils literal notranslate"><span class="pre">update_access_token()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="adlib_api.html">AdLibAPI Module</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="media_download.html">Media Download Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli.html">Client module</a></li>
 </ul>
@@ -105,7 +109,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Helpers module</li>
+      <li class="breadcrumb-item active">Helpers Module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/helpers.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -116,7 +120,8 @@
            <div itemprop="articleBody">
              
   <section id="module-AdDownloader.helpers">
-<span id="helpers-module"></span><h1>Helpers module<a class="headerlink" href="#module-AdDownloader.helpers" title="Link to this heading"></a></h1>
+<span id="helpers-module"></span><h1>Helpers Module<a class="headerlink" href="#module-AdDownloader.helpers" title="Link to this heading"></a></h1>
+<p>This module provides different helper functions for the AdLibAPI object, such as validation and data processing tasks.</p>
 <section id="numbervalidator-class">
 <h2>NumberValidator Class<a class="headerlink" href="#numbervalidator-class" title="Link to this heading"></a></h2>
 <dl class="py class">
@@ -313,14 +318,43 @@ The transformed data is saved inside ‘output/{project_name}/ads_data’, where
 </dd></dl>
 
 </section>
+<section id="update-access-token-function">
+<h2>update_access_token Function<a class="headerlink" href="#update-access-token-function" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="AdDownloader.helpers.update_access_token">
+<span class="sig-prename descclassname"><span class="pre">AdDownloader.helpers.</span></span><span class="sig-name descname"><span class="pre">update_access_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_access_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AdDownloader/helpers.html#update_access_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#AdDownloader.helpers.update_access_token" title="Link to this definition"></a></dt>
+<dd><p>Update the ad_snapshot_url with a new access token given ad data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – A dataframe containing a column ad_snapshot_url.</p></li>
+<li><p><strong>new_access_token</strong> (<em>str</em>) – The new access token, optional. If none is given, user will be prompted for inputting it.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dataframe with the processed age_gender_reach data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="s1">&#39;path/to/your/data.xlsx&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_access_token</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Provide an updated access token: &quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">update_access_token</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">new_access_token</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to AdDownloader’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="adlib_api.html" class="btn btn-neutral float-right" title="AdLibAPI Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="adlib_api.html" class="btn btn-neutral float-left" title="AdLibAPI Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="media_download.html" class="btn btn-neutral float-right" title="Media Download Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

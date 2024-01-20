@@ -43,8 +43,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../helpers.html">Helpers module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../adlib_api.html">AdLibAPI Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../helpers.html">Helpers Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../media_download.html">Media Download Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../cli.html">Client module</a></li>
 </ul>
@@ -74,7 +74,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for AdDownloader.cli</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;This module provides the AdDownloader CLI.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;This module provides the AdDownloader Command-line Interface.&quot;&quot;&quot;</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Created on January 11, 2024</span>
 
@@ -94,7 +94,7 @@
 <span class="c1"># any time you change the source of your project or the configuration in your setup.py file, </span>
 <span class="c1"># you need to rebuild these files again before you can distribute the changes to PyPI.</span>
 
-<span class="c1"># to generate the sphinx documentation r</span>
+<span class="c1"># to generate the sphinx documentation run &#39;sphinx-build -M html docs/source docs&#39;</span>
 <span class="c1">########</span>
 
 <span class="c1">#from typing import Optional</span>
@@ -105,7 +105,7 @@
 <span class="c1">#from AdDownloader import __app_name__, __version__</span>
 <span class="kn">from</span> <span class="nn">AdDownloader.adlib_api</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">AdDownloader.media_download</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">AdDownloader.helpers</span> <span class="kn">import</span> <span class="n">NumberValidator</span><span class="p">,</span> <span class="n">DateValidator</span><span class="p">,</span> <span class="n">CountryValidator</span>
+<span class="kn">from</span> <span class="nn">AdDownloader.helpers</span> <span class="kn">import</span> <span class="n">NumberValidator</span><span class="p">,</span> <span class="n">DateValidator</span><span class="p">,</span> <span class="n">CountryValidator</span><span class="p">,</span> <span class="n">update_access_token</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -239,6 +239,27 @@
         
         <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
         <span class="n">total_ads</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># ask the user if the token is still valid - otherwise the downloads won&#39;t work</span>
+        <span class="n">new_token</span> <span class="o">=</span> <span class="n">prompt</span><span class="p">([</span>
+            <span class="p">{</span>
+                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;is_valid&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Is your access token still valid? You might need to regenerate a new one.&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;choices&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;No - input new one&#39;</span><span class="p">,</span> <span class="s1">&#39;Yes - it is valid&#39;</span><span class="p">]</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;input&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;new_acs_tkn&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Please input your updated access token&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;when&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">answers</span><span class="p">:</span> <span class="n">answers</span><span class="p">[</span><span class="s1">&#39;is_valid&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;No - input new one&#39;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">])</span>
+
+        <span class="c1"># update the access token in the data if needed</span>
+        <span class="k">if</span> <span class="n">new_token</span><span class="p">[</span><span class="s1">&#39;is_valid&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;No - input new one&#39;</span><span class="p">:</span>
+            <span class="n">new_access_token</span> <span class="o">=</span> <span class="n">new_token</span><span class="p">[</span><span class="s2">&quot;new_acs_tkn&quot;</span><span class="p">]</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">update_access_token</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">new_access_token</span><span class="p">)</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting downloading media content.&quot;</span><span class="p">)</span>
 

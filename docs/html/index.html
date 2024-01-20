@@ -21,7 +21,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Helpers module" href="helpers.html" /> 
+    <link rel="next" title="AdLibAPI Module" href="adlib_api.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -45,8 +45,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="adlib_api.html">AdLibAPI Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="media_download.html">Media Download Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli.html">Client module</a></li>
 </ul>
@@ -77,10 +77,28 @@
              
   <section id="welcome-to-addownloader-s-documentation">
 <h1>Welcome to AdDownloader’s documentation!<a class="headerlink" href="#welcome-to-addownloader-s-documentation" title="Link to this heading"></a></h1>
+<p><strong>AdDownloader</strong> is a Python library and Command-line Interface (CLI) that directly
+calls the Meta Ad Library API given a valid Meta developer access token. It downloads general ad data
+based on user-defined parameters by creating an <code class="xref py py-class docutils literal notranslate"><span class="pre">AdLibAPI</span></code> object, then downloads
+the media content of the ads using <a class="reference internal" href="media_download.html#AdDownloader.media_download.start_media_download" title="AdDownloader.media_download.start_media_download"><code class="xref py py-func docutils literal notranslate"><span class="pre">start_media_download()</span></code></a>. Additionally, for a more user-friendly interface, the entire ad download
+process can be run as a CLI through the <a class="reference internal" href="cli.html#AdDownloader.cli.run_analysis" title="AdDownloader.cli.run_analysis"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_analysis()</span></code></a> call, offering a <em>simple</em> and <em>intuitive</em> API.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This project is under active development.</p>
+</div>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers module</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="adlib_api.html">AdLibAPI Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#adlibapi-init-method">AdLibAPI.__init__ Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#adlibapi-fetch-data-method">AdLibAPI.fetch_data Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#adlibapi-add-parameters-method">AdLibAPI.add_parameters Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#adlibapi-start-download-method">AdLibAPI.start_download Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#adlibapi-get-parameters-method">AdLibAPI.get_parameters Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#adlibapi-get-fields-method">AdLibAPI.get_fields Method</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers Module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="helpers.html#numbervalidator-class">NumberValidator Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="helpers.html#datevalidator-class">DateValidator Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="helpers.html#countryvalidator-class">CountryValidator Class</a></li>
@@ -88,16 +106,7 @@
 <li class="toctree-l2"><a class="reference internal" href="helpers.html#load-json-from-folder-function">load_json_from_folder Function</a></li>
 <li class="toctree-l2"><a class="reference internal" href="helpers.html#flatten-age-country-gender-function">flatten_age_country_gender Function</a></li>
 <li class="toctree-l2"><a class="reference internal" href="helpers.html#transform-data-function">transform_data Function</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="adlib_api.html">AdLibAPI Module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#AdDownloader.adlib_api.AdLibAPI"><code class="docutils literal notranslate"><span class="pre">AdLibAPI</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#adlibapi-init-method">AdLibAPI.__init__ Method</a></li>
-<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#adlibapi-fetch-data-method">AdLibAPI.fetch_data Method</a></li>
-<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#adlibapi-add-parameters-method">AdLibAPI.add_parameters Method</a></li>
-<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#adlibapi-start-download-method">AdLibAPI.start_download Method</a></li>
-<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#adlibapi-get-parameters-method">AdLibAPI.get_parameters Method</a></li>
-<li class="toctree-l2"><a class="reference internal" href="adlib_api.html#adlibapi-get-fields-method">AdLibAPI.get_fields Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="helpers.html#update-access-token-function">update_access_token Function</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="media_download.html">Media Download Module</a><ul>
@@ -116,6 +125,44 @@
 </li>
 </ul>
 </div>
+<p>Below, you can find two examples of how to (1) manually download ad data and media content using the AdLibAPI class and the media_download module
+and (2) run the automated CLI to download ad data and media content.</p>
+<p><strong>Example 1:</strong> <em>Manual Download</em>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AdDownloader</span> <span class="kn">import</span> <span class="n">adlib_api</span>
+<span class="kn">from</span> <span class="nn">AdDownloader.media_download</span> <span class="kn">import</span> <span class="n">start_media_download</span>
+<span class="kn">from</span> <span class="nn">AdDownloader.cli</span> <span class="kn">import</span> <span class="n">run_analysis</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">access_token</span> <span class="o">=</span> <span class="nb">input</span><span class="p">()</span> <span class="c1"># your fb-access-token-here</span>
+<span class="c1"># initialize the AdLibAPI object</span>
+<span class="n">ads_api</span> <span class="o">=</span> <span class="n">adlib_api</span><span class="o">.</span><span class="n">AdLibAPI</span><span class="p">(</span><span class="n">access_token</span><span class="p">)</span>
+
+<span class="c1"># either search_terms OR search_pages_ids</span>
+<span class="n">ads_api</span><span class="o">.</span><span class="n">add_parameters</span><span class="p">(</span><span class="n">countries</span> <span class="o">=</span> <span class="s1">&#39;BE&#39;</span><span class="p">,</span> <span class="n">start_date</span> <span class="o">=</span> <span class="s2">&quot;2023-09-01&quot;</span><span class="p">,</span> <span class="n">end_date</span> <span class="o">=</span> <span class="s2">&quot;2023-09-02&quot;</span><span class="p">,</span> <span class="n">search_terms</span> <span class="o">=</span> <span class="s2">&quot;pizza&quot;</span><span class="p">,</span> <span class="n">project_name</span> <span class="o">=</span> <span class="s2">&quot;test1&quot;</span><span class="p">)</span>
+
+<span class="c1"># check the parameters</span>
+<span class="n">ads_api</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">()</span>
+
+<span class="c1"># start the ad data download</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">ads_api</span><span class="o">.</span><span class="n">start_download</span><span class="p">()</span>
+
+<span class="c1"># if you want to download media right away</span>
+<span class="n">start_media_download</span><span class="p">(</span><span class="n">project_name</span> <span class="o">=</span> <span class="s2">&quot;test1&quot;</span><span class="p">,</span> <span class="n">nr_ads</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">)</span>
+
+<span class="c1"># if you want to download media from an earlier project</span>
+<span class="n">data_path</span> <span class="o">=</span> <span class="s1">&#39;path/to/your/data.xlsx&#39;</span>
+<span class="n">new_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+
+<span class="n">start_media_download</span><span class="p">(</span><span class="n">project_name</span> <span class="o">=</span> <span class="s2">&quot;test2&quot;</span><span class="p">,</span> <span class="n">nr_ads</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">new_data</span><span class="p">)</span>
+
+<span class="c1"># you can find all the output in the &#39;output/your-project-name&#39; folder</span>
+</pre></div>
+</div>
+<p><strong>Example 2:</strong> <em>Automated CLI</em>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">AdDownloader.cli</span> <span class="kn">import</span> <span class="n">run_analysis</span>
+<span class="n">run_analysis</span><span class="p">()</span>
+</pre></div>
+</div>
 </section>
 <section id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
@@ -130,7 +177,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="helpers.html" class="btn btn-neutral float-right" title="Helpers module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="adlib_api.html" class="btn btn-neutral float-right" title="AdLibAPI Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

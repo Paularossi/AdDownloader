@@ -5,7 +5,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
-import pandas as pd
 import requests
 import os
 
@@ -55,7 +54,7 @@ def download_media(media_url, media_type, ad_id, media_folder):
 
 def accept_cookies(driver):
     """
-    Accept the cookies in a running Chrome webdriver. Only needs to be done once when the webdriver is open.
+    Accept the cookies in a running Chrome webdriver. Only needs to be done once, when openning the webdriver.
 
     :param driver: A running Chrome webdriver.
     :type driver: webdriver.Chrome
@@ -83,6 +82,7 @@ def start_media_download(project_name, nr_ads, data=[]):
     :param data: A dataframe containing a ad_snapshot_url column.
     :type data: pd.DataFrame
     """
+
     # check if the nr of ads to download is within the length of the data
     if nr_ads > len(data):
         nr_ads = len(data)

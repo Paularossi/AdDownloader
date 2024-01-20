@@ -1,10 +1,10 @@
 AdLibAPI Module
 ===============
 
-.. automodule:: AdDownloader.adlib_api
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. module:: AdDownloader.adlib_api
+   :synopsis: Module for interacting with the API.
+
+   This module provides the AdLibAPI class, which allows interaction with the Meta Ad Library API.
 
 AdLibAPI.__init__ Method
 ------------------------

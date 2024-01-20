@@ -4,6 +4,8 @@ Media Download Module
 .. module:: AdDownloader.media_download
    :synopsis: Provides functionality for media content download using Selenium.
 
+   This module provides functionality for media content download using Selenium, given ads data urls and a valid access token.
+
 download_media Function
 -----------------------
 

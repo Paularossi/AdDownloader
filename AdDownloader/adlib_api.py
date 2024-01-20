@@ -195,7 +195,6 @@ class AdLibAPI:
 
 
 """
-
 # alcohol nl: [882849606601570,306533725582037,2629981837151638,811933024017255]
 # 882849606601570 - //*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/img
 # 306533725582037 - //*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/img
@@ -206,10 +205,4 @@ class AdLibAPI:
 # 315337970888155, 942331563502762 for drinks be, //*[@id="content"]/div/div/div/div/div/div/div[2]/div[1]/video
 # 186811847833644, 886890406228902 for drinks nl
 # 737451568226648 - the weird fanta page
-
-
-# update access token before downloading images
-new_token = input("New access token:")
-ads_data['ad_snapshot_url'] = ads_data['ad_snapshot_url'].str.replace(r'access_token=.*$', f'access_token={new_token}', regex=True)
-
 """

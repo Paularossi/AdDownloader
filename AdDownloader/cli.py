@@ -1,4 +1,4 @@
-"""This module provides the AdDownloader CLI."""
+"""This module provides the AdDownloader Command-line Interface."""
 """
 Created on January 11, 2024
 
@@ -29,7 +29,7 @@ from rich import print as rprint
 #from AdDownloader import __app_name__, __version__
 from AdDownloader.adlib_api import *
 from AdDownloader.media_download import *
-from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator
+from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator, update_access_token
 import time
 import pandas as pd
 import logging
@@ -155,6 +155,27 @@ def run_task_B(project_name, file_name=None):
         
         data = pd.read_excel(file_path)
         total_ads = len(data)
+
+        # ask the user if the token is still valid - otherwise the downloads won't work
+        new_token = prompt([
+            {
+                'type': 'list',
+                'name': 'is_valid',
+                'message': 'Is your access token still valid? You might need to regenerate a new one.',
+                'choices': ['No - input new one', 'Yes - it is valid']
+            },
+            {
+                'type': 'input',
+                'name': 'new_acs_tkn',
+                'message': 'Please input your updated access token',
+                'when': lambda answers: answers['is_valid'] == 'No - input new one',
+            }
+        ])
+
+        # update the access token in the data if needed
+        if new_token['is_valid'] == 'No - input new one':
+            new_access_token = new_token["new_acs_tkn"]
+            data = update_access_token(data, new_access_token)
 
         print("Starting downloading media content.")
 
