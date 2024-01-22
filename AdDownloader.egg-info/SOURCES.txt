@@ -1,0 +1,16 @@
+LICENSE.txt
+README.md
+pyproject.toml
+AdDownloader/__init__.py
+AdDownloader/__main__.py
+AdDownloader/adlib_api.py
+AdDownloader/cli.py
+AdDownloader/helpers.py
+AdDownloader/media_download.py
+AdDownloader.egg-info/PKG-INFO
+AdDownloader.egg-info/SOURCES.txt
+AdDownloader.egg-info/dependency_links.txt
+AdDownloader.egg-info/entry_points.txt
+AdDownloader.egg-info/requires.txt
+AdDownloader.egg-info/top_level.txt
+tests/test_AdDownloader.py

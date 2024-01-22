@@ -1,0 +1,2 @@
+[console_scripts]
+AdDownloader = AdDownloader.cli:main
