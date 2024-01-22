@@ -30,7 +30,7 @@
 
           
           
-          <a href="../../index.html" class="icon icon-home">
+          <a href="../../homepage.html" class="icon icon-home">
             AdDownloader
           </a>
 <div role="search">
@@ -55,14 +55,14 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">AdDownloader</a>
+          <a href="../../homepage.html">AdDownloader</a>
       </nav>
 
       <div class="wy-nav-content">
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li><a href="../../homepage.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
       <li class="breadcrumb-item active">AdDownloader.cli</li>
       <li class="wy-breadcrumbs-aside">
@@ -97,7 +97,8 @@
 <span class="c1"># to generate the sphinx documentation run &#39;sphinx-build -M html docs/source docs&#39;</span>
 <span class="c1">########</span>
 
-<span class="c1">#from typing import Optional</span>
+<span class="c1"># for some reason the docs are published but the functions are not shown.</span>
+
 <span class="kn">import</span> <span class="nn">typer</span>
 <span class="kn">from</span> <span class="nn">PyInquirer</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">style_from_dict</span><span class="p">,</span> <span class="n">Token</span>
 <span class="kn">from</span> <span class="nn">rich</span> <span class="kn">import</span> <span class="nb">print</span> <span class="k">as</span> <span class="n">rprint</span>
@@ -105,7 +106,7 @@
 <span class="c1">#from AdDownloader import __app_name__, __version__</span>
 <span class="kn">from</span> <span class="nn">AdDownloader.adlib_api</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">AdDownloader.media_download</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">AdDownloader.helpers</span> <span class="kn">import</span> <span class="n">NumberValidator</span><span class="p">,</span> <span class="n">DateValidator</span><span class="p">,</span> <span class="n">CountryValidator</span><span class="p">,</span> <span class="n">update_access_token</span>
+<span class="kn">from</span> <span class="nn">AdDownloader.helpers</span> <span class="kn">import</span> <span class="n">NumberValidator</span><span class="p">,</span> <span class="n">DateValidator</span><span class="p">,</span> <span class="n">CountryValidator</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -259,7 +260,7 @@
         <span class="c1"># update the access token in the data if needed</span>
         <span class="k">if</span> <span class="n">new_token</span><span class="p">[</span><span class="s1">&#39;is_valid&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;No - input new one&#39;</span><span class="p">:</span>
             <span class="n">new_access_token</span> <span class="o">=</span> <span class="n">new_token</span><span class="p">[</span><span class="s2">&quot;new_acs_tkn&quot;</span><span class="p">]</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">update_access_token</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">new_access_token</span><span class="p">)</span>
+            <span class="c1">#data = update_access_token(data, new_access_token)</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting downloading media content.&quot;</span><span class="p">)</span>
 

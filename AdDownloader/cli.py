@@ -21,7 +21,8 @@ Created on January 11, 2024
 # to generate the sphinx documentation run 'sphinx-build -M html docs/source docs'
 ########
 
-#from typing import Optional
+# for some reason the docs are published but the functions are not shown.
+
 import typer
 from PyInquirer import prompt, style_from_dict, Token
 from rich import print as rprint
@@ -29,7 +30,7 @@ from rich import print as rprint
 #from AdDownloader import __app_name__, __version__
 from AdDownloader.adlib_api import *
 from AdDownloader.media_download import *
-from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator, update_access_token
+from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator
 import time
 import pandas as pd
 import logging
@@ -175,7 +176,7 @@ def run_task_B(project_name, file_name=None):
         # update the access token in the data if needed
         if new_token['is_valid'] == 'No - input new one':
             new_access_token = new_token["new_acs_tkn"]
-            data = update_access_token(data, new_access_token)
+            #data = update_access_token(data, new_access_token)
 
         print("Starting downloading media content.")
 

@@ -32,6 +32,13 @@ extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode",
             "sphinx.ext.napoleon", "recommonmark", 'sphinx_click.ext', 'sphinx_rtd_theme'
 ]
 
+intersphinx_mapping = {
+    "rtd": ("https://docs.readthedocs.io/en/stable/", None),
+    "python": ("https://https://docs.python.org/3.9/", None),
+    "sphinx": ("https://www.sphinx-doc.org/en/master/", None),
+}
+intersphinx_disabled_domains = ["std"]
+
 templates_path = ['_templates']
 exclude_patterns = ['build/*']
 
@@ -48,10 +55,10 @@ pygments_style = 'sphinx'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 
-#html_static_path = ['_static']
+html_static_path = ['_static']
 
 source_suffix = {'.rst' : 'restructuredtext',
                 '.md' : 'markdown',
                 '.txt' : 'markdown'}
 
-master_doc = 'index'
+master_doc = 'homepage'
