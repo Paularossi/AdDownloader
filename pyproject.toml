@@ -14,7 +14,7 @@ maintainers = [
 # the description corresponds to the "Summary" metadata field:
 description = "A cmd tool for downloading ads and their media content from the Meta Ad Library."
 readme = "README.md"
-requires-python = "==3.9"
+requires-python = "==3.9.*"
 license = {file = "LICENSE.txt"}
 keywords = ["CLI tool", "MetaAPI", "AdLibrary", "image scraping"]  # Optional
 
