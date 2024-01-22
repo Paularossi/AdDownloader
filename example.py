@@ -1,6 +1,5 @@
 from AdDownloader import adlib_api
 from AdDownloader.media_download import start_media_download
-from AdDownloader.cli import run_analysis
 import pandas as pd
 
 # ============================================================
@@ -19,7 +18,7 @@ ads_api = adlib_api.AdLibAPI(access_token)
 #                    search_terms = "Biden")
 
 # either search_terms OR search_pages_ids
-ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza", project_name = "test1")
+ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "clothes, shoes", project_name = "Roselindetest2")
 
 # check the parameters
 ads_api.get_parameters()
@@ -28,7 +27,7 @@ ads_api.get_parameters()
 data = ads_api.start_download()
 
 # if you want to download media right away
-start_media_download(project_name = "test1", nr_ads = 20, data = data)
+start_media_download(project_name = "Roselindetest2", nr_ads = 20, data = data)
 
 # if you want to download media from an earlier project
 data_path = 'path/to/your/data.xlsx'
@@ -46,5 +45,7 @@ start_media_download(project_name = "test2", nr_ads = 20, data = new_data)
 #
 # ===========================================================
 
+from AdDownloader.cli import run_analysis
 run_analysis()
+
 
