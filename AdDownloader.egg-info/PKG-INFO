@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: AdDownloader
-Version: 0.2.0
+Version: 0.2.1
 Summary: A cmd tool for downloading ads and their media content from the Meta Ad Library.
 Author-email: Paula-Alexandra Gitu <paula.gitu@maastrichtuniversity.nl>
 Maintainer-email: Paula-Alexandra Gitu <paula.gitu@maastrichtuniversity.nl>
@@ -689,7 +689,7 @@ Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: Science/Research
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
 Classifier: Topic :: Internet :: WWW/HTTP :: Indexing/Search
-Requires-Python: ==3.9
+Requires-Python: ==3.9.*
 Description-Content-Type: text/markdown
 License-File: LICENSE.txt
 Requires-Dist: click==8.1.3

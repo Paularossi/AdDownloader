@@ -12,22 +12,19 @@ Created on January 11, 2024
 
 # to build new distributions (new versions), in the cmd inside the venv run 'python -m build'
 # then, to upload the dist archives to TestPyPi, run 'python -m twine upload --repository testpypi dist/*'
+# to upload to PyPi, run 'python -m twine upload dist/*'
+# to install the package, inside the directory with venv run: 'python -m pip install AdDownloader'
 
-# to install the test version, inside the directory with venv run: 'python -m pip install --index-url https://test.pypi.org/simple/ AdDownloader'
-
-# any time you change the source of your project or the configuration in your setup.py file, 
+# any time you change the source of your project or the configuration inside pyproject.toml, 
 # you need to rebuild these files again before you can distribute the changes to PyPI.
 
 # to generate the sphinx documentation run 'sphinx-build -M html docs/source docs'
 ########
 
-# for McDonald's download for a year all ad data and perform a little descriptive analysis
-
 import typer
 from PyInquirer import prompt, style_from_dict, Token
 from rich import print as rprint
 
-#from AdDownloader import __app_name__, __version__
 from AdDownloader.adlib_api import *
 from AdDownloader.media_download import *
 from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator
