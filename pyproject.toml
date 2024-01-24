@@ -3,7 +3,7 @@ name = "AdDownloader"
 # $ pip install sampleproject
 # And where it will live on PyPI: https://pypi.org/project/sampleproject/
 
-version = "0.2.1"
+version = "0.2.2"
 authors = [
   {name = "Paula-Alexandra Gitu", email = "paula.gitu@maastrichtuniversity.nl"},
 ]
