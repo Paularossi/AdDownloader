@@ -170,17 +170,19 @@ def flatten_age_country_gender(row, target_country):
     return flattened_data
 
 
-def transform_data(project_name, country):
+def transform_data(project_name, country, ad_type):
     """
     Transform all the data from a given project with a target country by flattening its age_country_gender_reach_breakdown column.
     This function will work if there exists a folder 'output/{project_name/json}' containing raw downloaded data in JSON format.
     The transformed data is saved inside 'output/{project_name}/ads_data', where original_data.xlsx is the original downloaded data and processed_data.xlsx contains flattened age_country_gender_reach_breakdown columns. 
 
     :param project_name: The name of the current project.
-    :type file: str
+    :type project_name: str
     :param country: The target country for which the data will be transformed.
     :type country: str
-    :returns: A dataframe with the processed age_gender_reach data.
+    :param ad_type: The type of the ads that were retrieved (can be "All" or "Political"). Depending on the ad_type different processing will be done.
+    :type ad_type: str
+    :returns: If ad_type = "All" then a dataframe with the processed age_gender_reach data, if not then the original JSON processed data.
     :rtype: pd.DataFrame
     """
     
@@ -193,6 +195,10 @@ def transform_data(project_name, country):
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     df.to_excel(f'{data_path}\\original_data.xlsx', index=False)
+
+    # for political ads there is no processing to be done
+    if not ad_type == "ALL":
+        return(df)
 
     # flatten the age_country_gender_breakdown for each ad
     df['flattened_data'] = df['age_country_gender_reach_breakdown'].apply(flatten_age_country_gender, target_country=country)
@@ -219,7 +225,6 @@ def transform_data(project_name, country):
     final_data[selected_columns] = final_data[selected_columns].fillna(0)
 
     final_data.to_excel(f'{data_path}\\processed_data.xlsx', index=False)
-    # better use column names
     return final_data
 
 
@@ -238,20 +243,3 @@ def update_access_token(data, new_access_token=None):
         new_access_token = input("Please provide an update access token: ")
     data['ad_snapshot_url'] = data['ad_snapshot_url'].str.replace(r'access_token=.*$', f'access_token={new_access_token}', regex=True)
     return data
-
-
-"""
-########## JSON DATA PROCESSING
-def load_json(file_path):
-    # open the JSON file and read the content as text
-    with open(file_path, 'r') as json_file:
-        json_data = json_file.read()
-    
-    # parse and extract the data
-    parsed_data = json.loads(json_data)
-    data_list = parsed_data.get('data', [])
-    len(data_list)
-    df = pd.DataFrame(data_list)
-    return df
-
-"""

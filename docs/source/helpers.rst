@@ -67,7 +67,7 @@ transform_data Function
 
       >>> project_name_example = "example_project"
       >>> country_example = "NL"
-      >>> transformed_data = transform_data(project_name_example, country_example)
+      >>> transformed_data = transform_data(project_name_example, country_example, "ALL")
       >>> print(transformed_data.head())
             id ad_delivery_start_time ad_delivery_stop_time  ... unknown_45-54 unknown_55-64 unknown_65+
       0  11111             2023-12-21            2023-12-21  ...           0.0           0.0         0.0

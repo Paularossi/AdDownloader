@@ -68,6 +68,6 @@ AdLibAPI.get_fields Method
    :no-index:
 
    Example::
-      >>> ads_api.get_fields()
+      >>> ads_api.get_fields(ad_type = "ALL")
       'id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, 
       page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown'

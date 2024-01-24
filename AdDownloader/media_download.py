@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 import requests
 import os
+import cv2
 
 
 def download_media(media_url, media_type, ad_id, media_folder):
@@ -75,7 +76,7 @@ def start_media_download(project_name, nr_ads, data=[]):
     Start media content download for a given project and desired number of ads. 
     The ads media are saved in the output folder with the project_name.
 
-    :param project_name: A running Chrome webdriver.
+    :param project_name: The name of the current project.
     :type project_name: str
     :param nr_ads: The desired number of ads for which media content should be downloaded.
     :type nr_ads: int
@@ -159,3 +160,55 @@ def start_media_download(project_name, nr_ads, data=[]):
     
     # close the driver once it's done downloading
     driver.quit()
+
+
+def extract_frames(video, project_name, interval=3):
+    """
+    Extract a number of frames from ad videos
+
+    :param video: The name of the video for which frames should be extracted.
+    :type video: str
+    :param project_name: The name of the current project.
+    :type project_name: str
+    :param interval: The interval between the (in seconds), optional. Default = 3 seconds.
+    :type interval: int
+    """
+    video_path = f"output\\{project_name}\\ads_videos\\{video}"
+    # Create a VideoCapture object
+    cap = cv2.VideoCapture(video_path)
+
+    # Check if video opened successfully
+    if not cap.isOpened():
+        print("Error: Could not open video.")
+        return
+
+    # Get video frame rate
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    duration = frame_count / fps
+
+    print(f"Processing {video_path} | FPS: {fps} | Total Frames: {frame_count} | Duration: {duration}s")
+
+    # get the ad id
+    ad_id = os.path.basename(video_path).split('_')[1]
+    frame_dir = f"{project_name}\\video_frames"
+    if not os.path.exists(frame_dir):
+        os.makedirs(frame_dir)
+
+    # read the video and save frames every interval
+    frame_number = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Check if the current frame number is the one we want to save
+        if frame_number % (interval * fps) == 0:
+            frame_path = f"{frame_dir}\\ad_{ad_id}_frame{frame_number}.png"
+            cv2.imwrite(frame_path, frame)
+            print(f"Saved {frame_path}")
+
+        frame_number += 1
+
+    # Release the VideoCapture object
+    cap.release()

@@ -18,7 +18,7 @@ ads_api = adlib_api.AdLibAPI(access_token)
 #                    search_terms = "Biden")
 
 # either search_terms OR search_pages_ids
-ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "clothes, shoes", project_name = "Roselindetest2")
+ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "burger", project_name = "test1")
 
 # check the parameters
 ads_api.get_parameters()
@@ -27,15 +27,29 @@ ads_api.get_parameters()
 data = ads_api.start_download()
 
 # if you want to download media right away
-start_media_download(project_name = "Roselindetest2", nr_ads = 20, data = data)
+start_media_download(project_name = "test1", nr_ads = 20, data = data)
 
 # if you want to download media from an earlier project
 data_path = 'path/to/your/data.xlsx'
 new_data = pd.read_excel(data_path)
 
-start_media_download(project_name = "test2", nr_ads = 20, data = new_data)
+start_media_download(project_name = "test11", nr_ads = 20, data = new_data)
 
 # you can find all the output in the 'output/your-project-name' folder
+
+#### Example with Political ads:
+plt_ads_api = adlib_api.AdLibAPI(access_token)
+
+plt_ads_api.add_parameters(countries = 'US', start_date = "2023-09-01", end_date = "2023-09-29", search_terms = "Joe Biden", project_name = "test2", ad_type = "POLITICAL_AND_ISSUE_ADS")
+
+# check the parameters
+plt_ads_api.get_parameters()
+
+# start the ad data download
+plt_data = plt_ads_api.start_download()
+
+# start the media download
+start_media_download(project_name = "test2", nr_ads = 20, data = plt_data)
 
 
 

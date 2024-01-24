@@ -22,7 +22,7 @@ class AdLibAPI:
         self.version = version
         self.access_token = access_token
         self.base_url = "https://graph.facebook.com/{version}/ads_archive".format(version = self.version)
-        self.fields = self.get_fields()
+        self.fields = None
         self.request_parameters = {}
         self.project_name = None
 
@@ -74,7 +74,7 @@ class AdLibAPI:
 
     
     def add_parameters(self, fields = None, countries = 'NL', start_date = "2023-01-01", end_date = datetime.today().strftime('%Y-%m-%d'),
-                       page_ids = None, search_terms = None, project_name = datetime.now().strftime("%Y%m%d%H%M%S")):
+                       page_ids = None, search_terms = None, project_name = datetime.now().strftime("%Y%m%d%H%M%S"), ad_type = "ALL"):
         """
         Add parameters for the API request.
         See available parameters here: https://developers.facebook.com/docs/marketing-api/reference/ads_archive/
@@ -93,15 +93,18 @@ class AdLibAPI:
         :type search_terms: str
         :param project_name: The name of the project. Default is the current date and time.
         :type project_name: str
+        :param ad_type: The type of the ads to be retrieved. Default is "ALL"
+        :type ad_type: str
         """
         if fields is None:
-            fields = self.get_fields()
+            fields = self.get_fields(ad_type)
 
         self.project_name = project_name
 
         params = {
             "fields": fields,
             "ad_reached_countries": countries,
+            "ad_type": ad_type,
             "search_page_ids": None,
             "search_terms": None,
             "ad_delivery_date_min": start_date,
@@ -163,7 +166,7 @@ class AdLibAPI:
 
         # process into excel files:
         try:
-            final_data = transform_data(self.project_name, country=params["ad_reached_countries"]) 
+            final_data = transform_data(self.project_name, country=params["ad_reached_countries"], ad_type=params["ad_type"]) 
             total_ads = len(final_data)
             print(f"Done processing and saving ads data for {total_ads} ads for project {self.project_name}.")
             return(final_data)
@@ -182,16 +185,21 @@ class AdLibAPI:
 
         return(self.request_parameters)
     
-    def get_fields(self):
+
+    def get_fields(self, ad_type):
         """
         Get the default fields for the API request.
 
+        :param ad_type: The type of the ads to be retrieved.
+        :type ad_type: str
         :returns: A string containing the fields for the API request.
         :rtype: str
         """
-        #TODO: add different fields based on political ads (impressions, total_spend, etc.)
         # for available fields visit: https://developers.facebook.com/docs/marketing-api/reference/archived-ad/
-        return("id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown")
+        if ad_type == "ALL":
+            return("id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown")
+        else:
+            return("id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, bylines, currency, delivery_by_region, demographic_distribution, estimated_audience_size, impressions, spend, page_id, page_name, target_ages, target_gender, target_locations")
 
 
 """

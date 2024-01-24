@@ -21,7 +21,7 @@ Created on January 11, 2024
 # to generate the sphinx documentation run 'sphinx-build -M html docs/source docs'
 ########
 
-# for some reason the docs are published but the functions are not shown.
+# for McDonald's download for a year all ad data and perform a little descriptive analysis
 
 import typer
 from PyInquirer import prompt, style_from_dict, Token
@@ -53,6 +53,12 @@ def request_params_task_AC():
     :rtype: dict
     """
     add_questions = [
+        {
+            'type': 'list',
+            'name': 'ad_type',
+            'message': 'What type of ads do you want to search?',
+            'choices': ['All', 'Political/Elections']
+        },
         {
             'type': 'input',
             'name': 'countries',
@@ -117,13 +123,15 @@ def run_task_A(project_name, answers):
     # ask for search parameters
     add_answers = request_params_task_AC()
     search_by = add_answers['search_by']
+    ad_type = add_answers['ad_type']
     ads.add_parameters(
         countries = add_answers['countries'], 
         start_date = add_answers['start_date'], 
         end_date = add_answers['end_date'], 
         page_ids = add_answers['pages_id_path'] if search_by == 'Pages ID' else None,
         search_terms = add_answers['search_terms'] if search_by == 'Search Terms' else None,
-        project_name = project_name
+        project_name = project_name,
+        ad_type = "ALL" if ad_type == 'All' else "POLITICAL_AND_ISSUE_ADS"
     )
         
     rprint("[yellow]Let's check the parameters you provided:[yellow]")
@@ -174,9 +182,9 @@ def run_task_B(project_name, file_name=None):
         ])
 
         # update the access token in the data if needed
-        if new_token['is_valid'] == 'No - input new one':
-            new_access_token = new_token["new_acs_tkn"]
-            #data = update_access_token(data, new_access_token)
+        #if new_token['is_valid'] == 'No - input new one':
+        #    new_access_token = new_token["new_acs_tkn"]
+        #    data = update_access_token(data, new_access_token)
 
         print("Starting downloading media content.")
 
