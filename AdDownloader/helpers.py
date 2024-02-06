@@ -5,7 +5,6 @@ import pandas as pd
 import os
 from datetime import datetime
 from prompt_toolkit.validation import Validator, ValidationError
-import openpyxl
 
 
 class NumberValidator(Validator):

@@ -3,13 +3,15 @@
 import pandas as pd
 import requests
 import os
+import logging
+
 from datetime import datetime
 from AdDownloader.helpers import *
 
 class AdLibAPI:
     """A class representing the Meta Online Ad Library API connection point."""
 
-    def __init__(self, access_token, version = "v18.0"):
+    def __init__(self, access_token, version = "v18.0", project_name = None):
         """
         Initialize the AdLibAPI object.
 
@@ -18,13 +20,29 @@ class AdLibAPI:
         :param version: The version of the Meta Ad Library API. Default is "v18.0".
         :type version: str
         """
-        
+
         self.version = version
         self.access_token = access_token
         self.base_url = "https://graph.facebook.com/{version}/ads_archive".format(version = self.version)
         self.fields = None
         self.request_parameters = {}
-        self.project_name = None
+        self.project_name = project_name
+
+        # create logger
+        log_path = f"output/{project_name}"
+        if not os.path.exists(log_path):
+            os.makedirs(log_path)
+
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+
+        self.log_file = logging.FileHandler(os.path.join(log_path, "logs.log"), 'a')  # append mode
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
+        self.log_file.setFormatter(formatter)
+        self.logger.addHandler(self.log_file)
+          
+        #logging.shutdown()
+
 
     # function to fetch and process data based on url and params
     def fetch_data(self, url, params, page_ids = None, page_number = 1):
@@ -41,6 +59,7 @@ class AdLibAPI:
         :type page_number: int
         """
         print("##### Starting reading page", page_number, "#####")
+        self.logger.info('Starting reading page %i', page_number)
         response = requests.get(url, params=params)
         data = response.json()
 
@@ -72,9 +91,9 @@ class AdLibAPI:
             self.fetch_data(next_page_url, params, page_ids, page_number+1)
 
 
-    
+    # maybe change here to provide the project_name when initiating the adlib_api object (for the logging as well)
     def add_parameters(self, fields = None, countries = 'NL', start_date = "2023-01-01", end_date = datetime.today().strftime('%Y-%m-%d'),
-                       page_ids = None, search_terms = None, project_name = datetime.now().strftime("%Y%m%d%H%M%S"), ad_type = "ALL"):
+                       page_ids = None, search_terms = None, project_name = datetime.now().strftime("%Y%m%d%H%M%S"), ad_type = "ALL", **kwargs):
         """
         Add parameters for the API request.
         See available parameters here: https://developers.facebook.com/docs/marketing-api/reference/ads_archive/
@@ -113,11 +132,9 @@ class AdLibAPI:
             "access_token": self.access_token
         }
 
-        #TODO: accept additional parameters through kwargs**
-        # kwargs.update(fields = fields)
-        # headers = kwargs
-        # headers += ["&{key}={value}".format(key = str(key), value = str(value)) for key, value in kwargs.items()]
-        # print(f"you added the following params: {headers}")
+        # accept additional parameters through kwargs**
+        params.update(kwargs)
+       
 
         # page ids - the file must contain at least one column called page_id
         if page_ids is not None:
@@ -134,6 +151,7 @@ class AdLibAPI:
 
         else:
             print('You need to specify either pages ids or search terms.')
+            self.logger.warning('You need to specify either pages ids or search terms.')
             
     
     def start_download(self, params=None):
@@ -162,17 +180,25 @@ class AdLibAPI:
                 self.fetch_data(self.base_url, params, page_ids=f"[{i},{end_index}]", page_number=1)
         
         print("Done downloading json files for the given parameters.")
+        self.logger.info('Done downloading json files for the given parameters.')
         print("Data processing will start now.")
+        self.logger.info('Data processing will start now.')
 
         # process into excel files:
         try:
             final_data = transform_data(self.project_name, country=params["ad_reached_countries"], ad_type=params["ad_type"]) 
             total_ads = len(final_data)
             print(f"Done processing and saving ads data for {total_ads} ads for project {self.project_name}.")
+            self.logger.info('Done processing and saving ads data for %i ads for project %s.', total_ads,  self.project_name)
+
+            # close the log file
+            self.log_file.close()
+            self.logger.removeHandler(self.log_file)
             return(final_data)
 
         except Exception:
             print("No data was downloaded. Please try a new request.")
+            self.logger.warning('No data was downloaded. Please try a new request.')
 
 
     def get_parameters(self):
@@ -200,17 +226,3 @@ class AdLibAPI:
             return("id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown")
         else:
             return("id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, bylines, currency, delivery_by_region, demographic_distribution, estimated_audience_size, impressions, spend, page_id, page_name, target_ages, target_gender, target_locations")
-
-
-"""
-# alcohol nl: [882849606601570,306533725582037,2629981837151638,811933024017255]
-# 882849606601570 - //*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/img
-# 306533725582037 - //*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/img
-# 2629981837151638 - //*[@id="content"]/div/div/div/div/div/div/div[2]/a/div[1]/img
-# 811933024017255 
-
-
-# 315337970888155, 942331563502762 for drinks be, //*[@id="content"]/div/div/div/div/div/div/div[2]/div[1]/video
-# 186811847833644, 886890406228902 for drinks nl
-# 737451568226648 - the weird fanta page
-"""

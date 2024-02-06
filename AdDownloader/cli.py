@@ -30,7 +30,6 @@ from AdDownloader.media_download import *
 from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator
 import time
 import pandas as pd
-import logging
 
 # global style for the cmd
 default_style = style_from_dict({
@@ -299,7 +298,7 @@ def run_analysis():
     """
     Main function to run the AdDownloader tool until the user stops the analysis.
     """
-    #TODO: add logging tracking?
+    #TODO: add logging tracking
     while True:
         intro_messages()
 
