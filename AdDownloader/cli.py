@@ -115,7 +115,7 @@ def run_task_A(project_name, answers):
     :param answers: User's answers from the initial questions for tasks A/C regarding desired parameters.
     :type answers: dict
     """
-    ads = AdLibAPI(f"{answers['access_token']}")
+    ads = AdLibAPI(f"{answers['access_token']}", project_name = project_name)
     # ask for search parameters
     add_answers = request_params_task_AC()
     search_by = add_answers['search_by']
@@ -126,7 +126,6 @@ def run_task_A(project_name, answers):
         end_date = add_answers['end_date'], 
         page_ids = add_answers['pages_id_path'] if search_by == 'Pages ID' else None,
         search_terms = add_answers['search_terms'] if search_by == 'Search Terms' else None,
-        project_name = project_name,
         ad_type = "ALL" if ad_type == 'All' else "POLITICAL_AND_ISSUE_ADS"
     )
         
@@ -298,7 +297,7 @@ def run_analysis():
     """
     Main function to run the AdDownloader tool until the user stops the analysis.
     """
-    #TODO: add logging tracking
+    
     while True:
         intro_messages()
 

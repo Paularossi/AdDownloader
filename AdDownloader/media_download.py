@@ -9,6 +9,7 @@ import requests
 import os
 import cv2
 
+#TODO: add logging tracking
 
 def download_media(media_url, media_type, ad_id, media_folder):
     """

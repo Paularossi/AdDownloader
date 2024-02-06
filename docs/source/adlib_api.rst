@@ -15,7 +15,7 @@ AdLibAPI.__init__ Method
 
       >>> from AdDownloader import adlib_api
       >>> access_token = input() # your fb-access-token-here
-      >>> ads_api = adlib_api.AdLibAPI(access_token)
+      >>> ads_api = adlib_api.AdLibAPI(access_token, project_name = "test1")
 
 AdLibAPI.fetch_data Method
 --------------------------
@@ -36,7 +36,7 @@ AdLibAPI.add_parameters Method
    :no-index:
 
    Example::
-      >>> ads_api.add_parameters(countries = 'NL', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza", project_name = "test1")
+      >>> ads_api.add_parameters(countries = 'NL', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza")
 
 
 AdLibAPI.start_download Method

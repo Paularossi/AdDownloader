@@ -40,10 +40,10 @@ and (2) run the automated CLI to download ad data and media content.
 
    access_token = input() # your fb-access-token-here
    # initialize the AdLibAPI object
-   ads_api = adlib_api.AdLibAPI(access_token)
+   ads_api = adlib_api.AdLibAPI(access_token, project_name = "test1")
 
    # either search_terms OR search_pages_ids
-   ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza", project_name = "test1")
+   ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza")
 
    # check the parameters
    ads_api.get_parameters()
@@ -67,10 +67,11 @@ and (2) run the automated CLI to download ad data and media content.
 .. code-block:: python
 
    # the same can be done for POLITICAL_AND_ISSUE_ADS:
-   plt_ads_api = adlib_api.AdLibAPI(access_token)
+   plt_ads_api = adlib_api.AdLibAPI(access_token, project_name = "test2")
 
-   plt_ads_api.add_parameters(countries = 'US', start_date = "2023-09-01", end_date = "2023-09-15", search_terms = "Joe Biden", project_name = "test2", ad_type = "POLITICAL_AND_ISSUE_ADS")
-
+   plt_ads_api.add_parameters(countries = 'US', start_date = "2023-01-01", end_date = "2023-01-05", ad_type = "POLITICAL_AND_ISSUE_ADS",
+                   ad_active_status = "ALL", impression_condition = 'HAS_IMPRESSIONS_LAST_90_DAYS', search_terms = "Biden")
+                   
    # check the parameters
    plt_ads_api.get_parameters()
 

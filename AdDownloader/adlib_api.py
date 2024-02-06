@@ -11,7 +11,7 @@ from AdDownloader.helpers import *
 class AdLibAPI:
     """A class representing the Meta Online Ad Library API connection point."""
 
-    def __init__(self, access_token, version = "v18.0", project_name = None):
+    def __init__(self, access_token, version = "v18.0", project_name = datetime.now().strftime("%Y%m%d%H%M%S")):
         """
         Initialize the AdLibAPI object.
 
@@ -19,6 +19,8 @@ class AdLibAPI:
         :type access_token: str
         :param version: The version of the Meta Ad Library API. Default is "v18.0".
         :type version: str
+        :param project_name: The name of the project. Default is the current date and time.
+        :type project_name: str
         """
 
         self.version = version
@@ -40,8 +42,6 @@ class AdLibAPI:
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
         self.log_file.setFormatter(formatter)
         self.logger.addHandler(self.log_file)
-          
-        #logging.shutdown()
 
 
     # function to fetch and process data based on url and params
@@ -91,9 +91,8 @@ class AdLibAPI:
             self.fetch_data(next_page_url, params, page_ids, page_number+1)
 
 
-    # maybe change here to provide the project_name when initiating the adlib_api object (for the logging as well)
     def add_parameters(self, fields = None, countries = 'NL', start_date = "2023-01-01", end_date = datetime.today().strftime('%Y-%m-%d'),
-                       page_ids = None, search_terms = None, project_name = datetime.now().strftime("%Y%m%d%H%M%S"), ad_type = "ALL", **kwargs):
+                       page_ids = None, search_terms = None, ad_type = "ALL", **kwargs):
         """
         Add parameters for the API request.
         See available parameters here: https://developers.facebook.com/docs/marketing-api/reference/ads_archive/
@@ -110,15 +109,11 @@ class AdLibAPI:
         :type page_ids: str
         :param search_terms: The search terms for ad filtering. Default is None. Complementary with page_ids.
         :type search_terms: str
-        :param project_name: The name of the project. Default is the current date and time.
-        :type project_name: str
         :param ad_type: The type of the ads to be retrieved. Default is "ALL"
         :type ad_type: str
         """
         if fields is None:
             fields = self.get_fields(ad_type)
-
-        self.project_name = project_name
 
         params = {
             "fields": fields,
@@ -134,7 +129,6 @@ class AdLibAPI:
 
         # accept additional parameters through kwargs**
         params.update(kwargs)
-       
 
         # page ids - the file must contain at least one column called page_id
         if page_ids is not None:
