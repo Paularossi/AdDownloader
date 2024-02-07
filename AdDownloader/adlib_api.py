@@ -66,9 +66,11 @@ class AdLibAPI:
         # check if the output json file is empty and return
         if not "data" in data:
             print("No data on page", page_number)
+            self.logger.error('No data on page %i', page_number)
             return
         if not bool(data["data"]):
             print("Page", page_number, "is empty.")
+            self.logger.warning('Page %i is empty.', page_number)
             return
         
         folder_path = f"output\\{self.project_name}\\json"
@@ -94,23 +96,24 @@ class AdLibAPI:
     def add_parameters(self, fields = None, countries = 'NL', start_date = "2023-01-01", end_date = datetime.today().strftime('%Y-%m-%d'),
                        page_ids = None, search_terms = None, ad_type = "ALL", **kwargs):
         """
-        Add parameters for the API request.
+        Add parameters for the API request. Mandatory parameters are reached countries, start and end date, and either page_ids or search_terms.
         See available parameters here: https://developers.facebook.com/docs/marketing-api/reference/ads_archive/
 
         :param fields: The fields to include in the API response. Default is None, fields are retrieved from the created AdLibApi object.
         :type fields: str
-        :param countries: The country for ad targeting. Default is 'NL'.
+        :param countries: The reached country for ad targeting. Default is 'NL'.
         :type countries: str
         :param start_date: The start date for ad delivery. Default is "2023-01-01".
         :type start_date: str
         :param end_date: The end date for ad delivery. Default is the current date.
         :type end_date: str
-        :param page_ids: The file containing page IDs. Default is None. Complementary with search_terms.
+        :param page_ids: The name of the file containing page IDs. Default is None. Complementary with search_terms.
         :type page_ids: str
-        :param search_terms: The search terms for ad filtering. Default is None. Complementary with page_ids.
+        :param search_terms: The search terms for ad filtering, in one string separated by a comma. Default is None. Complementary with page_ids.
         :type search_terms: str
-        :param ad_type: The type of the ads to be retrieved. Default is "ALL"
+        :param ad_type: The type of the ads to be retrieved. Default is "ALL", can also be "POLITICAL_AND_ISSUE_ADS".
         :type ad_type: str
+        :param kwargs**: Add additional parameters for the search query, e.g. ""
         """
         if fields is None:
             fields = self.get_fields(ad_type)
@@ -146,6 +149,8 @@ class AdLibAPI:
         else:
             print('You need to specify either pages ids or search terms.')
             self.logger.warning('You need to specify either pages ids or search terms.')
+
+        self.logger.info('You added the following parameters: %s', self.request_parameters)
             
     
     def start_download(self, params=None):
@@ -204,18 +209,25 @@ class AdLibAPI:
         """
 
         return(self.request_parameters)
+
+    
+    def clear_parameters(self):
+        """
+        Clear the current list of search parameters.]
+        """
+        self.request_parameters = {}
+        self.logger.warning('Seach parameters removed.')
     
 
     def get_fields(self, ad_type):
         """
-        Get the default fields for the API request.
+        Get the default fields for the API request, depends on the type of ads to be retrieved (All or Political). For available fields visit https://www.facebook.com/ads/library/api 
 
         :param ad_type: The type of the ads to be retrieved.
         :type ad_type: str
         :returns: A string containing the fields for the API request.
         :rtype: str
         """
-        # for available fields visit: https://developers.facebook.com/docs/marketing-api/reference/archived-ad/
         if ad_type == "ALL":
             return("id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown")
         else:
