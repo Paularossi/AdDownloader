@@ -3,7 +3,6 @@
 import pandas as pd
 import requests
 import os
-import logging
 
 from datetime import datetime
 from AdDownloader.helpers import *
@@ -13,7 +12,7 @@ class AdLibAPI:
 
     def __init__(self, access_token, version = "v18.0", project_name = datetime.now().strftime("%Y%m%d%H%M%S")):
         """
-        Initialize the AdLibAPI object.
+        Initialize the AdLibAPI object by providing a valid Meta developer token and a project name.
 
         :param access_token: The access token for authentication.
         :type access_token: str
@@ -30,21 +29,10 @@ class AdLibAPI:
         self.request_parameters = {}
         self.project_name = project_name
 
-        # create logger
-        log_path = f"output/{project_name}"
-        if not os.path.exists(log_path):
-            os.makedirs(log_path)
-
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
-
-        self.log_file = logging.FileHandler(os.path.join(log_path, "logs.log"), 'a')  # append mode
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
-        self.log_file.setFormatter(formatter)
-        self.logger.addHandler(self.log_file)
+        # create logger based on the project name
+        self.logger = configure_logging(project_name)
 
 
-    # function to fetch and process data based on url and params
     def fetch_data(self, url, params, page_ids = None, page_number = 1):
         """
         Fetch and process data based on the provided URL and parameters.
@@ -58,9 +46,10 @@ class AdLibAPI:
         :param page_number: The page number for tracking the progress. Default is 1.
         :type page_number: int
         """
+        
         print("##### Starting reading page", page_number, "#####")
         self.logger.info('Starting reading page %i', page_number)
-        response = requests.get(url, params=params)
+        response = requests.get(url, params = params)
         data = response.json()
 
         # check if the output json file is empty and return
@@ -81,16 +70,16 @@ class AdLibAPI:
         # save the data to a JSON file
         if page_ids is None:
             with open(f"{folder_path}\\{page_number}.json", "w") as json_file:
-                json.dump(data, json_file, indent=4)
+                json.dump(data, json_file, indent = 4)
         else:
             with open(f"{folder_path}\\{page_ids}_{page_number}.json", "w") as json_file:
-                json.dump(data, json_file, indent=4)
+                json.dump(data, json_file, indent = 4)
         
 
         # check if there is a next page and retrieve further data
         if "paging" in data and "next" in data["paging"]:
             next_page_url = data["paging"]["next"]
-            self.fetch_data(next_page_url, params, page_ids, page_number+1)
+            self.fetch_data(next_page_url, params, page_ids, page_number + 1)
 
 
     def add_parameters(self, fields = None, countries = 'NL', start_date = "2023-01-01", end_date = datetime.today().strftime('%Y-%m-%d'),
@@ -115,6 +104,7 @@ class AdLibAPI:
         :type ad_type: str
         :param kwargs**: Add additional parameters for the search query, e.g. ""
         """
+
         if fields is None:
             fields = self.get_fields(ad_type)
 
@@ -153,7 +143,7 @@ class AdLibAPI:
         self.logger.info('You added the following parameters: %s', self.request_parameters)
             
     
-    def start_download(self, params=None):
+    def start_download(self, params = None):
         """
         Start the download process from the Meta Ad Library API based on the provided parameters.
 
@@ -162,11 +152,12 @@ class AdLibAPI:
         :returns: A dataframe containing the downloaded and processed ad data from the Meta Online Ad Library.
         :rtype: pd.Dataframe
         """
+
         if params is None:
             params = self.request_parameters
 
         if params["search_terms"] is not None:
-            self.fetch_data(url=self.base_url, params=params, page_number=1)
+            self.fetch_data(url = self.base_url, params = params, page_number = 1)
         
         if params["search_page_ids"] is not None:
             search_page_ids_list = params["search_page_ids"]
@@ -176,7 +167,7 @@ class AdLibAPI:
                 params["search_page_ids"] = str(search_page_ids_list[i:end_index])
 
                 # call the function with the initial API endpoint and parameters
-                self.fetch_data(self.base_url, params, page_ids=f"[{i},{end_index}]", page_number=1)
+                self.fetch_data(self.base_url, params, page_ids = f"[{i},{end_index}]", page_number = 1)
         
         print("Done downloading json files for the given parameters.")
         self.logger.info('Done downloading json files for the given parameters.')
@@ -185,14 +176,14 @@ class AdLibAPI:
 
         # process into excel files:
         try:
-            final_data = transform_data(self.project_name, country=params["ad_reached_countries"], ad_type=params["ad_type"]) 
+            final_data = transform_data(self.project_name, country = params["ad_reached_countries"], ad_type = params["ad_type"]) 
             total_ads = len(final_data)
             print(f"Done processing and saving ads data for {total_ads} ads for project {self.project_name}.")
             self.logger.info('Done processing and saving ads data for %i ads for project %s.', total_ads,  self.project_name)
 
-            # close the log file
-            self.log_file.close()
-            self.logger.removeHandler(self.log_file)
+            # close the logger
+            close_logger(self.logger)
+
             return(final_data)
 
         except Exception:

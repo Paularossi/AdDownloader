@@ -9,13 +9,13 @@ import pandas as pd
 # ============================================================
 
 access_token = input() # your fb-access-token-here
-ads_api = adlib_api.AdLibAPI(access_token, project_name = "test1")
+ads_api = adlib_api.AdLibAPI(access_token, project_name = "test3")
 
 # add parameters for your search
 # for available parameters, visit https://developers.facebook.com/docs/graph-api/reference/ads_archive/
 
 # either search_terms OR search_pages_ids
-ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "burger")
+ads_api.add_parameters(countries = 'BE', start_date = "2024-01-01", end_date = "2024-01-10", search_terms = "burger")
 
 # check the parameters
 ads_api.get_parameters()

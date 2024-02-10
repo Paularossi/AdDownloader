@@ -74,6 +74,16 @@ transform_data Function
 
       [1 rows x 33 columns]
 
+configure_logging Function
+----------------------------
+
+.. autofunction:: configure_logging
+
+close_logger Function
+----------------------------
+
+.. autofunction:: close_logger
+
 update_access_token Function
 ----------------------------
 

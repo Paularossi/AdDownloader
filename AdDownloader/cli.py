@@ -41,6 +41,7 @@ default_style = style_from_dict({
 })
 
 
+#TODO: add option to go back or change already defined parameters
 def request_params_task_AC():
     """
     Prompt user for additional parameters for the API request in tasks A and C that involve ad data download from the Meta Ad Library.
@@ -160,21 +161,22 @@ def run_task_B(project_name, file_name=None):
         data = pd.read_excel(file_path)
         total_ads = len(data)
 
+        #TODO: update the token
         # ask the user if the token is still valid - otherwise the downloads won't work
-        new_token = prompt([
-            {
-                'type': 'list',
-                'name': 'is_valid',
-                'message': 'Is your access token still valid? You might need to regenerate a new one.',
-                'choices': ['No - input new one', 'Yes - it is valid']
-            },
-            {
-                'type': 'input',
-                'name': 'new_acs_tkn',
-                'message': 'Please input your updated access token',
-                'when': lambda answers: answers['is_valid'] == 'No - input new one',
-            }
-        ])
+        # new_token = prompt([
+        #     {
+        #         'type': 'list',
+        #         'name': 'is_valid',
+        #         'message': 'Is your access token still valid? You might need to regenerate a new one.',
+        #         'choices': ['No - input new one', 'Yes - it is valid']
+        #     },
+        #     {
+        #         'type': 'input',
+        #         'name': 'new_acs_tkn',
+        #         'message': 'Please input your updated access token',
+        #         'when': lambda answers: answers['is_valid'] == 'No - input new one',
+        #     }
+        # ])
 
         # update the access token in the data if needed
         #if new_token['is_valid'] == 'No - input new one':
@@ -222,8 +224,8 @@ def run_task_B(project_name, file_name=None):
         else:
             nr_ads = int(answers_down["custom_ads_nr"])
         start_media_download(project_name, nr_ads=nr_ads, data=data)
-    except Exception:
-        pass # do nothing if no data has been downloaded
+    except Exception as e:
+        print(e)
 
 
 def intro_messages():

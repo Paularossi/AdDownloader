@@ -5,6 +5,7 @@ import pandas as pd
 import os
 from datetime import datetime
 from prompt_toolkit.validation import Validator, ValidationError
+import logging
 
 
 class NumberValidator(Validator):
@@ -104,7 +105,7 @@ def load_json_from_folder(folder_path):
     :param file: A path to a folder containing JSON files with ad data.
     :type file: str
     :returns: A dataframe containing information retrieved from all JSON files of the folder.
-    :rtype: pd.DataFrame
+    :rtype: pandas.DataFrame
     """
     # get a list of all files in the specified folder
     all_files = os.listdir(folder_path)
@@ -182,7 +183,7 @@ def transform_data(project_name, country, ad_type):
     :param ad_type: The type of the ads that were retrieved (can be "All" or "Political"). Depending on the ad_type different processing will be done.
     :type ad_type: str
     :returns: If ad_type = "All" then a dataframe with the processed age_gender_reach data, if not then the original JSON processed data.
-    :rtype: pd.DataFrame
+    :rtype: pandas.DataFrame
     """
     
     folder_path = f'output\\{project_name}\\json'
@@ -225,6 +226,50 @@ def transform_data(project_name, country, ad_type):
 
     final_data.to_excel(f'{data_path}\\processed_data.xlsx', index=False)
     return final_data
+
+
+def configure_logging(project_name):
+    """
+    Configures and returns a logger with a file handler set to write logs to a specified project's log file. 
+    This function creates a log file named 'logs.log' within a directory named after the `project_name` under the 'output' directory.
+    It checks if the logger already has handlers to prevent adding multiple handlers that do the same thing, ensuring 
+    that each message is logged only once.
+
+    :param project_name: The name of the project for which logging is being configured.
+    :type project_name: str
+    :returns: A configured logger object that logs messages to 'output/<project_name>/logs.log'.
+    :rtype: logging.Logger
+    """
+
+    log_path = f"output/{project_name}"
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
+
+    logger = logging.getLogger(project_name)
+    logger.setLevel(logging.DEBUG)
+
+    log_file = logging.FileHandler(os.path.join(log_path, "logs.log"), 'a')  # append mode
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
+    log_file.setFormatter(formatter)
+
+    # Check if the logger already has handlers to prevent adding multiple handlers that do the same thing
+    if not logger.handlers:
+        logger.addHandler(log_file)
+
+    return logger
+
+
+def close_logger(logger):
+    """
+    Closes all handlers of the specified logger to ensure proper release of file resources.
+
+    :param logger: The logger instance whose handlers are to be closed.
+    :type logger: logging.Logger
+    """
+    handlers = logger.handlers[:]
+    for handler in handlers:
+        handler.close()
+        logger.removeHandler(handler)
 
 
 def update_access_token(data, new_access_token=None):

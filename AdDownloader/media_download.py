@@ -8,8 +8,8 @@ from selenium.common.exceptions import NoSuchElementException
 import requests
 import os
 import cv2
+from AdDownloader.helpers import configure_logging, close_logger
 
-#TODO: add logging tracking
 
 def download_media(media_url, media_type, ad_id, media_folder):
     """
@@ -24,7 +24,7 @@ def download_media(media_url, media_type, ad_id, media_folder):
     :param media_folder: The path to the folder where media content will be saved.
     :type media_folder: str
     """
-    # once we got the url of the media, try to download it
+    
     try:
         response = requests.get(media_url, stream=True)
         response.raise_for_status() # catch any status error
@@ -85,10 +85,14 @@ def start_media_download(project_name, nr_ads, data=[]):
     :type data: pd.DataFrame
     """
 
+    # configure logger
+    logger = configure_logging(project_name)
+
     # check if the nr of ads to download is within the length of the data
     if nr_ads > len(data):
         nr_ads = len(data)
     print(f"Downloading media content for project {project_name}.")
+    logger.info('Downloading media content for project %s', project_name)
     nr_ads_processed = 0
 
     # initialize folders for the images and videos of current category
@@ -146,6 +150,7 @@ def start_media_download(project_name, nr_ads, data=[]):
                 image_count = len(driver.find_elements(By.XPATH, multpl_img_xpath.format('*')))
                 if image_count == 0:
                     print(f"No media were downloaded for ad {data['id'][i]}.")
+                    logger.error('No media were downloaded for ad %s', data['id'][i])
                     continue
                 print(f'{image_count} media content found. Trying to retrieve all of them.')
                 
@@ -158,9 +163,13 @@ def start_media_download(project_name, nr_ads, data=[]):
                 nr_ads_processed += 1
 
     print(f'Finished saving media content for {nr_ads_processed} ads for project {project_name}.')
-    
+    logger.info('Finished saving media content for %i ads for project %s.', nr_ads_processed, project_name)
+
     # close the driver once it's done downloading
     driver.quit()
+
+    # close the logger
+    close_logger(logger)
 
 
 def extract_frames(video, project_name, interval=3):
