@@ -35,7 +35,6 @@ and (2) run the automated CLI to download ad data and media content.
 
    from AdDownloader import adlib_api
    from AdDownloader.media_download import start_media_download
-   from AdDownloader.cli import run_analysis
    import pandas as pd
 
    access_token = input() # your fb-access-token-here

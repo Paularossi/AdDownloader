@@ -103,12 +103,12 @@ venv\Scripts\activate.bat
 Once you're inside your repository and the virtual environment, to install from the wheel-file run:
 
 ```bash
-python -m pip install "dist/AdDownloader-0.2.1.tar.gz"
+python -m pip install "dist/AdDownloader-0.2.3.tar.gz"
 ```
 
 To install from source run:
 ```bash
-python -m pip install "dist/AdDownloader-0.2.1-py3-none-any.whl"
+python -m pip install "dist/AdDownloader-0.2.3-py3-none-any.whl"
 ```
 
 ### From pip
@@ -129,12 +129,12 @@ Once installed, AdDownloader can be run in two ways: as a command-line tool (CLI
 from AdDownloader import adlib_api
 from AdDownloader.media_download import start_media_download
  
-ads_api = adlib_api.AdLibAPI(your-fb-access-token-here)
+ads_api = adlib_api.AdLibAPI(your-fb-access-token-here, project_name = "test1")
 ```
 
 2. Add parameters to your search:
 ```bash
-ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza", project_name = "test1")
+ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza")
 ```
 Note that `search_terms` and `search_pages_id` are complementary.
 
@@ -155,12 +155,12 @@ start_media_download(project_name = "test1", nr_ads = 20, data = data)
 from AdDownloader import adlib_api
 from AdDownloader.media_download import start_media_download
  
-plt_ads_api = adlib_api.AdLibAPI(your-fb-access-token-here)
+plt_ads_api = adlib_api.AdLibAPI(your-fb-access-token-here, project_name = "test2")
 ```
 
 2. Add parameters to your search:
 ```bash
-plt_ads_api.add_parameters(countries = 'US', start_date = "2023-09-01", end_date = "2023-09-29", search_terms = "Joe Biden", project_name = "test2", ad_type = "POLITICAL_AND_ISSUE_ADS")
+plt_ads_api.add_parameters(countries = 'US', start_date = "2023-02-01", end_date = "2023-03-01", ad_type = "POLITICAL_AND_ISSUE_ADS", ad_active_status = "ALL", estimated_audience_size_max = 10000, languages = 'es', search_terms = "Biden")
 ```
 
 3. Check the parameters and start the download of ads data:
