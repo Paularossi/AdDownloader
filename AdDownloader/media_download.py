@@ -81,12 +81,18 @@ def start_media_download(project_name, nr_ads, data=[]):
     :type project_name: str
     :param nr_ads: The desired number of ads for which media content should be downloaded.
     :type nr_ads: int
-    :param data: A dataframe containing a ad_snapshot_url column.
-    :type data: pd.DataFrame
+    :param data: A dataframe containing an `ad_snapshot_url` column.
+    :type data: pandas.DataFrame
     """
 
     # configure logger
     logger = configure_logging(project_name)
+
+    # check if data was provided
+    if data is None or len(data) == 0:
+        logger.error("No data was provided for media download. Please try again.")
+        return(print("No data was provided for media download. Please try again."))
+
 
     # check if the nr of ads to download is within the length of the data
     if nr_ads > len(data):

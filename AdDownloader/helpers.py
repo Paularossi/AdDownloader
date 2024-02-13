@@ -6,6 +6,7 @@ import os
 from datetime import datetime
 from prompt_toolkit.validation import Validator, ValidationError
 import logging
+import ast
 
 
 class NumberValidator(Validator):
@@ -133,7 +134,7 @@ def load_json_from_folder(folder_path):
     return result_df
 
 
-# function that flattens the age_country_gender_reach_breakdown column 
+#TODO: refactor to accept an entire dataframe instead of just one row
 def flatten_age_country_gender(row, target_country):
     """
     Flatten an entry row containing the age_country_gender_reach_breakdown by putting it into wide format for a given target country.
@@ -147,9 +148,17 @@ def flatten_age_country_gender(row, target_country):
     """
     flattened_data = []
 
-    # Check if the row is empty and remove it
+    # check if the row is empty and remove it
     if isinstance(row, float) and pd.isna(row):
         return flattened_data
+    
+    # if row is a string (after loading the data from an Excel file), safely convert it back to a list
+    if isinstance(row, str):
+        try:
+            row = ast.literal_eval(row)
+        except (ValueError, SyntaxError):
+            # in case the string cannot be converted back to a list
+            return flattened_data
 
     for entry in row:
         country = entry.get('country')
@@ -196,7 +205,7 @@ def transform_data(project_name, country, ad_type):
         os.makedirs(data_path)
     df.to_excel(f'{data_path}\\original_data.xlsx', index=False)
 
-    # for political ads there is no processing to be done
+    #TODO: add processing for political ads
     if not ad_type == "ALL":
         return(df)
 
@@ -222,7 +231,7 @@ def transform_data(project_name, country, ad_type):
     final_data = df.iloc[:, :15].merge(wide_df, on="id")
     # fill the NAs in the reach columns
     selected_columns = [col for col in final_data.columns if col.startswith(('female', 'male', 'unknown'))]
-    final_data[selected_columns] = final_data[selected_columns].fillna(0)
+    #final_data[selected_columns] = final_data[selected_columns].fillna(0)
 
     final_data.to_excel(f'{data_path}\\processed_data.xlsx', index=False)
     return final_data
