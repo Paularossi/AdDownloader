@@ -12,7 +12,7 @@ Created on January 11, 2024
 
 # to build new distributions (new versions), in the cmd inside the venv run 'python -m build'
 # then, to upload the dist archives to TestPyPi, run 'python -m twine upload --repository testpypi dist/*'
-# to upload to PyPi, run 'python -m twine upload dist/*'
+# to upload to PyPi, run 'python -m twine upload dist/AdDownloader-0.2.3-py3-none-any.whl'
 # to install the package, inside the directory with venv run: 'python -m pip install AdDownloader'
 
 # any time you change the source of your project or the configuration inside pyproject.toml, 
