@@ -227,10 +227,9 @@ def transform_data(project_name, country, ad_type):
     wide_df.reset_index(inplace=True)
 
     # keep only the relevant columns and save data to csv
-    #TODO: remove index slicing here!!!
-    final_data = df.iloc[:, :15].merge(wide_df, on="id")
+    final_data = df.drop(columns=['flattened_data']).merge(wide_df, on="id")
     # fill the NAs in the reach columns
-    selected_columns = [col for col in final_data.columns if col.startswith(('female', 'male', 'unknown'))]
+    #selected_columns = [col for col in final_data.columns if col.startswith(('female', 'male', 'unknown'))]
     #final_data[selected_columns] = final_data[selected_columns].fillna(0)
 
     final_data.to_excel(f'{data_path}\\processed_data.xlsx', index=False)

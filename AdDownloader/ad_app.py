@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 # from plotly.subplots import make_subplots
 import plotly.graph_objects as go
@@ -48,8 +49,7 @@ def get_all_stopwords():
     try:
         all_stopwords = set(stopwords.words('english')) | \
                         set(stopwords.words('french')) | \
-                        set(stopwords.words('dutch')) | \
-                        set(stopwords.words('german'))
+                        set(stopwords.words('dutch'))
     except AttributeError:
         nltk.download('stopwords')
         all_stopwords = set(stopwords.words('english')) | \
@@ -68,7 +68,7 @@ def preprocess(text):
         words = word_tokenize(text)
         for word in words:
             lower_word = word.lower()
-            if lower_word.isalnum() and lower_word not in all_stopwords:
+            if lower_word.isalnum() and lower_word not in all_stopwords and not lower_word.isdigit():
                 # lemmatization
                 lemmatized_word = lemmatizer.lemmatize(lower_word)
                 processed_text.append(lemmatized_word)
@@ -130,8 +130,13 @@ def load_data(project_name):
     data = pd.read_excel(data_path)
     data[DATE_MIN] = pd.to_datetime(data[DATE_MIN])
     data[DATE_MAX] = pd.to_datetime(data[DATE_MAX])
-    data["campaign_duration"] = (data["ad_delivery_stop_time"] - data["ad_delivery_start_time"]).dt.days
 
+    data['campaign_duration'] = np.where(
+        data['ad_delivery_stop_time'].isna(),
+        (pd.Timestamp('today') - data['ad_delivery_start_time']).dt.days,
+        (data['ad_delivery_stop_time'] - data['ad_delivery_start_time']).dt.days
+    )
+    
     # check if the age_country_gender_reach_breakdown column has been processed
     if not (any(col in data.columns for col in DEMOGRAPHIC_COLS)):
         #data['flattened_data'] = data['age_country_gender_reach_breakdown'].apply(flatten_age_country_gender, target_country=country)
@@ -190,10 +195,11 @@ st.markdown('<style>div.block-container{padding-top:1rem;}</style>', unsafe_allo
 #     project_name = 'temp'
 #     st.write("No data file path provided.")
 
-project_name = "teststream"
+project_name = "testmeet"
 data = load_data(project_name)
 
 # START HERE
+st.subheader(f'Creating analytics for project {project_name}.')
 # just show the first 10 rows of the data
 st.subheader('First glance on your data')
 st.dataframe(data.head(20))
@@ -212,16 +218,18 @@ with col2:
     date2 = pd.to_datetime(st.date_input("End Date", endDate))
 
 data = data[(data[DATE_MIN] >= date1) & (data[DATE_MAX] <= date2)].copy()
-#TODO: the filter is not working for the text analysis
 
 
 # quick stats
 st.subheader('Quick stats for your data')
 unique_pages = data["page_id"].nunique()
-col1, col2, col3 = st.columns(3)
+ads_target_13 = len(data[data['target_ages'].str.contains("'13'")])
+col1, col2, col3, col11, col22 = st.columns(5)
 col1.metric(":green[Total ads]", len(data))
 col2.metric(":green[Unique pages]", unique_pages)
-col3.metric("Think of something else", "-----86%")
+col3.metric(":green[Ads targeted at teenagers]", ads_target_13)
+col11.metric(":green[Longest ad campaign]", max(data["campaign_duration"]))
+col22.metric(":green[Biggest EU reach]", max(data["eu_total_reach"]))
 
 
 # next, visualize the reach data:
