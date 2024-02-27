@@ -10,7 +10,7 @@ from AdDownloader.helpers import *
 class AdLibAPI:
     """A class representing the Meta Online Ad Library API connection point."""
 
-    def __init__(self, access_token, version = "v18.0", project_name = datetime.now().strftime("%Y%m%d%H%M%S")):
+    def __init__(self, access_token, version = "v19.0", project_name = datetime.now().strftime("%Y%m%d%H%M%S")):
         """
         Initialize the AdLibAPI object by providing a valid Meta developer token and a project name.
 

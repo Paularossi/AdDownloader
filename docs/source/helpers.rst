@@ -117,3 +117,8 @@ update_access_token Function
       >>> data = pd.read_excel('path/to/your/data.xlsx')
       >>> new_access_token = input("Provide an updated access token: ")
       >>> data = update_access_token(data, new_access_token)
+
+get_long_lived_token Function
+----------------------------
+
+.. autofunction:: get_long_lived_token

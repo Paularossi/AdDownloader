@@ -1,12 +1,14 @@
 """This module provides different helper functions for the AdDownloader."""
 
 import json
+from matplotlib.font_manager import json_dump
 import pandas as pd
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from prompt_toolkit.validation import Validator, ValidationError
 import logging
 import ast
+import requests
 
 
 class NumberValidator(Validator):
@@ -303,7 +305,7 @@ def hide_access_token(data):
 
 def update_access_token(data, new_access_token=None):
     """
-    Update the ad_snapshot_url with a new access token given ad data. 
+    Update the `ad_snapshot_url` with a new access token given ad data. 
 
     :param data: A dataframe containing a column `ad_snapshot_url`.
     :type data: pandas.DataFrame
@@ -313,6 +315,51 @@ def update_access_token(data, new_access_token=None):
     :rtype: pandas.DataFrame
     """
     if new_access_token is None:
-        new_access_token = input("Please provide an update access token: ")
+        new_access_token = input("Please provide an updated access token: ")
     data['ad_snapshot_url'] = data['ad_snapshot_url'].str.replace(r'access_token=.*$', f'access_token={new_access_token}', regex=True)
     return data
+
+
+def get_long_lived_token(access_token = None, app_id = None, app_secret = None, version = "v19.0"):
+    """
+    Generate a Meta long-lived access token, that lasts around 60 days, given a valid short-lived access token.
+    The long-lived access token and the expiration time will be saved in a `meta_long_lived_token.txt` file. The `app_id` and `app_secret` can be found inside your app at https://developers.facebook.com/apps/.
+
+    :param access_token: A valid access token, optional. If none is given, user will be prompted for inputting it.
+    :type access_token: str
+    :param app_id: A valid access token, optional. If none is given, user will be prompted for inputting it.
+    :type app_id: str
+    :param app_secret: A valid access token, optional. If none is given, user will be prompted for inputting it.
+    :type app_secret: str
+    """
+
+    url = f"https://graph.facebook.com/{version}/oauth/access_token"
+    if access_token is None:
+        access_token = input("Please provide a valid access token: ")
+
+    if app_id is None:
+        app_id = input("Please provide a valid app ID: ")
+
+    if app_secret is None:
+        app_secret = input("Please provide a valid app secret: ")
+
+    params = {
+        "grant_type": "fb_exchange_token",
+        "client_id": app_id,
+        "client_secret": app_secret,
+        "fb_exchange_token": access_token
+    }
+
+    response = requests.get(url, params=params)
+    response = response.json()
+    if not "access_token" in response:
+        print("Error encountered while trying to generate a long-lived token.")
+        return
+    
+    expires_in = timedelta(seconds = response["expires_in"])
+    response["expires_in"] = str(expires_in)
+    
+    with open("meta_long_lived_token.txt", "w") as file:
+        json.dump(response, file, indent = 4)
+    
+    print(f"Long-lived token generated and saved successfully inside {file.name}.")
