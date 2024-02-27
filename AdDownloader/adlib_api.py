@@ -102,7 +102,7 @@ class AdLibAPI:
         :type search_terms: str
         :param ad_type: The type of the ads to be retrieved. Default is "ALL", can also be "POLITICAL_AND_ISSUE_ADS".
         :type ad_type: str
-        :param kwargs**: Add additional parameters for the search query, e.g. ""
+        :param kwargs**: Add additional parameters for the search query, e.g. "estimated_audience_size_max = 10000"
         """
 
         if fields is None:
@@ -150,7 +150,7 @@ class AdLibAPI:
         :param params: The parameters for the API request. Default is None, parameters are retrieved from the created AdLibApi object.
         :type params: dict
         :returns: A dataframe containing the downloaded and processed ad data from the Meta Online Ad Library.
-        :rtype: pd.Dataframe
+        :rtype: pandas.Dataframe
         """
 
         if params is None:

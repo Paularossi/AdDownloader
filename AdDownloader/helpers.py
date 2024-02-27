@@ -25,7 +25,7 @@ class NumberValidator(Validator):
         except ValueError:
             raise ValidationError(
                 message='Please enter a number',
-                cursor_position=len(document.text))  # Move cursor to end
+                cursor_position=len(document.text))  # move cursor to end
         
 class DateValidator(Validator):
     """A class representing a date validator."""
@@ -43,7 +43,7 @@ class DateValidator(Validator):
         except ValueError:
             raise ValidationError(
                 message='Please enter a valid date',
-                cursor_position=len(document.text))  # Move cursor to end
+                cursor_position=len(document.text))
 
 class CountryValidator(Validator):
     """A class representing a country code validator."""
@@ -95,7 +95,7 @@ def is_valid_excel_file(file):
         # try to read the excel file
         pd.read_excel(path)
         return True
-    except Exception as e:  # catches any exception when trying to read
+    except Exception as e:  # catch any exception when trying to read
         return False
 
 
@@ -134,12 +134,11 @@ def load_json_from_folder(folder_path):
     return result_df
 
 
-#TODO: refactor to accept an entire dataframe instead of just one row
 def flatten_age_country_gender(row, target_country):
     """
     Flatten an entry row containing the age_country_gender_reach_breakdown by putting it into wide format for a given target country.
 
-    :param row: A row in JSON format containing age_country_gender_reach_breakdown data.
+    :param row: A row in JSON format containing `age_country_gender_reach_breakdown` data.
     :type row: list
     :param target_country: The target country for which the reach data will be processed.
     :type target_country: str
@@ -167,15 +166,38 @@ def flatten_age_country_gender(row, target_country):
             for age_gender_entry in age_gender_data:
                 # exclude entries with 'Unknown' age range
                 if age_gender_entry.get('age_range', '').lower() != 'unknown':
-                    # extract each field and flatten it together
-                    flattened_entry = {
-                        'country': country,
-                        'age_range': age_gender_entry.get('age_range', ''),
-                        'male': age_gender_entry.get('male', 0),
-                        'female': age_gender_entry.get('female', 0),
-                        'unknown': age_gender_entry.get('unknown', 0)
-                    }
-                    flattened_data.append(flattened_entry)
+                    age_range = age_gender_entry['age_range']
+                    male_count = age_gender_entry.get('male', 0)
+                    female_count = age_gender_entry.get('female', 0)
+                    unknown_count = age_gender_entry.get('unknown', 0)
+
+                    # add all the entries to the flattened data                   
+                    flattened_data[f"{country}_{age_range}_male"] = male_count
+                    flattened_data[f"{country}_{age_range}_female"] = female_count
+                    flattened_data[f"{country}_{age_range}_unknown"] = unknown_count
+
+    return flattened_data
+
+
+def flatten_demographic_distribution(row):
+    """
+    Flatten the demographic distribution data from a single row into a dictionary.
+
+    This function takes a single row of demographic distribution data, which is typically a list of dictionaries containing percentage, age, and gender information. It flattens this nested structure into a dictionary with keys formatted as "{gender}_{age}" and corresponding percentage values.
+
+    :param row: A row of demographic distribution data, typically a list of dictionaries.
+    :type row: list
+    :returns: A dictionary where keys are formatted as "{gender}_{age}" and values are the corresponding percentage values.
+    :rtype: dict
+    """
+    flattened_data = {}
+    if isinstance(row, float) and pd.isna(row):
+        return flattened_data
+
+    for entry in row:
+        key = f"{entry['gender']}_{entry['age']}"
+        flattened_data[key] = float(entry['percentage'])
+
     return flattened_data
 
 
@@ -189,7 +211,7 @@ def transform_data(project_name, country, ad_type):
     :type project_name: str
     :param country: The target country for which the data will be transformed.
     :type country: str
-    :param ad_type: The type of the ads that were retrieved (can be "All" or "Political"). Depending on the ad_type different processing will be done.
+    :param ad_type: The type of the ads that were retrieved (can be "All" or "Political"). Depending on the `ad_type` different processing will be done.
     :type ad_type: str
     :returns: If ad_type = "All" then a dataframe with the processed age_gender_reach data, if not then the original JSON processed data.
     :rtype: pandas.DataFrame
@@ -203,35 +225,21 @@ def transform_data(project_name, country, ad_type):
     # check if the folder exists
     if not os.path.exists(data_path):
         os.makedirs(data_path)
+    # save the original data as it came from the API
     df.to_excel(f'{data_path}\\original_data.xlsx', index=False)
 
-    #TODO: add processing for political ads
-    if not ad_type == "ALL":
-        return(df)
+    # flatten the reach data (age-country-gender or demographic-distribution)
+    if ad_type == "ALL":
+        wide_df = pd.DataFrame(df['age_country_gender_reach_breakdown'].apply(flatten_age_country_gender, country).tolist())  
+    else:
+        wide_df = pd.DataFrame(df['demographic_distribution'].apply(flatten_demographic_distribution).tolist())
+              
 
-    # flatten the age_country_gender_breakdown for each ad
-    df['flattened_data'] = df['age_country_gender_reach_breakdown'].apply(flatten_age_country_gender, target_country=country)
-    # create a new DataFrame from the flattened data
-    flattened_df = pd.DataFrame(df['flattened_data'].sum()) 
-
-    # create a list of ids for the flattened data
-    id_list = []
-    for index, row in df.iterrows():
-        id_list.extend([row['id']] * len(row['flattened_data']))
-    flattened_df['id'] = id_list
-
-    # convert to wide format
-    wide_df = flattened_df.pivot_table(index=['id'], columns='age_range', values=['male', 'female', 'unknown'], aggfunc='first')
-    # change the column names and reset the index
-    wide_df.columns = ['_'.join(col) for col in wide_df.columns.values]
-    wide_df.reset_index(inplace=True)
-
-    # keep only the relevant columns and save data to csv
-    final_data = df.drop(columns=['flattened_data']).merge(wide_df, on="id")
-    # fill the NAs in the reach columns
-    #selected_columns = [col for col in final_data.columns if col.startswith(('female', 'male', 'unknown'))]
-    #final_data[selected_columns] = final_data[selected_columns].fillna(0)
-
+    # reorder the columns alphabetically and save the processed data to a different file
+    wide_df = wide_df.reindex(sorted(wide_df.columns), axis=1)
+    final_data = pd.concat([df, wide_df], axis=1)
+    
+    final_data = hide_access_token(final_data)
     final_data.to_excel(f'{data_path}\\processed_data.xlsx', index=False)
     return final_data
 
@@ -280,16 +288,29 @@ def close_logger(logger):
         logger.removeHandler(handler)
 
 
+def hide_access_token(data):
+    """
+    Remove the access token from `ad_snapshot_url` column. This can be readded by calling `update_access_token()`. 
+
+    :param data: A dataframe containing a column `ad_snapshot_url`.
+    :type data: pandas.DataFrame
+    :returns: A dataframe with the access token removed from the `ad_snapshot_url` column.
+    :rtype: pandas.DataFrame
+    """
+    data['ad_snapshot_url'] = data['ad_snapshot_url'].str.replace(r'access_token=.*$', 'access_token={access_token}', regex=True)
+    return data
+
+
 def update_access_token(data, new_access_token=None):
     """
     Update the ad_snapshot_url with a new access token given ad data. 
 
-    :param data: A dataframe containing a column ad_snapshot_url.
-    :type data: pd.DataFrame
+    :param data: A dataframe containing a column `ad_snapshot_url`.
+    :type data: pandas.DataFrame
     :param new_access_token: The new access token, optional. If none is given, user will be prompted for inputting it.
     :type new_access_token: str
-    :returns: A dataframe with the processed age_gender_reach data.
-    :rtype: pd.DataFrame
+    :returns: A dataframe with an updated access token in the `ad_snapshot_url` column.
+    :rtype: pandas.DataFrame
     """
     if new_access_token is None:
         new_access_token = input("Please provide an update access token: ")

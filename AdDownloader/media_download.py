@@ -70,6 +70,8 @@ def accept_cookies(driver):
         print("Cookies accepted.")
     except NoSuchElementException:
         print("Cookies already accepted.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 
 def start_media_download(project_name, nr_ads, data=[]):
@@ -113,51 +115,78 @@ def start_media_download(project_name, nr_ads, data=[]):
         os.makedirs(folder_path_vid)
     
     # define some constants first
-    img_xpath = '//*[@id="content"]/div/div/div/div/div/div/div[2]/a/div[1]/img'
-    video_xpath = '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/video'
+    img_xpath_1 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/a/div[1]/img'
+    img_xpath_2 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/img'
+    video_xpath_1 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/video'
+    video_xpath_2 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/video'
     #multpl_img_xpath = '//*[@id="content"]/div/div/div/div/div/div/div[3]/div/div/div/div[{}]/div/div/a/div[1]/img'
     # //*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/img
     multpl_img_xpath = '//*[@id="content"]/div/div/div/div/div/div/div[3]/div/div/div/div[{}]/div/div/div/img'
 
-    # start the downloads here, accept cookies
-    driver = webdriver.Chrome()
     # sample the nr_ads
     data = data.sample(nr_ads)
     data = data.reset_index(drop=True)
 
+    # start the downloads here, accept cookies
+    driver = webdriver.Chrome()
+
     driver.get(data['ad_snapshot_url'][0]) # start from here to accept cookies
     accept_cookies(driver)    
-
+    
     # for each ad in the dataset download the media
     for i in range(0, nr_ads): #TODO: randomize the ads to download
         # get the target ad
+        success = False
         driver.get(data['ad_snapshot_url'][i])
 
-        try: # first try to get the img
-            img_element = driver.find_element(By.XPATH, img_xpath)
+        try: # first try to get the img using first xpath
+            img_element = driver.find_element(By.XPATH, img_xpath_1)
             # if it's found, get its url and download it
             media_url = img_element.get_attribute('src')
             media_type = 'image'
             download_media(media_url, media_type, str(data['id'][i]), folder_path_img)
             nr_ads_processed += 1
+            success = True
 
         except NoSuchElementException: 
-            try: # otherwise try to find the video
-                video_element = driver.find_element(By.XPATH, video_xpath)
+            try: # otherwise try the second xpath
+                img_element = driver.find_element(By.XPATH, img_xpath_2)
+                # if it's found, get its url and download it
+                media_url = img_element.get_attribute('src')
+                media_type = 'image'
+                download_media(media_url, media_type, str(data['id'][i]), folder_path_img)
+                nr_ads_processed += 1
+                success = True
+
+            except NoSuchElementException: 
+                pass
+
+        try: # if it's not an image, try to find the video with first xpath
+            video_element = driver.find_element(By.XPATH, video_xpath_2)
+            # if it's found, get its url and download it
+            media_url = video_element.get_attribute('src')
+            media_type = 'video'
+            download_media(media_url, media_type, str(data['id'][i]), folder_path_vid)
+            nr_ads_processed += 1
+            success = True
+        
+        except NoSuchElementException:
+            try: # otherwise try the second xpath
+                video_element = driver.find_element(By.XPATH, video_xpath_1)
                 # if it's found, get its url and download it
                 media_url = video_element.get_attribute('src')
                 media_type = 'video'
                 download_media(media_url, media_type, str(data['id'][i]), folder_path_vid)
                 nr_ads_processed += 1
+                success = True
             
             except NoSuchElementException:
-                # means there must be more than 1 image:
-                # determine the number of images on the page
-                image_count = len(driver.find_elements(By.XPATH, multpl_img_xpath.format('*')))
-                if image_count == 0:
-                    print(f"No media were downloaded for ad {data['id'][i]}.")
-                    logger.error('No media were downloaded for ad %s', data['id'][i])
-                    continue
+                pass
+
+        try: # check if there is more than one image
+            # determine the number of images on the page
+            image_count = len(driver.find_elements(By.XPATH, multpl_img_xpath.format('*')))
+            if image_count > 0:
                 print(f'{image_count} media content found. Trying to retrieve all of them.')
                 
                 # iterate over the images and download each one
@@ -167,6 +196,14 @@ def start_media_download(project_name, nr_ads, data=[]):
                     media_type = 'image'
                     download_media(media_url, media_type, f"{str(data['id'][i])}_{img_index}", folder_path_img)
                 nr_ads_processed += 1
+                success = True
+        
+        except NoSuchElementException:
+            pass
+
+        if not success:
+            print(f"No media were downloaded for ad {data['id'][i]}.")
+            logger.error('No media were downloaded for ad %s', data['id'][i])
 
     print(f'Finished saving media content for {nr_ads_processed} ads for project {project_name}.')
     logger.info('Finished saving media content for %i ads for project %s.', nr_ads_processed, project_name)

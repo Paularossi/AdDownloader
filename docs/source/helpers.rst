@@ -52,11 +52,23 @@ flatten_age_country_gender Function
 
    Example::
 
-      >>> row_example = [{"country": "NL", "age_gender_breakdowns": [{"age_range": "18-24", "male": 100, "female": 50, "unknown": 10}]}]
+      >>> row_example = [{"country": "NL", "age_gender_breakdowns": [{"age_range": "18-24", "male": 100, "female": 50, "unknown": 10}, ...]}]
       >>> target_country_example = "NL"
       >>> flattened_data = flatten_age_country_gender(row_example, target_country_example)
       >>> print(flattened_data)
-      [{'country': 'NL', 'age_range': '18-24', 'male': 100, 'female': 50, 'unknown': 10}]
+      [{'country': 'NL', 'age_range': '18-24', 'male': 100, 'female': 50, 'unknown': 10}, ...]
+
+flatten_demographic_distribution Function
+-----------------------------------
+
+.. autofunction:: flatten_demographic_distribution
+
+   Example::
+
+      >>> row_example = [{'percentage': '0.113043', 'age': '45-54', 'gender': 'male'}, {'percentage': '0.008696', 'age': '25-34', 'gender': 'female'}, ...]
+      >>> flattened_data = flatten_demographic_distribution(row_example)
+      >>> print(flattened_data)
+      {'male_45-54': 0.113043, 'female_25-34': 0.008696, ...}
 
 transform_data Function
 -----------------------
@@ -83,6 +95,17 @@ close_logger Function
 ----------------------------
 
 .. autofunction:: close_logger
+
+hide_access_token Function
+----------------------------
+
+.. autofunction:: hide_access_token
+
+   Example::
+
+      >>> data = pd.read_excel('path/to/your/data.xlsx')
+      >>> data = hide_access_token(data)
+      >>> data.to_excel('path/to/your/data.xlsx', index=False)
 
 update_access_token Function
 ----------------------------
