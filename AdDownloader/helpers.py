@@ -1,7 +1,6 @@
 """This module provides different helper functions for the AdDownloader."""
 
 import json
-from matplotlib.font_manager import json_dump
 import pandas as pd
 import os
 from datetime import datetime, timedelta
@@ -228,7 +227,7 @@ def transform_data(project_name, country, ad_type):
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     # save the original data as it came from the API
-    df.to_excel(f'{data_path}\\original_data.xlsx', index=False)
+    df.to_excel(f'{data_path}/{project_name}_original_data.xlsx', index=False)
 
     # flatten the reach data (age-country-gender or demographic-distribution)
     if ad_type == "ALL":
@@ -242,7 +241,7 @@ def transform_data(project_name, country, ad_type):
     final_data = pd.concat([df, wide_df], axis=1)
     
     final_data = hide_access_token(final_data)
-    final_data.to_excel(f'{data_path}\\processed_data.xlsx', index=False)
+    final_data.to_excel(f'{data_path}/{project_name}_processed_data.xlsx', index=False)
     return final_data
 
 
