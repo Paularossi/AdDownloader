@@ -2,11 +2,12 @@ import datetime
 import base64
 import io
 from dash import Dash, dcc, html, callback, Input, Output, State, dash_table, no_update
+from matplotlib import table
 import plotly.express as px
 import pandas as pd
 from AdDownloader import analysis
 
-# add to dependencies: dash==2.15.0, plotly==5.18.0(?)
+# add to dependencies: plotly==5.18.0(?)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -40,12 +41,13 @@ app.layout = html.Div([
         },
         multiple = False
     ),
-    html.Div(id='output-div'),
     html.Div(id='output-datatable'),
+    html.Div(id='output-div'),
 ])
 
 
 def parse_contents(contents, filename, date):
+    # parse the contents of the uploaded file and return a table of the data
     content_type, content_string = contents.split(',')
 
     decoded = base64.b64decode(content_string)
@@ -65,13 +67,12 @@ def parse_contents(contents, filename, date):
         ])
     
     try:
-        fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8 = analysis.get_graphs(df)
-    except Exception as e:
-        return html.Div([html.H5(f"Failed to get graphs. Try uploading another file. Error: {e}")])
+        project_name = filename.split('_')[0]
+    except:
+        project_name = filename
 
-    graphs_children = html.Div([
-        #TODO: add project name instead of filename
-        html.H5(filename),
+    table_children = html.Div([
+        html.H5(f"Currently showing project {project_name}."),
         # html.P("Inset X axis data"),
         # dcc.Dropdown(id='xaxis-data',
         #              options=[{'label':x, 'value':x} for x in df.columns]),
@@ -87,7 +88,7 @@ def parse_contents(contents, filename, date):
             fixed_rows={'headers': True},
             fixed_columns={'headers': True},
             page_size=15,
-            # add horizontal scrolling
+            # add scrolling option
             style_table={'overflowX': 'auto', 'overflowY': 'auto', 'height': '300px'},
             style_cell={
                 'overflow': 'hidden',
@@ -108,8 +109,40 @@ def parse_contents(contents, filename, date):
         ),
         dcc.Store(id='stored-data', data=df.to_dict('records')),
 
-        html.Hr(),
+        html.Hr()
 
+    ])
+
+    return table_children
+
+
+@app.callback(Output('output-datatable', 'children'),
+              Input('upload-data', 'contents'),
+              State('upload-data', 'filename'),
+              State('upload-data', 'last_modified'))
+def update_output(contents, filename, last_modified):
+    if contents is not None:
+        #children = [parse_contents(c, n, d) for c, n, d in zip(contents, filename, last_modified)]
+        children = parse_contents(contents, filename, last_modified)
+        return children
+
+
+@app.callback(Output('output-div', 'children'),
+              Input('submit-button', 'n_clicks'),
+              State('stored-data', 'data'))
+def make_graphs(n, data):
+    if n is None:
+        return no_update
+    
+    else:
+        try:
+            df = pd.DataFrame(data)
+            # not working - list has no attribute groupby
+            fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8 = analysis.get_graphs(df)
+        except Exception as e:
+            return html.Div([html.H5(f"Failed to get graphs. Try uploading another file. Error: {e}")])
+        
+    graphs_children = html.Div([
         html.H2('Quick stats for your data'),
         html.Div([
             html.Div([
@@ -176,87 +209,14 @@ def parse_contents(contents, filename, date):
 
         html.H2('Ad Creative Analysis.'),
         html.H6('To be continued...', style={"color": "red"})
-
-        # html.Div([
-        #     html.H1('Plots:'),
-        #     html.Div('Third plot.'),
-
-        #     dcc.Graph(
-        #         id='graph3',
-        #         figure=fig3
-        #     ),
-        # ])
-
     ])
-
+        
     return graphs_children
-
-
-@app.callback(Output('output-datatable', 'children'),
-              Input('upload-data', 'contents'),
-              State('upload-data', 'filename'),
-              State('upload-data', 'last_modified'))
-def update_output(contents, filename, last_modified):
-    if contents is not None:
-        #children = [parse_contents(c, n, d) for c, n, d in zip(contents, filename, last_modified)]
-        children = parse_contents(contents, filename, last_modified)
-        return children
-
-
-# @app.callback(Output('output-div', 'children'),
-#               Input('submit-button','n_clicks'),
-#               State('stored-data','data'))
-# def make_graphs(n, data, x_data, y_data):
-#     if n is None:
-#         return no_update
-#     else:
-#         bar_fig = px.bar(data, x=x_data, y=y_data)
-#         # print(data)
-#         return dcc.Graph(figure=bar_fig)
 
 
 if __name__ == '__main__':
     app.run_server(debug=True)
 
-
-""" # define callback to load data from uploaded file
-@app.callback(
-    Output('store', 'data'),
-    [Input('upload-data', 'contents')],
-    [State('upload-data', 'filename')],
-    prevent_initial_call=True
-)
-def load_data_from_upload(contents, filename):
-    if contents is not None:
-        content_type, content_string = contents[0].split(',')
-        decoded = base64.b64decode(content_string)
-        try:
-            if 'xls' in filename:
-                # assume that the user uploaded an Excel file
-                data = analysis.load_data(io.BytesIO(decoded.decode('utf-8')))
-                #TODO: Invalid file path or buffer object type: <class 'dict'> here
-                return(data.to_json(orient='split'))
-            else:
-                return html.Div('Unsupported file format. Please upload an Excel file.')
-        except Exception as e:
-            print(e)
-            return None
-
-
-@app.callback(
-        Output('output-data-upload', 'children'),
-        Input('store', 'data'),
-        prevent_initial_call=True)
-def output_data(stored_data):
-    df = pd.read_json(stored_data, orient='split')
-    return html.Div([
-        dash_table.DataTable(
-            df.to_dict('records'),
-            [{'name': i, 'id': i} for i in df.columns]
-        ),
-        html.Hr(),  # horizontal line
-    ])
- """
 
 """ 
     html.Div([
@@ -308,14 +268,3 @@ def output_data(stored_data):
             ]),
         ]),
     ]), """
-
-# Define callback to update data based on date range
-# @app.callback(
-#     Output('data', 'children'),
-#     [Input('date-range', 'start_date'),
-#      Input('date-range', 'end_date')]
-# )
-# def update_data(start_date, end_date):
-#     filtered_data = data[(data[DATE_MIN] >= start_date) & (data[DATE_MAX] <= end_date)].copy()
-#     return filtered_data.to_json()
-

@@ -40,7 +40,7 @@ start_media_download Function
         >>> start_media_download(project_name = "test1", nr_ads = 20, data = data)
 
 extract_frames Function
------------------------------
+-----------------------
 
 .. autofunction:: extract_frames
 

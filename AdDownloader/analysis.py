@@ -1,4 +1,4 @@
-"""This module provides different text and image analysis functions for the AdDownloader."""
+"""This module provides different text and image analysis, and visualization functions for the AdDownloader."""
 
 #import cv2
 import numpy as np
@@ -26,8 +26,7 @@ import plotly.express as px
 
 
 
-# add to the dependencies: transformers==4.37.2, torch==2.2.0, torchvision==0.17.0 (check if needed?), 
-# wordcloud==1.9.3, textblob==0.17.1, gensim==4.3.2, spacy==3.7.4
+# add to the dependencies: transformers==4.37.2, torch==2.2.0, torchvision==0.17.0 (check if needed?), spacy==3.7.4
 
 # text analysis
 #nltk.download('stopwords')
@@ -52,22 +51,16 @@ DEMOGRAPHIC_COLS = ['female_13-17', 'female_18-24', 'female_25-34', 'female_35-4
 GENDERS = ['female', 'male', 'unknown']
 AGE_RANGES = ['13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+']
 
-# separate demographic columns into genders
-female_columns = [col for col in DEMOGRAPHIC_COLS if 'female' in col]
-male_columns = [col for col in DEMOGRAPHIC_COLS if 'male' in col and not 'female' in col]
-unknown_columns = [col for col in DEMOGRAPHIC_COLS if 'unknown' in col]
-
-# separate demographic columns into age ranges
-age_13_17_columns = [col for col in DEMOGRAPHIC_COLS if '13-17' in col]
-age_18_24_columns = [col for col in DEMOGRAPHIC_COLS if '18-24' in col]
-age_25_34_columns = [col for col in DEMOGRAPHIC_COLS if '25-34' in col]
-age_35_44_columns = [col for col in DEMOGRAPHIC_COLS if '35-44' in col]
-age_45_54_columns = [col for col in DEMOGRAPHIC_COLS if '45-54' in col]
-age_55_64_columns = [col for col in DEMOGRAPHIC_COLS if '55-64' in col]
-age_65_columns = [col for col in DEMOGRAPHIC_COLS if '65+' in col]
-
 
 def load_data(data_path):
+    """
+    Load ads data from an Excel file into a dataframe given a valid path.
+
+    :param data_path: A valid path to an Excel file containing ad data.
+    :type data_path: str
+    :returns: A dataframe containing ads data and an additional campaign duration column.
+    :rtype: pandas.DataFrame
+    """
     try:
         data = pd.read_excel(data_path)
         data[DATE_MIN] = pd.to_datetime(data[DATE_MIN])
@@ -81,11 +74,19 @@ def load_data(data_path):
         return data
     except Exception as e:
         #print(f"Error while trying to load the data. Check if there exists a file output/{project_name}/ads_data/processed_data.xlsx")
-        print("Unable to load data.")
+        print(f"Unable to load data. Error: {e}")
         return None
 
 
 def preprocess(text):
+    """
+    Preprocesses the input text by tokenizing, lowercasing, removing stopwords, and lemmatizing.
+
+    :param text: The input text to be preprocessed.
+    :type text: str
+    :return: A list of preprocessed words.
+    :rtype: list
+    """
     processed_text = []
     lemmatizer = WordNetLemmatizer()
     try: # otherwise throws an error if Nan
@@ -104,24 +105,36 @@ def preprocess(text):
 
 
 def get_word_freq(tokens):
+    """
+    Calculate word frequencies and generate a word cloud.
+
+    :param tokens: A list of tokenized words, created using the `preprocess` function from this module.
+    :type tokens: list
+    :return: A tuple containing the word frequency distribution (FreqDist) and the generated word cloud (WordCloud).
+    :rtype: tuple
+    """
     # calculate word frequencies
     merged_tkn = []
     for lst in tokens:
         merged_tkn += lst
     fd = FreqDist(merged_tkn) # takes a list of strings as input
-    #fd.tabulate()
-    #print(f"Most common 10 keywords: {fd.most_common(10)}")
+    # fd.tabulate()
 
     wc_tokens = ' '.join(merged_tkn)
-    wc = WordCloud(background_color="white").generate(wc_tokens) # only takes a string as input
-    #plt.imshow(wc, interpolation='bilinear')
-    #plt.axis("off")
-    #plt.show()
+    wc = WordCloud(collocations = False, background_color="white").generate(wc_tokens) # only takes a string as input
 
     return fd, wc
 
 
 def get_sentiment(captions):
+    """
+    Retrieve the sentiment of the ad captions using two libraries: Vader from NLTK and TextBlob.
+
+    :param captions: A pandas Series containing ad captions.
+    :type captions: pandas.Series
+    :return: A tuple containing sentiment scores calculated using TextBlob and Vader.
+    :rtype: tuple
+    """
     # sentiment analysis using textblob
     textblb_sent = captions.apply(lambda v: TextBlob(v).sentiment.polarity)
 
@@ -132,24 +145,29 @@ def get_sentiment(captions):
     return textblb_sent, nltk_sent
 
 
-def get_topics(tokens):
-    # TOPIC MODELING
+def get_topics(tokens, topics = 3):
+    """
+    Perform topic modeling on a given set of tokens using Latent Dirichlet Allocation (LDA).
+    The coherence score of the model can be improved by adjusting the number of topics or the hyperparameters of LDA.
+
+    :param tokens: A list of tokenized words, created using the `preprocess` function from this module.
+    :type tokens: list
+    :param topics: The number of topics to extract (default is 3).
+    :type topics: int, optional
+    :return: A tuple containing the trained LDA model and the coherence score.
+    :rtype: tuple
+    """
     # create a dictionary and a corpus
     dictionary = corpora.Dictionary(tokens) # only accepts an array of unicode tokens on input
     corpus = [dictionary.doc2bow(text) for text in tokens]
 
     # create a gensim lda models
-    lda_model = LdaModel(corpus, num_topics=3, id2word=dictionary, passes=20)
-
-    #for idx, topic in lda_model.print_topics(num_words=5):
-    #    print("Topic: {} \nWords: {}".format(idx + 1, topic))
-    #    print("\n")
+    lda_model = LdaModel(corpus, num_topics = topics, id2word = dictionary, passes = 20)
 
     # evaluate model coherence - the degree of semantic similarity between high scoring words in each topic
     # c_v - frequency of the top words and their degree of co-occurrence
     coherence_model_lda = CoherenceModel(model=lda_model, texts=tokens, dictionary=dictionary, coherence='c_v')
     coherence_lda = coherence_model_lda.get_coherence()
-    #print('\nCoherence Score:', coherence_lda)
     # to improve this score, we can adjust the number of topics, the hyperparameters of the lda model (alpha and beta), or experiment with preprocessing 
 
     #TODO: need to adapt for different languages?
@@ -158,18 +176,43 @@ def get_topics(tokens):
 
 
 # main function
-def start_analysis(data):
+def start_text_analysis(data):
+    """
+    Perform text analysis including preprocessing, word frequency calculation, sentiment analysis, and topic modeling.
+
+    :param data: A pandas DataFrame containing an `ad_creative_bodies` column with ad captions.
+    :type data: pandas.DataFrame
+    :return: A tuple containing the word frequency distribution, word cloud, sentiment scores using TextBlob and Vader, LDA model, and coherence score.
+    :rtype: tuple
+    """
     captions = data["ad_creative_bodies"].dropna()
     tokens = captions.apply(preprocess)
 
-    fd, wc = get_word_freq(tokens)
+    freq_dist, word_cl = get_word_freq(tokens)
 
-    get_sentiment(captions)
+    textblb_sent, nltk_sent = get_sentiment(captions)
 
     lda_model, coherence = get_topics(tokens)
+    return freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence
 
 
 def get_graphs(data):
+    """
+    Generate various graphs based on ad data. These include: 
+    - Total reach by `ad_delivery_start_time`
+    - Total reach distribution (overall)
+    - Number of ads per page
+    - Top 20 pages with most ads
+    - Total reach by page
+    - Top 20 pages by reach
+    - Ad campaign duration distribution
+    - Ad campaign duration vs. total reachs
+
+    :param data: A pandas DataFrame containing ad data.
+    :type data: pandas.DataFrame
+    :return: A tuple containing multiple Plotly figures representing different visualizations.
+    :rtype: tuple
+    """
     
     # total reach by ad_delivery_start_time (cohort)
     ad_start_cohort = data.groupby("ad_delivery_start_time")['eu_total_reach'].sum().reset_index()
@@ -235,103 +278,8 @@ def get_graphs(data):
                  title='Campaign Duration vs. EU Total Reach',
                  labels={'campaign_duration': 'Campaign Duration (Days)', 'eu_total_reach': 'EU Total Reach'})
 
-
-    """
-    # total reach distribution (overall) - VERY skewed
-    plt.figure(figsize=(10, 6))
-    plt.hist(data['eu_total_reach'], bins=20, color='skyblue', edgecolor='black') 
-    plt.title('Distribution of EU total reach ')
-    plt.xlabel('EU total reach')
-    plt.ylabel('Number of Pages')
-    plt.grid(axis='y', alpha=0.75)
-    plt.show()
-
-    # unique page_ids
-    #unique_pages = data["page_id"].nunique()
-    #print(f"Number of unique page_ids: {unique_pages}.")
-
-    # nr of ads per page - very skewed
-    nr_ads_per_page = data.groupby(["page_id", "page_name"])["id"].count().reset_index(name="nr_ads")
-
-    plt.figure(figsize=(10, 6))
-    plt.hist(nr_ads_per_page['nr_ads'], bins=20, color='skyblue', edgecolor='black') 
-    plt.title('Distribution of Ads per Page')
-    plt.xlabel('Number of Ads')
-    plt.ylabel('Number of Pages')
-    plt.grid(axis='y', alpha=0.75)
-    plt.show() 
-
-    # top 20 pages with most ads
-    nr_ads_per_page_sorted = nr_ads_per_page.sort_values(by="nr_ads", ascending=False).head(20) 
-
-    plt.figure(figsize=(10, 8))
-    plt.bar(nr_ads_per_page_sorted['page_name'], nr_ads_per_page_sorted['nr_ads'], color='skyblue')
-    plt.xlabel('Page Name')
-    plt.ylabel('Number of Ads')
-    plt.xticks(rotation=45, ha="right")
-    plt.title('Top 20 pages by number of ads')
-    plt.tight_layout() 
-    plt.show()
-
-    # total reach per page - very skewed 
-    reach_by_page = data.groupby(["page_id", "page_name"])["eu_total_reach"].sum().reset_index(name="eu_total_reach")
-
-    plt.figure(figsize=(10, 6))
-    plt.hist(reach_by_page['eu_total_reach'], bins=20, color='skyblue', edgecolor='black') 
-    plt.title('Distribution of EU total reach per Page')
-    plt.xlabel('Total EU reach')
-    plt.ylabel('Number of Pages')
-    plt.grid(axis='y', alpha=0.75)
-    plt.show()
-
-    # top 20 pages with highest total reach
-    reach_by_page_sorted = reach_by_page.sort_values(by="eu_total_reach", ascending=False).head(20) 
-
-    plt.figure(figsize=(10, 8))
-    plt.bar(reach_by_page_sorted['page_name'], reach_by_page_sorted['eu_total_reach'], color='skyblue')
-    plt.xlabel('Page Name')
-    plt.ylabel('EU total reach')
-    plt.xticks(rotation=45, ha="right")
-    plt.title('Top 20 pages by EU total reach (for all ads)')
-    plt.tight_layout() 
-    plt.show()
-
-    # ad campain duration distribution
-    data["campaign_duration"] = (data["ad_delivery_stop_time"] - data["ad_delivery_start_time"]).dt.days
-
-    plt.figure(figsize=(10, 6))
-    plt.hist(data["campaign_duration"], bins=20, color='skyblue', edgecolor='black') 
-    plt.title('Distribution of ad campaign duration')
-    plt.xlabel('Duration of the ad campaign (days)')
-    plt.ylabel('Number of ads')
-    plt.grid(axis='y', alpha=0.75)
-    plt.show()
-
-    campaign_duration_by_page = data.groupby(["page_id", "page_name"])["campaign_duration"].mean().reset_index(name="avg_campaign_duration")
-
-    campaign_duration_by_page_sorted = campaign_duration_by_page.sort_values(by="avg_campaign_duration", ascending=False).head(20) 
-
-    # relationship between campaign duration and total reach
-    plt.figure(figsize=(10, 6))
-    plt.scatter(data['campaign_duration'], data['eu_total_reach'], alpha=0.5)
-    plt.title('Campaign Duration vs. EU Total Reach')
-    plt.xlabel('Campaign Duration (Days)')
-    plt.ylabel('EU Total Reach')
-    plt.show()
-
-    reach_data = data[DEMOGRAPHIC_COLS]
-    reach_data.plot(kind='bar', stacked=True, figsize=(12, 7))
-    plt.title('Reach by Age and Gender')
-    plt.xlabel('Age Ranges')
-    plt.ylabel('Reach')
-    plt.show()
-
-    data["languages"].nunique()
-    """
     return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8
 
-#project_name = "testmeet"
-#run_analysis(project_name)
 
 
 """ 

@@ -146,7 +146,7 @@ def flatten_age_country_gender(row, target_country):
     :returns: A list with the processed age_gender_reach data.
     :rtype: list
     """
-    flattened_data = []
+    flattened_data = {}
 
     # check if the row is empty and remove it
     if isinstance(row, float) and pd.isna(row):
@@ -218,11 +218,11 @@ def transform_data(project_name, country, ad_type):
     :rtype: pandas.DataFrame
     """
     
-    folder_path = f'output\\{project_name}\\json'
+    folder_path = f'output/{project_name}/json'
     df = load_json_from_folder(folder_path)
 
     # save original data
-    data_path = f'output\\{project_name}\\ads_data'
+    data_path = f'output/{project_name}/ads_data'
     # check if the folder exists
     if not os.path.exists(data_path):
         os.makedirs(data_path)
@@ -231,7 +231,7 @@ def transform_data(project_name, country, ad_type):
 
     # flatten the reach data (age-country-gender or demographic-distribution)
     if ad_type == "ALL":
-        wide_df = pd.DataFrame(df['age_country_gender_reach_breakdown'].apply(flatten_age_country_gender, country).tolist())  
+        wide_df = pd.DataFrame(df['age_country_gender_reach_breakdown'].apply(flatten_age_country_gender, target_country=country).tolist())
     else:
         wide_df = pd.DataFrame(df['demographic_distribution'].apply(flatten_demographic_distribution).tolist())
               

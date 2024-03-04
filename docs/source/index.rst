@@ -11,6 +11,8 @@ calls the Meta Ad Library API given a valid Meta developer access token. It down
 based on user-defined parameters by creating an :class:`~AdDownloader.adlib_api.AdLibAPI` object, then downloads 
 the media content of the ads using :func:`~AdDownloader.media_download.start_media_download`. Additionally, for a more user-friendly interface, the entire ad download
 process can be run as a CLI through the :func:`~AdDownloader.cli.run_analysis` call, offering a *simple* and *intuitive* API.
+Lastly, AdDownloader provides additional analysis functionalities, by performing text and image analysis of the ad creative contents,
+and creating useful visualizations inside an Analytics dashboard.
 
 .. note::
 
@@ -24,6 +26,7 @@ process can be run as a CLI through the :func:`~AdDownloader.cli.run_analysis` c
    helpers
    media_download
    cli
+   analysis
 
 
 Below, you can find two examples of how to (1) manually download ad data and media content using the AdLibAPI class and the media_download module
@@ -87,6 +90,56 @@ and (2) run the automated CLI to download ad data and media content.
 
    from AdDownloader.cli import run_analysis
    run_analysis()
+
+
+AdDownloader Analytics
+======================
+
+The output saved by AdDownloader, which includes: Excel files with original and processed ads data, and ad images and videos, can 
+further be analysed using the analytics module provided by AdDownloader. This can be achieved in two ways: (1) Run a Dash dashboard
+with various EDA and statistics, or (2) Analyze your data locally.
+
+**Example 1:** *Run Analytics Dashboard*.
+
+.. code-block:: python
+
+   from AdDownloader.start_app import start_gui # takes some time to load...
+   start_gui()
+
+This function will open an html page at http://127.0.0.1:8050/ once Dash is running.
+
+
+**Example 2:** *Analyze data manually*.
+
+.. code-block:: python
+
+   from AdDownloader.analysis import *
+   import matplotlib.pyplot as plt
+   data_path = "output/test1/ads_data/test1_processed_data.xlsx"
+   data = load_data(data_path)
+   data.head(20)
+
+   # create graphs with EDA
+   fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8 = get_graphs(data)
+   fig1.show() # will open a webpage with the graph, which can also be saved locally
+
+   # perform text analysis of the ad captions
+   freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence = start_text_analysis(data)
+   print(f"Most common 10 keywords: {freq_dist.most_common(10)}")
+
+   # show the word cloud
+   plt.imshow(word_cl, interpolation='bilinear')
+   plt.axis("off")
+   plt.show()
+
+   # check the sentiment
+   textblb_sent.head(20) # or textblb_sent
+
+   # print the top 3 topics and the coherence score
+   for idx, topic in lda_model.print_topics(num_words=5):
+      print("Topic: {} \nWords: {}".format(idx + 1, topic))
+
+   print('Coherence Score:', coherence)
 
 
 Indices and tables
