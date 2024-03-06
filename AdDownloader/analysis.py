@@ -14,7 +14,7 @@ from nltk.corpus import stopwords
 from nltk.sentiment import SentimentIntensityAnalyzer
 from nltk.stem import WordNetLemmatizer
 from nltk import FreqDist
-#import nltk
+import nltk
 #import spacy # use to lemmatize other languages than english
 import gensim.corpora as corpora
 from gensim.models.ldamodel import LdaModel
@@ -29,10 +29,10 @@ import plotly.express as px
 # add to the dependencies: transformers==4.37.2, torch==2.2.0, torchvision==0.17.0 (check if needed?), spacy==3.7.4
 
 # text analysis
-#nltk.download('stopwords')
-#nltk.download('punkt')
-#nltk.download('vader_lexicon')
-#nltk.download('wordnet')
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('vader_lexicon')
+nltk.download('wordnet')
 #nltk.download('omw-1.4')
 
 # tokenize and remove stopwords
@@ -230,7 +230,7 @@ def get_graphs(data):
     nr_ads_per_page = data.groupby(["page_id", "page_name"])["id"].count().reset_index(name="nr_ads")
     fig3 = px.histogram(nr_ads_per_page, x='nr_ads', title='Distribution of Ads per Page',
                         labels={'nr_ads': 'Number of Ads', 'count': 'Number of Pages'})
-    fig3.update_traces(marker_color='gold', marker_line_color='black')
+    fig3.update_traces(marker_color='honeydew', marker_line_color='black')
     fig3.update_layout(bargap=0.1, bargroupgap=0.05)
     
     # top 20 pages with most ads

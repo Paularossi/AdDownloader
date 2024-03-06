@@ -1,5 +1,5 @@
 Analysis Module
-==============
+===============
 
 .. module:: AdDownloader.analysis
    :synopsis: Provides different analysis functions for the AdDownloader.
