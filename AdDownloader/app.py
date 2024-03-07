@@ -1,13 +1,10 @@
-import datetime
 import base64
 import io
 from dash import Dash, dcc, html, callback, Input, Output, State, dash_table, no_update
-from matplotlib import table
 import plotly.express as px
 import pandas as pd
 from AdDownloader import analysis
 
-# add to dependencies: plotly==5.18.0(?)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -42,11 +39,13 @@ app.layout = html.Div([
         multiple = False
     ),
     html.Div(id='output-datatable'),
-    html.Div(id='output-div'),
+    html.Div(id='output-graphs'),
+    html.Div(id='output-text-analysis'),
+    html.Div(id='output-topic-analysis'),
 ])
 
 
-def parse_contents(contents, filename, date):
+def parse_contents(contents, filename):
     # parse the contents of the uploaded file and return a table of the data
     content_type, content_string = contents.split(',')
 
@@ -79,7 +78,7 @@ def parse_contents(contents, filename, date):
         # html.P("Inset Y axis data"),
         # dcc.Dropdown(id='yaxis-data',
         #              options=[{'label':x, 'value':x} for x in df.columns]),
-        html.Button(id="submit-button", children="Generate Graphs"),
+        html.Button(id="graphs-button", children="Generate Graphs"),
         html.Hr(),
 
         dash_table.DataTable(
@@ -109,7 +108,7 @@ def parse_contents(contents, filename, date):
         ),
         dcc.Store(id='stored-data', data=df.to_dict('records')),
 
-        html.Hr()
+        html.Hr(),
 
     ])
 
@@ -122,13 +121,12 @@ def parse_contents(contents, filename, date):
               State('upload-data', 'last_modified'))
 def update_output(contents, filename, last_modified):
     if contents is not None:
-        #children = [parse_contents(c, n, d) for c, n, d in zip(contents, filename, last_modified)]
-        children = parse_contents(contents, filename, last_modified)
+        children = parse_contents(contents, filename)
         return children
 
 
-@app.callback(Output('output-div', 'children'),
-              Input('submit-button', 'n_clicks'),
+@app.callback(Output('output-graphs', 'children'),
+              Input('graphs-button', 'n_clicks'),
               State('stored-data', 'data'))
 def make_graphs(n, data):
     if n is None:
@@ -138,7 +136,7 @@ def make_graphs(n, data):
         try:
             df = pd.DataFrame(data)
             # not working - list has no attribute groupby
-            fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8 = analysis.get_graphs(df)
+            fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10 = analysis.get_graphs(df)
         except Exception as e:
             return html.Div([html.H5(f"Failed to get graphs. Try uploading another file. Error: {e}")])
         
@@ -207,11 +205,108 @@ def make_graphs(n, data):
             ], className='six columns')
         ], className='row'),
 
+        html.H2('Reach data by age and gender'),
+        html.Div([
+            html.Div([
+                dcc.Graph(id='graph9', figure=fig9)
+            ], className='six columns'),
+            html.Div([
+                dcc.Graph(id='graph10', figure=fig10)
+            ], className='six columns')
+        ], className='row'),
+
+        html.Hr(),
         html.H2('Ad Creative Analysis.'),
-        html.H6('To be continued...', style={"color": "red"})
+        html.Button(id="text-analysis-button", children="Generate Text Analysis")
     ])
         
     return graphs_children
+
+
+@app.callback(Output('output-text-analysis', 'children'),
+              Input('text-analysis-button', 'n_clicks'),
+              State('stored-data', 'data'))
+def make_text_analysis(n, data):
+    if n is None:
+        return no_update
+    else:
+        try:
+            df = pd.DataFrame(data)
+            tokens, freq_dist, word_cl, textblb_sent, nltk_sent = analysis.start_text_analysis(df)
+            top_10_words = freq_dist.most_common(10)
+            fig1=px.bar(x=[word for word, count in top_10_words], y=[count for word, count in top_10_words], 
+                        labels={'x': 'Words', 'y': 'Frequency'}, title='Top 10 Most Frequent Words')
+            fig1.update_xaxes(tickfont=dict(size=14))
+            fig1.update_traces(text=[count for word, count in top_10_words], textposition='outside')
+
+            sentiment_data = {'sentiment_category': [], 'score': []}
+            for entry in nltk_sent:
+                for category, score in entry.items():
+                    if category != 'compound':
+                        sentiment_data['sentiment_category'].append(category)
+                        sentiment_data['score'].append(score)
+
+            # Create DataFrame from the sentiment data
+            sent_df = pd.DataFrame(sentiment_data)
+            fig2=px.pie(sent_df, names='sentiment_category', values='score', title='Pie Chart of Total Sentiment Scores')
+
+        except Exception as e:
+            return html.Div([html.H5(f"Failed to perform ad text analysis. Error: {e}")])
+        
+    text_children = html.Div([
+        html.H2('Word Count and Sentiment'),
+        html.Div([
+            html.Div([
+                dcc.Graph(id='top-10-words', figure=fig1)
+            ], className='six columns'),
+            html.Div([
+                dcc.Graph(id='sentiment', figure=fig2)
+            ], className='six columns')
+        ], className='row'),
+        html.Div([
+            html.Div([
+                html.Button(id="topic-button", children="Generate Topic Analysis")
+            ], className='two columns'),
+            html.Div([
+                html.H5("Note: this might take some time to run...")
+            ], className='four columns')
+        ]),        
+    ])
+        
+    return text_children
+
+
+@app.callback(Output('output-topic-analysis', 'children'),
+              Input('topic-button', 'n_clicks'),
+              State('stored-data', 'data'))
+def make_topic_analysis(n, data):
+    if n is None:
+        return no_update
+    else:
+        try:
+            df = pd.DataFrame(data)
+            captions = df["ad_creative_bodies"].dropna()
+            tokens = captions.apply(analysis.preprocess)
+            lda_model, coherence = analysis.get_topics(tokens)
+            topics = [f"Topic {topic[0]}: {topic[1]}" for topic in lda_model.print_topics(num_words=5)]
+
+        except Exception as e:
+            return html.Div([html.H5(f"Failed to perform ad topic analysis. Error: {e}")])
+        
+    topic_children = html.Div([
+        html.Div([
+            html.Div([
+                html.H2("Topics:"),
+                html.Ul([html.Li(topic) for topic in topics]),
+            ], className='six columns'),
+            html.Div([
+                html.H2("Coherence Score:"),
+                html.P(coherence)
+            ], className='four columns')
+        ], className='row')
+    ])
+        
+    return topic_children
 
 
 if __name__ == '__main__':

@@ -15,7 +15,7 @@ ads_api = adlib_api.AdLibAPI(access_token, project_name = "test1")
 # for available parameters, visit https://developers.facebook.com/docs/graph-api/reference/ads_archive/
 
 # either search_terms OR search_pages_ids
-ads_api.add_parameters(countries = 'BE', start_date = "2023-06-01", end_date = '2023-09-01', search_terms = "pizza hut")
+ads_api.add_parameters(countries = 'BE', start_date = "2024-03-01", start_date = "2024-03-07", search_terms = "pizza")
 
 # check the parameters
 ads_api.get_parameters()
@@ -85,16 +85,17 @@ start_gui()
 # ==================================================
 from AdDownloader.analysis import *
 import matplotlib.pyplot as plt
-data_path = "output/test1/ads_data/test1_processed_data.xlsx"
+
+data_path = "output/test7/ads_data/test7_processed_data.xlsx"
 data = load_data(data_path)
 data.head(20)
 
 # create graphs with EDA
-fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8 = get_graphs(data)
+fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10 = get_graphs(data)
 fig1.show() # will open a webpage with the graph, which can also be saved locally
 
 # perform text analysis of the ad captions
-freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence = start_text_analysis(data)
+tokens, freq_dist, word_cl, textblb_sent, nltk_sent = start_text_analysis(data)
 print(f"Most common 10 keywords: {freq_dist.most_common(10)}")
 
 # show the word cloud
@@ -104,6 +105,9 @@ plt.show()
 
 # check the sentiment
 textblb_sent.head(20) # or textblb_sent
+
+# topics - optional
+lda_model, coherence = get_topics(tokens)
 
 # print the top 3 topics and the coherence score
 for idx, topic in lda_model.print_topics(num_words=5):

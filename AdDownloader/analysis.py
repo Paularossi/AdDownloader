@@ -2,7 +2,6 @@
 
 #import cv2
 import numpy as np
-#from PIL import Image, ImageEnhance, ImageStat
 import pandas as pd
 import os
 #from sklearn.cluster import KMeans
@@ -43,10 +42,6 @@ all_stopwords = set(stopwords.words('english')) | \
 
 DATE_MIN = 'ad_delivery_start_time'
 DATE_MAX = 'ad_delivery_stop_time'
-
-DEMOGRAPHIC_COLS = ['female_13-17', 'female_18-24', 'female_25-34', 'female_35-44', 'female_45-54', 'female_55-64', 'female_65+',
-                    'male_13-17', 'male_18-24', 'male_25-34', 'male_35-44', 'male_45-54', 'male_55-64', 'male_65+',
-                    'unknown_13-17', 'unknown_18-24', 'unknown_25-34', 'unknown_35-44', 'unknown_45-54', 'unknown_55-64', 'unknown_65+']
 
 GENDERS = ['female', 'male', 'unknown']
 AGE_RANGES = ['13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+']
@@ -176,12 +171,14 @@ def get_topics(tokens, topics = 3):
 
 
 # main function
-def start_text_analysis(data):
+def start_text_analysis(data, topics = False):
     """
     Perform text analysis including preprocessing, word frequency calculation, sentiment analysis, and topic modeling.
 
     :param data: A pandas DataFrame containing an `ad_creative_bodies` column with ad captions.
     :type data: pandas.DataFrame
+    :param topics: 
+    :type topics: bool
     :return: A tuple containing the word frequency distribution, word cloud, sentiment scores using TextBlob and Vader, LDA model, and coherence score.
     :rtype: tuple
     """
@@ -192,21 +189,93 @@ def start_text_analysis(data):
 
     textblb_sent, nltk_sent = get_sentiment(captions)
 
-    lda_model, coherence = get_topics(tokens)
-    return freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence
+    if topics:
+        lda_model, coherence = get_topics(tokens)
+        return tokens, freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence
+    else: 
+        return tokens, freq_dist, word_cl, textblb_sent, nltk_sent
+
+
+def transform_data_by_age(data):
+    """
+    Transform demographic data into long format, separating data by age ranges.
+
+    :param data: A pandas DataFrame containing demographic data.
+    :type data: pandas.DataFrame
+    :return: A pandas DataFrame with columns 'Reach' and 'Age Range' in long format.
+    :rtype: pandas.DataFrame
+    """
+
+    # separate demographic columns into age ranges
+    age_13_17_columns = [col for col in data.columns if '13-17' in col]
+    age_18_24_columns = [col for col in data.columns if '18-24' in col]
+    age_25_34_columns = [col for col in data.columns if '25-34' in col]
+    age_35_44_columns = [col for col in data.columns if '35-44' in col]
+    age_45_54_columns = [col for col in data.columns if '45-54' in col]
+    age_55_64_columns = [col for col in data.columns if '55-64' in col]
+    age_65_columns = [col for col in data.columns if '65+' in col]
+    
+    age_columns = []
+
+    # check if 'age_13_17_columns' exist before including it
+    if any('13-17' in col for col in data.columns):
+        age_columns.append(data[age_13_17_columns].values.flatten())
+
+    age_columns.extend([
+        data[age_18_24_columns].values.flatten(),
+        data[age_25_34_columns].values.flatten(),
+        data[age_35_44_columns].values.flatten(),
+        data[age_45_54_columns].values.flatten(),
+        data[age_55_64_columns].values.flatten(),
+        data[age_65_columns].values.flatten()
+    ])
+
+    long_data_age = pd.DataFrame({
+        'Reach': [value for sublist in age_columns for value in sublist],  # flatten the list
+        'Age Range': [label for label, sublist in zip(AGE_RANGES, age_columns) for _ in sublist]  # repeat labels accordingly
+    })
+
+    return long_data_age
+
+
+def transform_data_by_gender(data):
+    """
+    Transform demographic data into long format, separating data by gender.
+
+    :param data: A pandas DataFrame containing demographic data.
+    :type data: pandas.DataFrame
+    :return: A pandas DataFrame with columns 'Reach' and 'Gender' in long format.
+    :rtype: pandas.DataFrame
+    """
+
+    # separate demographic columns into genders
+    female_columns = [col for col in data.columns if 'female' in col]
+    male_columns = [col for col in data.columns if 'male' in col and not 'female' in col]
+    unknown_columns = [col for col in data.columns if 'unknown' in col]
+    
+    data_by_gender = [data[female_columns].values.flatten(), data[male_columns].values.flatten(), data[unknown_columns].values.flatten()]
+    # transpose the data to have genders on the x-axis
+    long_data_gender = pd.DataFrame({
+        'Reach': [value for sublist in data_by_gender for value in sublist],  
+        'Gender': [label for label, sublist in zip(GENDERS, data_by_gender) for _ in sublist]
+    })
+
+    return long_data_gender
 
 
 def get_graphs(data):
     """
     Generate various graphs based on ad data. These include: 
-    - Total reach by `ad_delivery_start_time`
-    - Total reach distribution (overall)
-    - Number of ads per page
-    - Top 20 pages with most ads
-    - Total reach by page
-    - Top 20 pages by reach
-    - Ad campaign duration distribution
-    - Ad campaign duration vs. total reachs
+    * Total reach by `ad_delivery_start_time`
+    * Total reach distribution (overall)
+    * Number of ads per page
+    * Top 20 pages with most ads
+    * Total reach by page
+    * Top 20 pages by reach
+    * Ad campaign duration distribution
+    * Ad campaign duration vs. total reachs
+    * Reach across age ranges
+    * Reach across genders
 
     :param data: A pandas DataFrame containing ad data.
     :type data: pandas.DataFrame
@@ -277,8 +346,19 @@ def get_graphs(data):
     fig8 = px.scatter(data, x='campaign_duration', y='eu_total_reach', 
                  title='Campaign Duration vs. EU Total Reach',
                  labels={'campaign_duration': 'Campaign Duration (Days)', 'eu_total_reach': 'EU Total Reach'})
+    
+    # reach data by age and gender
+    data_by_age = transform_data_by_age(data)
+    data_by_gender = transform_data_by_gender(data)
 
-    return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8
+    # reach across age ranges (all ads)
+    fig9 = px.violin(data_by_age, y = 'Reach', x = 'Age Range', color='Age Range', template = "seaborn", title="Reach Across Age Ranges for all ads")
+    
+    # reach across genders (all ads)
+    fig10 = px.violin(data_by_gender, y = 'Reach', x = 'Gender', color='Gender', title="Reach Across Genders for all ads")
+    
+
+    return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10
 
 
 

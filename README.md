@@ -83,7 +83,7 @@ To download and run the AdDownloader, several prerequisities must be fullfilled:
 
 ## Installation
 
-AdDownloader can be installed in three different ways: from source, from a wheel-file, or as a package.
+AdDownloader can be installed in three different ways: from source, from a built distribution, or as a package from *pip*.
 
 Open a command-line tool (or a terminal) and navigate to your folder with:
 ```bash
@@ -99,16 +99,16 @@ And activate the venv:
 venv\Scripts\activate.bat
 ```
 
-### From source or wheel-file
-Once you're inside your repository and the virtual environment, to install from the wheel-file run:
+### From source or built distribution
+Once you're inside your repository and the virtual environment, to install from the source file run:
 
 ```bash
-python -m pip install "dist/AdDownloader-0.2.3.tar.gz"
+python -m pip install "dist/AdDownloader-0.2.4.1.tar.gz"
 ```
 
-To install from source run:
+To install from the built distribution run:
 ```bash
-python -m pip install "dist/AdDownloader-0.2.3-py3-none-any.whl"
+python -m pip install "dist/AdDownloader-0.2.4.1-py3-none-any.whl"
 ```
 
 ### From pip
@@ -129,14 +129,15 @@ Once installed, AdDownloader can be run in two ways: as a command-line tool (CLI
 from AdDownloader import adlib_api
 from AdDownloader.media_download import start_media_download
  
-ads_api = adlib_api.AdLibAPI(your-fb-access-token-here, project_name = "test1")
+access_token = input() # the best way to upload your token
+ads_api = adlib_api.AdLibAPI(access_token, project_name = "test1")
 ```
 
 2. Add parameters to your search:
 ```bash
 ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza")
 ```
-Note that `search_terms` and `search_pages_id` are complementary.
+Note that `search_terms` and `search_pages_id` cannot both be empty.
 
 3. Check the parameters and start the download of ads data:
 ```bash
@@ -155,7 +156,7 @@ start_media_download(project_name = "test1", nr_ads = 20, data = data)
 from AdDownloader import adlib_api
 from AdDownloader.media_download import start_media_download
  
-plt_ads_api = adlib_api.AdLibAPI(your-fb-access-token-here, project_name = "test2")
+plt_ads_api = adlib_api.AdLibAPI(access_token, project_name = "test2")
 ```
 
 2. Add parameters to your search:
@@ -174,7 +175,7 @@ plt_data = plt_ads_api.start_download()
 start_media_download(project_name = "test2", nr_ads = 20, data = plt_data)
 ```
 
-All the ouput can be found inside the '`output/your-project-name`' folder.
+All the ouput can be found inside the '`output/<project_name>`' folder.
 
 ### As a CLI
 #### From the cmd/terminal: (inside your folder with venv activated)
@@ -190,7 +191,7 @@ run_analysis()
 
 Once the CLI tool is running, more instructions and questions will appear in the cmd/terminal that will guide the API call.
 
-For further help see the [documentation](https://addownloader.readthedocs.io/en/latest/index.html). 
+For further help see the AdDownloader [documentation](https://addownloader.readthedocs.io/en/latest/index.html). 
 
 ## Contributing
 To contribute to this project...

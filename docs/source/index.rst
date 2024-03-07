@@ -120,11 +120,11 @@ This function will open an html page at http://127.0.0.1:8050/ once Dash is runn
    data.head(20)
 
    # create graphs with EDA
-   fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8 = get_graphs(data)
+   fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10 = get_graphs(data)
    fig1.show() # will open a webpage with the graph, which can also be saved locally
 
    # perform text analysis of the ad captions
-   freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence = start_text_analysis(data)
+   freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence = start_text_analysis(data, topics = True)
    print(f"Most common 10 keywords: {freq_dist.most_common(10)}")
 
    # show the word cloud
