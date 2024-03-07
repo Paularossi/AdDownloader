@@ -27,7 +27,7 @@ from rich import print as rprint
 
 from AdDownloader.adlib_api import *
 from AdDownloader.media_download import *
-from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator
+from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator, update_access_token
 import time
 import pandas as pd
 
@@ -143,46 +143,28 @@ def run_task_A(project_name, answers):
     print(f"Download finished in {minutes} minutes and {seconds} seconds.")    
 
 
-def run_task_B(project_name, file_name=None):
+def run_task_B(project_name, answers, file_name=None):
     """
     Run task B: Download ads media content based on user's choices.
 
     :param project_name: The name of the current project.
     :type project_name: str
+    :param answers: User's answers from the initial questions for tasks A/C regarding desired parameters.
+    :type answers: dict
     :param file_name: Name of the Excel file containing ads data. If none is provided data is taken from 'output/project_name/ads/data/original_data.xlsx'
     :type file_name: str
     """
     try:
         if file_name is not None:
-            file_path = f'output\\{project_name}\\ads_data\\{file_name}.xlsx'
+            file_path = f'output/{project_name}/ads_data/{file_name}.xlsx'
         else:
-            file_path = f'output\\{project_name}\\ads_data\\original_data.xlsx'
+            file_path = f'output/{project_name}/ads_data/{project_name}_original_data.xlsx'
         
         data = pd.read_excel(file_path)
         total_ads = len(data)
 
-        #TODO: update the token
-        # ask the user if the token is still valid - otherwise the downloads won't work
-        # new_token = prompt([
-        #     {
-        #         'type': 'list',
-        #         'name': 'is_valid',
-        #         'message': 'Is your access token still valid? You might need to regenerate a new one.',
-        #         'choices': ['No - input new one', 'Yes - it is valid']
-        #     },
-        #     {
-        #         'type': 'input',
-        #         'name': 'new_acs_tkn',
-        #         'message': 'Please input your updated access token',
-        #         'when': lambda answers: answers['is_valid'] == 'No - input new one',
-        #     }
-        # ])
-
-        # update the access token in the data if needed
-        #if new_token['is_valid'] == 'No - input new one':
-        #    new_access_token = new_token["new_acs_tkn"]
-        #    data = update_access_token(data, new_access_token)
-
+        data = update_access_token(data, answers['access_token'])
+       
         print("Starting downloading media content.")
 
         # if task C was chosen - continue with downloading media content
@@ -250,12 +232,10 @@ def intro_messages():
                         },
             ],
         },
-        { # if the user wants to download ad data
+        {
             'type': 'password',
             'name': 'access_token',
-            'message': 'Please provide your access token',
-            'when': lambda answers: answers['task'] == 'A - download ads data only' or 
-                                    answers['task'] == 'C - download both ads data and media content'
+            'message': 'Please provide a valid access token'
         },
         {
             'type': 'confirm',
@@ -278,15 +258,14 @@ def intro_messages():
         project_name = input()
         rprint("[yellow]Please enter the name of the excel file containing ads data.\n The data needs to be in the output\project_name\\ads_data folder.[yellow]")
         file_name = input()
-        run_task_B(project_name, file_name)
+        run_task_B(project_name, answers, file_name)
 
     if answers['task'] == 'C - download both ads data and media content':
         rprint("[yellow]Please enter a name for your project. All created folders will use this name:[yellow]")
         project_name = input()
         run_task_A(project_name, answers)
-        run_task_B(project_name)
+        run_task_B(project_name, answers)
         
-
 
     rprint("[yellow]=============================================[yello]")
     rprint("Finished.")
@@ -309,6 +288,7 @@ def run_analysis():
             rprint("[yellow]=============================================[yello]")
             rprint("[yellow]Analysis completed. Thank you for using AdDownloader! [yello]")
             break
+
 
 # need this to run the app
 if __name__ == "__main__":

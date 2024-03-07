@@ -188,8 +188,8 @@ def flatten_demographic_distribution(row):
 
     :param row: A row of demographic distribution data, typically a list of dictionaries.
     :type row: list
-    :returns: A dictionary where keys are formatted as "{gender}_{age}" and values are the corresponding percentage values.
-    :rtype: dict
+    :returns: A list where keys are formatted as "{gender}_{age}" and values are the corresponding percentage values.
+    :rtype: list
     """
     flattened_data = {}
     if isinstance(row, float) and pd.isna(row):
