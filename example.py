@@ -107,10 +107,11 @@ plt.show()
 textblb_sent.head(20) # or textblb_sent
 
 # topics - optional
-lda_model, coherence = get_topics(tokens)
+lda_model, coherence, sent_topics_df = get_topics(tokens, data["ad_creative_bodies"].dropna())
+sent_topics_df.head(20)
 
-# print the top 3 topics and the coherence score
-for idx, topic in lda_model.print_topics(num_words=5):
-    print("Topic: {} \nWords: {}".format(idx + 1, topic))
+# print the topics and the coherence score
+for idx, topic in lda_model.print_topics(num_words=8):
+    print("Topic: {} \nWords: {}".format(idx, topic))
 
 print('Coherence Score:', coherence)

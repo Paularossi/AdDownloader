@@ -4,6 +4,8 @@ from dash import Dash, dcc, html, callback, Input, Output, State, dash_table, no
 import plotly.express as px
 import pandas as pd
 from AdDownloader import analysis
+from AdDownloader.helpers import update_access_token
+from AdDownloader.media_download import start_media_download
 
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -40,6 +42,7 @@ app.layout = html.Div([
     ),
     html.Div(id='output-datatable'),
     html.Div(id='output-graphs'),
+    html.Div(id='output-image-analysis'),
     html.Div(id='output-text-analysis'),
     html.Div(id='output-topic-analysis'),
 ])
@@ -72,13 +75,6 @@ def parse_contents(contents, filename):
 
     table_children = html.Div([
         html.H5(f"Currently showing project {project_name}."),
-        # html.P("Inset X axis data"),
-        # dcc.Dropdown(id='xaxis-data',
-        #              options=[{'label':x, 'value':x} for x in df.columns]),
-        # html.P("Inset Y axis data"),
-        # dcc.Dropdown(id='yaxis-data',
-        #              options=[{'label':x, 'value':x} for x in df.columns]),
-        html.Button(id="graphs-button", children="Generate Graphs"),
         html.Hr(),
 
         dash_table.DataTable(
@@ -107,9 +103,30 @@ def parse_contents(contents, filename):
             tooltip_duration=None
         ),
         dcc.Store(id='stored-data', data=df.to_dict('records')),
+        dcc.Store(id='stored-project-name', data = project_name),
+
+        html.H2("Choose a task by clicking a button below."),
+        html.Div([
+            # generate graphs
+            html.Button(id="graphs-button", children="Generate Graphs"),
+
+            # generate text analysis
+            html.Button(id="text-analysis-button", children="Generate Text Analysis"),
+
+            # generate topic modeling
+            html.Button(id="topic-button", children="Generate Topic Analysis")
+            #TODO: getting stuck here
+        ]),
+
+        # start image download
+        html.Div([
+            html.H5('Or provide your access token and desired number of images to download (might take some time to run depending on your dataset size).'),
+            dcc.Input(id="access-tkn", type="text", placeholder="Insert your access token", debounce=True),
+            dcc.Input(id="nr-ads", type="number", placeholder="Insert a number"),
+            html.Button(id="image-analysis-button", children="Generate Image Analysis"),
+        ]),
 
         html.Hr(),
-
     ])
 
     return table_children
@@ -117,9 +134,8 @@ def parse_contents(contents, filename):
 
 @app.callback(Output('output-datatable', 'children'),
               Input('upload-data', 'contents'),
-              State('upload-data', 'filename'),
-              State('upload-data', 'last_modified'))
-def update_output(contents, filename, last_modified):
+              State('upload-data', 'filename'))
+def update_output(contents, filename):
     if contents is not None:
         children = parse_contents(contents, filename)
         return children
@@ -216,11 +232,37 @@ def make_graphs(n, data):
         ], className='row'),
 
         html.Hr(),
-        html.H2('Ad Creative Analysis.'),
-        html.Button(id="text-analysis-button", children="Generate Text Analysis")
+        
     ])
         
     return graphs_children
+
+
+@app.callback(Output('output-image-analysis', 'children'),
+              Input('access-tkn', 'value'),
+              Input('nr-ads', 'value'),
+              Input('image-analysis-button', 'n_clicks'),
+              State('stored-data', 'data'),
+              State('stored-project-name', 'data'))
+def start_image_analysis(access_token, nr_ads, n, data, project_name):
+    if n is None or access_token is None or nr_ads is None:
+        return no_update
+    
+    else:
+        try:
+            df = pd.DataFrame(data)
+            df = update_access_token(df, str(access_token))
+            start_media_download(str(project_name), int(nr_ads), data = df)
+
+        except Exception as e:
+            return html.Div([html.H5(f"Failed to perform ad text analysis. Error: {e}")])
+        
+    img_children = html.Div([
+        html.H2('Ad Images Download and Analysis.'),
+        html.H3("Finished downloading media.")
+    ])
+        
+    return img_children
 
 
 @app.callback(Output('output-text-analysis', 'children'),
@@ -233,6 +275,7 @@ def make_text_analysis(n, data):
         try:
             df = pd.DataFrame(data)
             tokens, freq_dist, word_cl, textblb_sent, nltk_sent = analysis.start_text_analysis(df)
+            # add these to the dataframe and save it
             top_10_words = freq_dist.most_common(10)
             fig1=px.bar(x=[word for word, count in top_10_words], y=[count for word, count in top_10_words], 
                         labels={'x': 'Words', 'y': 'Frequency'}, title='Top 10 Most Frequent Words')
@@ -246,15 +289,24 @@ def make_text_analysis(n, data):
                         sentiment_data['sentiment_category'].append(category)
                         sentiment_data['score'].append(score)
 
-            # Create DataFrame from the sentiment data
             sent_df = pd.DataFrame(sentiment_data)
-            fig2=px.pie(sent_df, names='sentiment_category', values='score', title='Pie Chart of Total Sentiment Scores')
+            sentiment_labels = {'pos': 'Positive', 'neg': 'Negative', 'neu': 'Neutral'}
+            sent_df['sentiment_category'] = sent_df['sentiment_category'].map(sentiment_labels)
+
+            #fig2=px.pie(sent_df, names='sentiment_category', values='score', title='Pie Chart of Total Sentiment Scores')
+            fig2 = px.box(sent_df, x='sentiment_category', y='score', 
+                          title='Distribution of Scores for Each Sentiment Type (using Vader from NLTK)',
+                          labels={'sentiment_category': 'Sentiment', 'score': 'Score'},
+                          color='sentiment_category')
+            fig2.update_traces(marker_line_color='black')
+            fig2.update_layout(barmode='relative', xaxis=dict(categoryorder='total descending'))
 
         except Exception as e:
             return html.Div([html.H5(f"Failed to perform ad text analysis. Error: {e}")])
         
     text_children = html.Div([
-        html.H2('Word Count and Sentiment'),
+        html.H2('Ad Creative Analysis.'),
+        html.H4('Word Count and Sentiment'),
         html.Div([
             html.Div([
                 dcc.Graph(id='top-10-words', figure=fig1)
@@ -263,14 +315,7 @@ def make_text_analysis(n, data):
                 dcc.Graph(id='sentiment', figure=fig2)
             ], className='six columns')
         ], className='row'),
-        html.Div([
-            html.Div([
-                html.Button(id="topic-button", children="Generate Topic Analysis")
-            ], className='two columns'),
-            html.Div([
-                html.H5("Note: this might take some time to run...")
-            ], className='four columns')
-        ]),        
+        html.Hr(),     
     ])
         
     return text_children
@@ -287,23 +332,34 @@ def make_topic_analysis(n, data):
             df = pd.DataFrame(data)
             captions = df["ad_creative_bodies"].dropna()
             tokens = captions.apply(analysis.preprocess)
-            lda_model, coherence = analysis.get_topics(tokens)
-            topics = [f"Topic {topic[0]}: {topic[1]}" for topic in lda_model.print_topics(num_words=5)]
+            lda_model, coherence, sent_topics_df = analysis.get_topics(tokens, captions)
+            topics = [f"Topic {topic[0]}: {topic[1]}" for topic in lda_model.print_topics(num_words=8)]
+            topic_distribution = sent_topics_df['dom_topic'].value_counts().reset_index()
+
+            fig1 = px.bar(topic_distribution, x='dom_topic', y='count', 
+                        labels={'dom_topic': 'Dominant Topic', 'count': 'Count'}, 
+                        title='Topic Distribution Across all Ads', color='dom_topic')
+            fig1.update_layout(xaxis=dict(categoryorder='total descending'))
 
         except Exception as e:
             return html.Div([html.H5(f"Failed to perform ad topic analysis. Error: {e}")])
         
     topic_children = html.Div([
+        html.H2('Topic Modeling.'),
+        html.Div([
+            html.H4("Topics:"),
+            html.Ul([html.Li(topic) for topic in topics]),
+        ], className='six columns'),
         html.Div([
             html.Div([
-                html.H2("Topics:"),
-                html.Ul([html.Li(topic) for topic in topics]),
+                dcc.Graph(id='topic-dist', figure=fig1)
             ], className='six columns'),
             html.Div([
-                html.H2("Coherence Score:"),
+                html.H4("Coherence Score:"),
                 html.P(coherence)
-            ], className='four columns')
-        ], className='row')
+            ], className='six columns')
+        ], className='row'),
+        
     ])
         
     return topic_children
@@ -316,26 +372,6 @@ if __name__ == '__main__':
 """ 
     html.Div([
         html.H2(f'Creating analytics for project {project_name}.', className='sub-header'),
-
-        html.Div([
-            html.H3('First glance on your data', className='sub-header'),
-            html.Div([
-                html.Pre(data.head(20).to_html(), style={'overflowX': 'scroll'}),
-            ]),
-        ]),
-
-        html.Div([
-            html.H3('Filter your results by date:', className='sub-header'),
-            dcc.DatePickerRange(
-                id='date-range',
-                min_date_allowed=data[DATE_MIN].min(),
-                max_date_allowed=data[DATE_MAX].max(),
-                initial_visible_month=data[DATE_MIN].min(),
-                start_date=data[DATE_MIN].min(),
-                end_date=data[DATE_MAX].max(),
-                display_format='YYYY-MM-DD'
-            ),
-        ]),
 
         html.Div([
             html.H3('Quick stats for your data', className='sub-header'),

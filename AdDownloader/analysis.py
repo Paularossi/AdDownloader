@@ -22,6 +22,7 @@ from wordcloud import WordCloud
 from textblob import TextBlob
 from gensim.parsing.preprocessing import remove_stopwords
 import plotly.express as px
+import time
 
 
 
@@ -140,24 +141,36 @@ def get_sentiment(captions):
     return textblb_sent, nltk_sent
 
 
-def get_topics(tokens, topics = 3):
+def get_topics(tokens, captions, topics = 3):
     """
     Perform topic modeling on a given set of tokens using Latent Dirichlet Allocation (LDA).
     The coherence score of the model can be improved by adjusting the number of topics or the hyperparameters of LDA.
 
     :param tokens: A list of tokenized words, created using the `preprocess` function from this module.
     :type tokens: list
+    :param tokens: The original captions of the ads.
+    :type tokens: list
     :param topics: The number of topics to extract (default is 3).
     :type topics: int, optional
     :return: A tuple containing the trained LDA model and the coherence score.
     :rtype: tuple
     """
+
+    start_time = time.time()
+    
     # create a dictionary and a corpus
     dictionary = corpora.Dictionary(tokens) # only accepts an array of unicode tokens on input
+    # the dictionary represents the index of the word and its frequency
+
+    # filter out words that occur less than 20 documents, or more than 80% of the documents.
+    dictionary.filter_extremes(no_below = 20, no_above=0.9)
+
     corpus = [dictionary.doc2bow(text) for text in tokens]
+    print('Number of unique tokens: %d' % len(dictionary))
+    print('Number of documents: %d' % len(corpus))
 
     # create a gensim lda models
-    lda_model = LdaModel(corpus, num_topics = topics, id2word = dictionary, passes = 20)
+    lda_model = LdaModel(corpus, id2word = dictionary, num_topics = 10, update_every = 1, passes = 20, alpha='auto', eval_every=None)
 
     # evaluate model coherence - the degree of semantic similarity between high scoring words in each topic
     # c_v - frequency of the top words and their degree of co-occurrence
@@ -165,10 +178,43 @@ def get_topics(tokens, topics = 3):
     coherence_lda = coherence_model_lda.get_coherence()
     # to improve this score, we can adjust the number of topics, the hyperparameters of the lda model (alpha and beta), or experiment with preprocessing 
 
+    # associate each caption with a topic
+    sent_topics_df = get_topic_per_caption(lda_model, corpus, captions)
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    minutes = int(elapsed_time // 60)
+    seconds = int(elapsed_time % 60)
+    print(f"Topic modeling finished in {minutes} minutes and {seconds} seconds.") 
     #TODO: need to adapt for different languages?
 
-    return lda_model, coherence_lda 
+    return lda_model, coherence_lda, sent_topics_df
 
+
+def get_topic_per_caption(lda_model, corpus, captions):
+    #TODO: add docs
+    sent_topics_df = pd.DataFrame(columns = ['dom_topic', 'perc_contr', 'topic_keywords'])
+    
+    # get main topic in each document
+    for i, row in enumerate(lda_model[corpus]):
+        row = sorted(row, key=lambda x: (x[1]), reverse=True)
+
+        # get the dominant topic, percentage contribution and keywords for each document
+        for j, (topic_num, prop_topic) in enumerate(row):
+            if j == 0:  # => dominant topic
+                wp = lda_model.show_topic(topic_num)
+                topic_keywords = ", ".join([word for word, prop in wp])
+                sent_topics_df = pd.concat([sent_topics_df, 
+                                            pd.DataFrame({'dom_topic': [int(topic_num)], 'perc_contr': [round(prop_topic,4)], 'topic_keywords': [topic_keywords]})], 
+                                            ignore_index=True)
+            else:
+                break
+
+    # add original text to the end of the output
+    captions = captions.reset_index(drop = True)
+    sent_topics_df2 = pd.concat([sent_topics_df, captions], axis=1)
+    return(sent_topics_df2)
+ 
 
 # main function
 def start_text_analysis(data, topics = False):
@@ -182,6 +228,7 @@ def start_text_analysis(data, topics = False):
     :return: A tuple containing the word frequency distribution, word cloud, sentiment scores using TextBlob and Vader, LDA model, and coherence score.
     :rtype: tuple
     """
+    
     captions = data["ad_creative_bodies"].dropna()
     tokens = captions.apply(preprocess)
 
@@ -190,8 +237,8 @@ def start_text_analysis(data, topics = False):
     textblb_sent, nltk_sent = get_sentiment(captions)
 
     if topics:
-        lda_model, coherence = get_topics(tokens)
-        return tokens, freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence
+        lda_model, coherence, sent_topics_df = get_topics(tokens, captions)
+        return tokens, freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence, sent_topics_df
     else: 
         return tokens, freq_dist, word_cl, textblb_sent, nltk_sent
 
@@ -299,7 +346,7 @@ def get_graphs(data):
     nr_ads_per_page = data.groupby(["page_id", "page_name"])["id"].count().reset_index(name="nr_ads")
     fig3 = px.histogram(nr_ads_per_page, x='nr_ads', title='Distribution of Ads per Page',
                         labels={'nr_ads': 'Number of Ads', 'count': 'Number of Pages'})
-    fig3.update_traces(marker_color='honeydew', marker_line_color='black')
+    fig3.update_traces(marker_color='darkmagenta', marker_line_color='black')
     fig3.update_layout(bargap=0.1, bargroupgap=0.05)
     
     # top 20 pages with most ads
@@ -309,7 +356,7 @@ def get_graphs(data):
                 title='Top 20 pages by number of ads',
                 labels={'nr_ads': 'Number of Ads', 'page_name': 'Page Name'})
     fig4.update_xaxes(tickangle=45, tickmode='linear')
-    fig3.update_traces(marker_color='darkorchid', marker_line_color='black')
+    fig4.update_traces(marker_color='darkorchid', marker_line_color='black')
     fig4.update_layout(xaxis=dict(categoryorder='total descending'))
 
     # total reach per page - very skewed 
@@ -318,7 +365,7 @@ def get_graphs(data):
     fig5 = px.histogram(reach_by_page, x='eu_total_reach', 
                     title='Distribution of EU total reach per Page',
                     labels={'eu_total_reach': 'Total EU reach', 'page_name': 'Page Name'})
-    fig5.update_traces(marker_color='darkmagenta', marker_line_color='black')
+    fig5.update_traces(marker_color='yellowgreen', marker_line_color='black')
     fig5.update_layout(bargap=0.1, bargroupgap=0.05)
 
     # top 20 pages with highest total reach
@@ -346,6 +393,7 @@ def get_graphs(data):
     fig8 = px.scatter(data, x='campaign_duration', y='eu_total_reach', 
                  title='Campaign Duration vs. EU Total Reach',
                  labels={'campaign_duration': 'Campaign Duration (Days)', 'eu_total_reach': 'EU Total Reach'})
+    fig8.update_traces(marker_color='darkorange', marker_line_color='black')
     
     # reach data by age and gender
     data_by_age = transform_data_by_age(data)
