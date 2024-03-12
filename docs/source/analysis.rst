@@ -80,6 +80,25 @@ get_topics Function
       >>> print('Coherence Score:', coherence)
       Coherence Score: 0.4461575424013203
 
+get_topic_per_caption Function
+------------------------------
+
+.. autofunction:: get_topic_per_caption
+
+   Example::
+   
+      >>> # assuming the tokens are already processed captions
+      >>> dictionary = corpora.Dictionary(tokens)
+      >>> corpus = [dictionary.doc2bow(text) for text in tokens]
+      >>> lda_model = LdaModel(corpus, id2word = dictionary, num_topics = 3, passes = 20, eval_every = None)
+      >>> sent_topics_df = get_topic_per_caption(lda_model, corpus)
+      >>> sent_topics_df.head(5)
+            dom_topic  perc_contr                                     topic_keywords                                 ad_creative_bodies
+      0          1      0.5464  would, could, one, father, like, eye, back, ge...  ["Ready to conquer your blood sugar? \nDiscove...
+      1          1      0.6054  would, could, one, father, like, eye, back, ge...  ["👀 Watch now to conquer Type 2 Diabetes! Lowe...
+      2          0      0.9734  alpha, victor, said, daisy, like, andrea, ceci...  ['Fast Food Chains: Worst to Best, Ranked (202...
+
+
 start_text_analysis Function
 ----------------------------
 

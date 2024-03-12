@@ -226,16 +226,16 @@ def extract_frames(video, project_name, interval=3):
     :param interval: The interval between the (in seconds), optional. Default = 3 seconds.
     :type interval: int
     """
-    video_path = f"output\\{project_name}\\ads_videos\\{video}"
-    # Create a VideoCapture object
+    video_path = f"output/{project_name}/ads_videos/{video}"
+    # create a VideoCapture object
     cap = cv2.VideoCapture(video_path)
 
-    # Check if video opened successfully
+    # check if video opened successfully
     if not cap.isOpened():
         print("Error: Could not open video.")
         return
 
-    # Get video frame rate
+    # get video frame rate
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration = frame_count / fps
@@ -244,7 +244,7 @@ def extract_frames(video, project_name, interval=3):
 
     # get the ad id
     ad_id = os.path.basename(video_path).split('_')[1]
-    frame_dir = f"{project_name}\\video_frames"
+    frame_dir = f"{project_name}/video_frames"
     if not os.path.exists(frame_dir):
         os.makedirs(frame_dir)
 
@@ -255,13 +255,13 @@ def extract_frames(video, project_name, interval=3):
         if not ret:
             break
 
-        # Check if the current frame number is the one we want to save
+        # check if the current frame number is the one we want to save
         if frame_number % (interval * fps) == 0:
-            frame_path = f"{frame_dir}\\ad_{ad_id}_frame{frame_number}.png"
+            frame_path = f"{frame_dir}/ad_{ad_id}_frame{frame_number}.png"
             cv2.imwrite(frame_path, frame)
             print(f"Saved {frame_path}")
 
         frame_number += 1
 
-    # Release the VideoCapture object
+    # release the VideoCapture object
     cap.release()

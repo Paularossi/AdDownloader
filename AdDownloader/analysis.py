@@ -22,24 +22,13 @@ from wordcloud import WordCloud
 from textblob import TextBlob
 from gensim.parsing.preprocessing import remove_stopwords
 import plotly.express as px
-import time
 
 
 
 # add to the dependencies: transformers==4.37.2, torch==2.2.0, torchvision==0.17.0 (check if needed?), spacy==3.7.4
 
-# text analysis
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('vader_lexicon')
-nltk.download('wordnet')
 #nltk.download('omw-1.4')
 
-# tokenize and remove stopwords
-all_stopwords = set(stopwords.words('english')) | \
-                set(stopwords.words('french')) | \
-                set(stopwords.words('dutch'))
-# check if the stopwords are reliable
 
 DATE_MIN = 'ad_delivery_start_time'
 DATE_MAX = 'ad_delivery_stop_time'
@@ -87,6 +76,10 @@ def preprocess(text):
     lemmatizer = WordNetLemmatizer()
     try: # otherwise throws an error if Nan
         #text = [word.lower() for word in word_tokenize(text) if word.isalnum() and word.lower() not in all_stopwords]
+        # check if the stopwords are reliable
+        all_stopwords = set(stopwords.words('english')) | \
+                        set(stopwords.words('french')) | \
+                        set(stopwords.words('dutch'))
         words = word_tokenize(text)
         for word in words:
             lower_word = word.lower()
@@ -95,6 +88,11 @@ def preprocess(text):
                 lemmatized_word = lemmatizer.lemmatize(lower_word)
                 processed_text.append(lemmatized_word)
     except Exception as e:
+        # text analysis
+        nltk.download('stopwords')
+        nltk.download('punkt')
+        nltk.download('vader_lexicon')
+        nltk.download('wordnet')
         pass
         #print(f"exception {e} occured for text {text}.")
     return processed_text
@@ -141,22 +139,18 @@ def get_sentiment(captions):
     return textblb_sent, nltk_sent
 
 
-def get_topics(tokens, captions, topics = 3):
+def get_topics(tokens, topics = 3):
     """
     Perform topic modeling on a given set of tokens using Latent Dirichlet Allocation (LDA).
     The coherence score of the model can be improved by adjusting the number of topics or the hyperparameters of LDA.
 
     :param tokens: A list of tokenized words, created using the `preprocess` function from this module.
     :type tokens: list
-    :param tokens: The original captions of the ads.
-    :type tokens: list
     :param topics: The number of topics to extract (default is 3).
     :type topics: int, optional
     :return: A tuple containing the trained LDA model and the coherence score.
     :rtype: tuple
     """
-
-    start_time = time.time()
     
     # create a dictionary and a corpus
     dictionary = corpora.Dictionary(tokens) # only accepts an array of unicode tokens on input
@@ -169,8 +163,8 @@ def get_topics(tokens, captions, topics = 3):
     print('Number of unique tokens: %d' % len(dictionary))
     print('Number of documents: %d' % len(corpus))
 
-    # create a gensim lda models
-    lda_model = LdaModel(corpus, id2word = dictionary, num_topics = 10, update_every = 1, passes = 20, alpha='auto', eval_every=None)
+    # create a gensim lda model
+    lda_model = LdaModel(corpus, id2word = dictionary, num_topics = topics, update_every = 1, passes = 20, alpha='auto', eval_every = None)
 
     # evaluate model coherence - the degree of semantic similarity between high scoring words in each topic
     # c_v - frequency of the top words and their degree of co-occurrence
@@ -179,21 +173,26 @@ def get_topics(tokens, captions, topics = 3):
     # to improve this score, we can adjust the number of topics, the hyperparameters of the lda model (alpha and beta), or experiment with preprocessing 
 
     # associate each caption with a topic
-    sent_topics_df = get_topic_per_caption(lda_model, corpus, captions)
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    minutes = int(elapsed_time // 60)
-    seconds = int(elapsed_time % 60)
-    print(f"Topic modeling finished in {minutes} minutes and {seconds} seconds.") 
+    topics_df = get_topic_per_caption(lda_model, corpus)
     #TODO: need to adapt for different languages?
 
-    return lda_model, coherence_lda, sent_topics_df
+    return lda_model, coherence_lda, topics_df
 
 
-def get_topic_per_caption(lda_model, corpus, captions):
-    #TODO: add docs
-    sent_topics_df = pd.DataFrame(columns = ['dom_topic', 'perc_contr', 'topic_keywords'])
+def get_topic_per_caption(lda_model, corpus, captions = None):
+    """
+    Extract the main topic per caption using a trained LDA model.
+
+    :param lda_model: A trained LDA model.
+    :type lda_model: gensim.models.LdaModel
+    :param corpus: The corpus of documents (in Bag of Words format) used to train the LDA model.
+    :type corpus: list of list of strings
+    :param captions: A Series containing the original captions (optional).
+    :type captions: pandas.Series
+    :return: A DataFrame containing the dominant topic, percentage contribution, topic keywords, and the original caption for each document.
+    :rtype: pandas.DataFrame
+    """
+    topics_df = pd.DataFrame(columns = ['dom_topic', 'perc_contr', 'topic_keywords'])
     
     # get main topic in each document
     for i, row in enumerate(lda_model[corpus]):
@@ -204,16 +203,17 @@ def get_topic_per_caption(lda_model, corpus, captions):
             if j == 0:  # => dominant topic
                 wp = lda_model.show_topic(topic_num)
                 topic_keywords = ", ".join([word for word, prop in wp])
-                sent_topics_df = pd.concat([sent_topics_df, 
-                                            pd.DataFrame({'dom_topic': [int(topic_num)], 'perc_contr': [round(prop_topic,4)], 'topic_keywords': [topic_keywords]})], 
-                                            ignore_index=True)
+                topics_df = pd.concat([topics_df, 
+                                        pd.DataFrame({'dom_topic': [int(topic_num)], 'perc_contr': [round(prop_topic,4)], 'topic_keywords': [topic_keywords]})], 
+                                        ignore_index=True)
             else:
                 break
 
-    # add original text to the end of the output
-    captions = captions.reset_index(drop = True)
-    sent_topics_df2 = pd.concat([sent_topics_df, captions], axis=1)
-    return(sent_topics_df2)
+    if captions is not None:
+        # add original text to the end of the output
+        captions = captions.reset_index(drop = True)
+        topics_df = pd.concat([topics_df, captions], axis=1)
+    return(topics_df)
  
 
 # main function
@@ -356,7 +356,7 @@ def get_graphs(data):
                 title='Top 20 pages by number of ads',
                 labels={'nr_ads': 'Number of Ads', 'page_name': 'Page Name'})
     fig4.update_xaxes(tickangle=45, tickmode='linear')
-    fig4.update_traces(marker_color='darkorchid', marker_line_color='black')
+    fig4.update_traces(marker_color='darkorange', marker_line_color='black')
     fig4.update_layout(xaxis=dict(categoryorder='total descending'))
 
     # total reach per page - very skewed 
@@ -393,20 +393,42 @@ def get_graphs(data):
     fig8 = px.scatter(data, x='campaign_duration', y='eu_total_reach', 
                  title='Campaign Duration vs. EU Total Reach',
                  labels={'campaign_duration': 'Campaign Duration (Days)', 'eu_total_reach': 'EU Total Reach'})
-    fig8.update_traces(marker_color='darkorange', marker_line_color='black')
+    fig8.update_traces(marker_color='darkorchid', marker_line_color='black')
     
     # reach data by age and gender
     data_by_age = transform_data_by_age(data)
     data_by_gender = transform_data_by_gender(data)
 
     # reach across age ranges (all ads)
-    fig9 = px.violin(data_by_age, y = 'Reach', x = 'Age Range', color='Age Range', template = "seaborn", title="Reach Across Age Ranges for all ads")
+    fig9 = px.violin(data_by_age, y='Reach', x='Age Range', color='Age Range', template = "seaborn", title="Reach Across Age Ranges for all ads (Violin plot)")
     
     # reach across genders (all ads)
-    fig10 = px.violin(data_by_gender, y = 'Reach', x = 'Gender', color='Gender', title="Reach Across Genders for all ads")
+    fig10 = px.violin(data_by_gender, y ='Reach', x='Gender', color='Gender', title="Reach Across Genders for all ads (Violin plot)")
     
 
     return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10
+
+
+def show_topics_top_pages(topic_data):
+    nr_ads_per_page = topic_data.groupby(["page_id", "page_name"])["id"].count().reset_index(name="nr_ads")
+    top_20_pages = nr_ads_per_page.sort_values(by="nr_ads", ascending=False)['page_id'].head(20) 
+
+    filtered_data = topic_data[topic_data['page_id'].isin(top_20_pages)].dropna(subset = "dom_topic")
+
+    # aggregate to count the number of ads per dominant topic for each page
+    dom_topic_distribution = filtered_data.groupby(['page_name', 'dom_topic']).size().reset_index(name='nr_ads')
+
+    fig = px.bar(dom_topic_distribution,
+                x='page_name', y='nr_ads', color='dom_topic',
+                title='Distribution of Dominant Topics for the Top 20 Pages by Number of Ads',
+                labels={'nr_ads': 'Number of Ads', 'page_name': 'Page Name', 'dom_topic': 'Dominant Topic'})
+
+    fig.update_xaxes(tickangle=45, tickmode='linear', categoryorder='total descending')
+    fig.update_traces(marker_line_color='black')
+    fig.update_layout(legend_title_text='Dominant Topic')
+
+    return fig
+
 
 
 

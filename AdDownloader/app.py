@@ -1,6 +1,7 @@
 import base64
 import io
 from dash import Dash, dcc, html, callback, Input, Output, State, dash_table, no_update
+from matplotlib.pyplot import sca
 import plotly.express as px
 import pandas as pd
 from AdDownloader import analysis
@@ -108,22 +109,28 @@ def parse_contents(contents, filename):
         html.H2("Choose a task by clicking a button below."),
         html.Div([
             # generate graphs
-            html.Button(id="graphs-button", children="Generate Graphs"),
-
+            html.Button(id="graphs-button", children="Generate Graphs")
+        ]),
+        html.Div([
             # generate text analysis
             html.Button(id="text-analysis-button", children="Generate Text Analysis"),
-
+            html.H5('Text analysis takes on average 15 seconds for every 1000 ads.', style={'marginLeft': '20px'}),
+        ], style={'display': 'flex', 'alignItems': 'center'}),
+        html.Div([
             # generate topic modeling
-            html.Button(id="topic-button", children="Generate Topic Analysis")
-            #TODO: getting stuck here
-        ]),
+            html.Button(id="topic-button", children="Generate Topic Analysis"),
+            html.H5('Topic modeling takes on average 30 seconds for every 1000 ads.', style={'marginLeft': '20px'}),
+        ], style={'display': 'flex', 'alignItems': 'center'}),
+
+        html.Hr(),
 
         # start image download
         html.Div([
-            html.H5('Or provide your access token and desired number of images to download (might take some time to run depending on your dataset size).'),
+            html.H5('Or provide your access token and desired number of images to download.'),
             dcc.Input(id="access-tkn", type="text", placeholder="Insert your access token", debounce=True),
             dcc.Input(id="nr-ads", type="number", placeholder="Insert a number"),
             html.Button(id="image-analysis-button", children="Generate Image Analysis"),
+            html.H5('The media download takes on average 1.5-2 minutes for every 50 ads.')
         ]),
 
         html.Hr(),
@@ -132,6 +139,7 @@ def parse_contents(contents, filename):
     return table_children
 
 
+# update output of the table
 @app.callback(Output('output-datatable', 'children'),
               Input('upload-data', 'contents'),
               State('upload-data', 'filename'))
@@ -139,6 +147,32 @@ def update_output(contents, filename):
     if contents is not None:
         children = parse_contents(contents, filename)
         return children
+    
+
+@app.callback(Output("download-sent-dataframe", "data"),
+             Input("btn_xlsx_sent", "n_clicks"),
+             State('sentiment-data', 'data'),
+             State('stored-project-name', 'data'),
+             prevent_initial_call=True)
+def download_sent_data(n_clicks, sent_data, project_name):
+    try:
+        df = pd.DataFrame(sent_data)
+        return dcc.send_data_frame(df.to_excel, f"{project_name}_sentiment_data.xlsx", index=False)
+    except:
+        print('Unable to save sentiment data.')
+
+
+@app.callback(Output("download-topic-dataframe", "data"),
+             Input("btn_xlsx_topic", "n_clicks"),
+             State('topic-data', 'data'),
+             State('stored-project-name', 'data'),
+             prevent_initial_call=True)
+def download_topic_data(n_clicks, topic_data, project_name):
+    try:
+        df = pd.DataFrame(topic_data)
+        return dcc.send_data_frame(df.to_excel, f"{project_name}_topic_data.xlsx", index=False)
+    except:
+        print('Unable to save topic data.')
 
 
 @app.callback(Output('output-graphs', 'children'),
@@ -274,6 +308,7 @@ def make_text_analysis(n, data):
     else:
         try:
             df = pd.DataFrame(data)
+            df = df.dropna(subset = ["ad_creative_bodies"])
             tokens, freq_dist, word_cl, textblb_sent, nltk_sent = analysis.start_text_analysis(df)
             # add these to the dataframe and save it
             top_10_words = freq_dist.most_common(10)
@@ -301,6 +336,10 @@ def make_text_analysis(n, data):
             fig2.update_traces(marker_line_color='black')
             fig2.update_layout(barmode='relative', xaxis=dict(categoryorder='total descending'))
 
+            # add the sentiment to the original data (to save it later)
+            df["textblb_sent"] = textblb_sent
+            df["nltk_sent"] = nltk_sent
+
         except Exception as e:
             return html.Div([html.H5(f"Failed to perform ad text analysis. Error: {e}")])
         
@@ -315,7 +354,10 @@ def make_text_analysis(n, data):
                 dcc.Graph(id='sentiment', figure=fig2)
             ], className='six columns')
         ], className='row'),
-        html.Hr(),     
+        dcc.Store(id='sentiment-data', data=df.to_dict('records')),
+        html.Button("Download Sentiment Data", id="btn_xlsx_sent"),
+        dcc.Download(id="download-sent-dataframe"),
+        html.Hr(),
     ])
         
     return text_children
@@ -332,14 +374,27 @@ def make_topic_analysis(n, data):
             df = pd.DataFrame(data)
             captions = df["ad_creative_bodies"].dropna()
             tokens = captions.apply(analysis.preprocess)
-            lda_model, coherence, sent_topics_df = analysis.get_topics(tokens, captions)
+            lda_model, coherence, topics_df = analysis.get_topics(tokens)
             topics = [f"Topic {topic[0]}: {topic[1]}" for topic in lda_model.print_topics(num_words=8)]
-            topic_distribution = sent_topics_df['dom_topic'].value_counts().reset_index()
+            topic_distribution = topics_df['dom_topic'].value_counts().reset_index()
 
             fig1 = px.bar(topic_distribution, x='dom_topic', y='count', 
                         labels={'dom_topic': 'Dominant Topic', 'count': 'Count'}, 
                         title='Topic Distribution Across all Ads', color='dom_topic')
             fig1.update_layout(xaxis=dict(categoryorder='total descending'))
+
+            topics_df = pd.concat([df, topics_df], axis=1)
+            if coherence < 0.4:
+                qual = 'bad'
+                qual_color = 'red'
+            elif coherence >= 0.6:
+                qual = 'good'
+                qual_color = 'green'
+            else:
+                qual = 'average'
+                qual_color = 'orange'
+
+            fig2 = analysis.show_topics_top_pages(topics_df)
 
         except Exception as e:
             return html.Div([html.H5(f"Failed to perform ad topic analysis. Error: {e}")])
@@ -347,19 +402,24 @@ def make_topic_analysis(n, data):
     topic_children = html.Div([
         html.H2('Topic Modeling.'),
         html.Div([
-            html.H4("Topics:"),
-            html.Ul([html.Li(topic) for topic in topics]),
-        ], className='six columns'),
-        html.Div([
             html.Div([
                 dcc.Graph(id='topic-dist', figure=fig1)
             ], className='six columns'),
             html.Div([
-                html.H4("Coherence Score:"),
-                html.P(coherence)
-            ], className='six columns')
+                dcc.Graph(id='topic-dist-top-pages', figure=fig2),
+            ], className='six columns'),
         ], className='row'),
-        
+        dcc.Store(id='topic-data', data=topics_df.to_dict('records')),
+        html.Div([
+            html.H4("Topics:"),
+            html.Ul([html.Li(topic) for topic in topics]),
+            html.H4("Coherence Score:"),
+            html.P([f"{coherence} - ", html.Span(qual, style={'color': qual_color})])
+        ]),        
+
+        html.Button("Download Topic Data", id="btn_xlsx_topic"),
+        dcc.Download(id="download-topic-dataframe"),
+        html.Hr(),
     ])
         
     return topic_children
