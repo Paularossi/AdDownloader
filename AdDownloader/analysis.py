@@ -1,13 +1,11 @@
 """This module provides different text and image analysis, and visualization functions for the AdDownloader."""
 
-#import cv2
+from math import sqrt, ceil
 import numpy as np
 import pandas as pd
 import os
-#from sklearn.cluster import KMeans
-#from skimage import color, data
-#from skimage.feature import canny, corner_harris, corner_peaks
-#from collections import Counter
+import re
+from collections import Counter
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.sentiment import SentimentIntensityAnalyzer
@@ -22,10 +20,14 @@ from wordcloud import WordCloud
 from textblob import TextBlob
 from gensim.parsing.preprocessing import remove_stopwords
 import plotly.express as px
+from PIL import Image
+from sklearn.cluster import KMeans
+from skimage import color as sk_color
+from skimage.feature import canny, corner_harris, corner_peaks
+import cv2
+from transformers import BlipProcessor, BlipForConditionalGeneration, BlipForQuestionAnswering
 
-
-
-# add to the dependencies: transformers==4.37.2, torch==2.2.0, torchvision==0.17.0 (check if needed?), spacy==3.7.4
+# add to the dependencies: spacy==3.7.4
 
 #nltk.download('omw-1.4')
 
@@ -35,6 +37,9 @@ DATE_MAX = 'ad_delivery_stop_time'
 
 GENDERS = ['female', 'male', 'unknown']
 AGE_RANGES = ['13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+']
+
+AD_PATTERN = re.compile(r"ad_(\d+(?:_\d+)?)_img\.png")
+
 
 
 def load_data(data_path):
@@ -58,7 +63,6 @@ def load_data(data_path):
         )
         return data
     except Exception as e:
-        #print(f"Error while trying to load the data. Check if there exists a file output/{project_name}/ads_data/processed_data.xlsx")
         print(f"Unable to load data. Error: {e}")
         return None
 
@@ -139,15 +143,15 @@ def get_sentiment(captions):
     return textblb_sent, nltk_sent
 
 
-def get_topics(tokens, topics = 3):
+def get_topics(tokens, nr_topics = 3):
     """
     Perform topic modeling on a given set of tokens using Latent Dirichlet Allocation (LDA).
     The coherence score of the model can be improved by adjusting the number of topics or the hyperparameters of LDA.
 
     :param tokens: A list of tokenized words, created using the `preprocess` function from this module.
     :type tokens: list
-    :param topics: The number of topics to extract (default is 3).
-    :type topics: int, optional
+    :param nr_topics: The number of topics to extract (default is 3).
+    :type nr_topics: int, optional
     :return: A tuple containing the trained LDA model and the coherence score.
     :rtype: tuple
     """
@@ -157,14 +161,17 @@ def get_topics(tokens, topics = 3):
     # the dictionary represents the index of the word and its frequency
 
     # filter out words that occur less than 20 documents, or more than 80% of the documents.
-    dictionary.filter_extremes(no_below = 20, no_above=0.9)
+    if len(tokens) < 100:
+        dictionary.filter_extremes(no_below = 5, no_above=0.9)
+    else:
+        dictionary.filter_extremes(no_below = 20, no_above=0.9)
 
     corpus = [dictionary.doc2bow(text) for text in tokens]
     print('Number of unique tokens: %d' % len(dictionary))
     print('Number of documents: %d' % len(corpus))
 
     # create a gensim lda model
-    lda_model = LdaModel(corpus, id2word = dictionary, num_topics = topics, update_every = 1, passes = 20, alpha='auto', eval_every = None)
+    lda_model = LdaModel(corpus, id2word = dictionary, num_topics = nr_topics, update_every = 1, passes = 20, alpha='auto', eval_every = None)
 
     # evaluate model coherence - the degree of semantic similarity between high scoring words in each topic
     # c_v - frequency of the top words and their degree of co-occurrence
@@ -217,7 +224,7 @@ def get_topic_per_caption(lda_model, corpus, captions = None):
  
 
 # main function
-def start_text_analysis(data, topics = False):
+def start_text_analysis(text_data, topics = False):
     """
     Perform text analysis including preprocessing, word frequency calculation, sentiment analysis, and topic modeling.
 
@@ -229,7 +236,7 @@ def start_text_analysis(data, topics = False):
     :rtype: tuple
     """
     
-    captions = data["ad_creative_bodies"].dropna()
+    captions = text_data.dropna()
     tokens = captions.apply(preprocess)
 
     freq_dist, word_cl = get_word_freq(tokens)
@@ -330,17 +337,32 @@ def get_graphs(data):
     :rtype: tuple
     """
     
-    # total reach by ad_delivery_start_time (cohort)
-    ad_start_cohort = data.groupby("ad_delivery_start_time")['eu_total_reach'].sum().reset_index()
-    fig1 = px.line(ad_start_cohort, x='ad_delivery_start_time', y='eu_total_reach', 
+    pol_ads = True if "impressions" in data.columns else False
+    # total reach/impressions by ad_delivery_start_time (cohort)
+    if pol_ads: # political ads
+        ad_start_cohort = data.groupby("ad_delivery_start_time")['impressions_avg'].sum().reset_index()
+        fig1 = px.line(ad_start_cohort, x='ad_delivery_start_time', y='impressions_avg', 
+                    title='Total Average Impressions by Ad Delivery Start Date',
+                    labels={'ad_delivery_start_time': 'Ad Campaign Start', 'impressions_avg': 'Total Average Impressions'})
+
+    else: # all ads
+        ad_start_cohort = data.groupby("ad_delivery_start_time")['eu_total_reach'].sum().reset_index()
+        fig1 = px.line(ad_start_cohort, x='ad_delivery_start_time', y='eu_total_reach', 
                    title='EU Total Reach by Ad Delivery Start Date',
                    labels={'ad_delivery_start_time': 'Ad Campaign Start', 'eu_total_reach': 'EU Total Reach'})
 
-    # total reach distribution (overall) - VERY skewed
-    fig2 = px.histogram(data, x='eu_total_reach',  title='Distribution of EU Total Reach',
-                        labels={'eu_total_reach': 'EU Total Reach', 'count': 'Number of Pages'})
-    fig2.update_traces(marker_color='darkgreen', marker_line_color='black')
-    fig2.update_layout(bargap=0.1, bargroupgap=0.05)
+    # total reach/impressions distribution (overall) - VERY skewed
+    if pol_ads:
+        fig2 = px.histogram(data, x='impressions_avg',  title='Distribution of Total Average Impressions',
+                            labels={'impressions_avg': 'Total Average Impressions', 'count': 'Number of Pages'})
+        fig2.update_traces(marker_color='darkgreen', marker_line_color='black')
+        fig2.update_layout(bargap=0.1, bargroupgap=0.05)
+    
+    else:
+        fig2 = px.histogram(data, x='eu_total_reach',  title='Distribution of EU Total Reach',
+                            labels={'eu_total_reach': 'EU Total Reach', 'count': 'Number of Pages'})
+        fig2.update_traces(marker_color='darkgreen', marker_line_color='black')
+        fig2.update_layout(bargap=0.1, bargroupgap=0.05)
     
     # number of ads per page - very skewed
     nr_ads_per_page = data.groupby(["page_id", "page_name"])["id"].count().reset_index(name="nr_ads")
@@ -349,34 +371,56 @@ def get_graphs(data):
     fig3.update_traces(marker_color='darkmagenta', marker_line_color='black')
     fig3.update_layout(bargap=0.1, bargroupgap=0.05)
     
-    # top 20 pages with most ads
+    # top X pages with most ads
     nr_ads_per_page_sorted = nr_ads_per_page.sort_values(by="nr_ads", ascending=False).head(20) 
 
     fig4 = px.bar(nr_ads_per_page_sorted, x='page_name', y='nr_ads', 
-                title='Top 20 pages by number of ads',
+                title=f'Top {len(nr_ads_per_page_sorted)} pages by number of ads',
                 labels={'nr_ads': 'Number of Ads', 'page_name': 'Page Name'})
     fig4.update_xaxes(tickangle=45, tickmode='linear')
     fig4.update_traces(marker_color='darkorange', marker_line_color='black')
     fig4.update_layout(xaxis=dict(categoryorder='total descending'))
 
-    # total reach per page - very skewed 
-    reach_by_page = data.groupby(["page_id", "page_name"])["eu_total_reach"].sum().reset_index(name="eu_total_reach")
+    # total reach/impressions per page - very skewed 
+    if pol_ads:
+        reach_by_page = data.groupby(["page_id", "page_name"])["impressions_avg"].sum().reset_index(name="impressions_avg")
+        nbins = ceil(sqrt(len(reach_by_page)))
 
-    fig5 = px.histogram(reach_by_page, x='eu_total_reach', 
-                    title='Distribution of EU total reach per Page',
-                    labels={'eu_total_reach': 'Total EU reach', 'page_name': 'Page Name'})
-    fig5.update_traces(marker_color='yellowgreen', marker_line_color='black')
-    fig5.update_layout(bargap=0.1, bargroupgap=0.05)
+        fig5 = px.histogram(reach_by_page, x='impressions_avg', 
+                        title='Distribution of Total Average Impressions per Page',
+                        labels={'impressions_avg': 'Total EU reach', 'page_name': 'Page Name'}, nbins=nbins)
+        fig5.update_traces(marker_color='yellowgreen', marker_line_color='black')
+        fig5.update_layout(bargap=0.1, bargroupgap=0.05)
 
-    # top 20 pages with highest total reach
-    reach_by_page_sorted = reach_by_page.sort_values(by="eu_total_reach", ascending=False).head(20)
+    else:
+        reach_by_page = data.groupby(["page_id", "page_name"])["eu_total_reach"].sum().reset_index(name="eu_total_reach")
 
-    fig6 = px.bar(reach_by_page_sorted, x='page_name', y='eu_total_reach', 
-                title='Top 20 pages by EU total reach',
-                labels={'eu_total_reach': 'EU Total reach', 'page_name': 'Page Name'})
-    fig6.update_xaxes(tickangle=45, tickmode='linear')
-    fig6.update_traces(marker_color='burlywood', marker_line_color='black')
-    fig6.update_layout(xaxis=dict(categoryorder='total descending'))
+        fig5 = px.histogram(reach_by_page, x='eu_total_reach', 
+                        title='Distribution of EU total reach per Page',
+                        labels={'eu_total_reach': 'Total EU reach', 'page_name': 'Page Name'})
+        fig5.update_traces(marker_color='yellowgreen', marker_line_color='black')
+        fig5.update_layout(bargap=0.1, bargroupgap=0.05)
+
+    # top 20 pages with highest total reach/impressions
+    if pol_ads:
+        reach_by_page_sorted = reach_by_page.sort_values(by="impressions_avg", ascending=False).head(20)
+
+        fig6 = px.bar(reach_by_page_sorted, x='page_name', y='impressions_avg', 
+                    title=f'Top {len(reach_by_page_sorted)} Pages by Total Average Impressions',
+                    labels={'impressions_avg': 'Total Average Impressions', 'page_name': 'Page Name'})
+        fig6.update_xaxes(tickangle=45, tickmode='linear')
+        fig6.update_traces(marker_color='burlywood', marker_line_color='black')
+        fig6.update_layout(xaxis=dict(categoryorder='total descending'))
+
+    else:
+        reach_by_page_sorted = reach_by_page.sort_values(by="eu_total_reach", ascending=False).head(20)
+
+        fig6 = px.bar(reach_by_page_sorted, x='page_name', y='eu_total_reach', 
+                    title=f'Top {len(reach_by_page_sorted)} Pages by EU Total Reach',
+                    labels={'eu_total_reach': 'EU Total reach', 'page_name': 'Page Name'})
+        fig6.update_xaxes(tickangle=45, tickmode='linear')
+        fig6.update_traces(marker_color='burlywood', marker_line_color='black')
+        fig6.update_layout(xaxis=dict(categoryorder='total descending'))
 
     # ad campain duration distribution
     fig7 = px.histogram(data, x='campaign_duration', 
@@ -389,11 +433,18 @@ def get_graphs(data):
 
     campaign_duration_by_page_sorted = campaign_duration_by_page.sort_values(by="avg_campaign_duration", ascending=False).head(20) 
 
-    # relationship between campaign duration and total reach
-    fig8 = px.scatter(data, x='campaign_duration', y='eu_total_reach', 
-                 title='Campaign Duration vs. EU Total Reach',
-                 labels={'campaign_duration': 'Campaign Duration (Days)', 'eu_total_reach': 'EU Total Reach'})
-    fig8.update_traces(marker_color='darkorchid', marker_line_color='black')
+    # relationship between campaign duration and total reach/impressions
+    if pol_ads:
+        fig8 = px.scatter(data, x='campaign_duration', y='impressions_avg', 
+                    title='Campaign Duration vs. Total Average Impressions',
+                    labels={'campaign_duration': 'Campaign Duration (Days)', 'impressions_avg': 'Total Average Impressions'})
+        fig8.update_traces(marker_color='darkorchid', marker_line_color='black')
+
+    else:
+        fig8 = px.scatter(data, x='campaign_duration', y='eu_total_reach', 
+                    title='Campaign Duration vs. EU Total Reach',
+                    labels={'campaign_duration': 'Campaign Duration (Days)', 'eu_total_reach': 'EU Total Reach'})
+        fig8.update_traces(marker_color='darkorchid', marker_line_color='black')
     
     # reach data by age and gender
     data_by_age = transform_data_by_age(data)
@@ -430,72 +481,124 @@ def show_topics_top_pages(topic_data):
     return fig
 
 
+# image captioning
+def blip_call(images_path, task = "image_captioning", nr_images = None, question = None):
+    processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
+    model_captioning = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
+    model_answering = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base")
+
+    image_files = [f for f in os.listdir(images_path) if f.endswith(('jpg', 'png', 'jpeg'))]
+
+    if nr_images is None:
+        nr_images = len(image_files)
+    tasks = ["image_captioning", "visual_question_answering"]
+    rows_list = []
+    i = 0
+
+    for image_file in image_files:
+        if i == nr_images:
+            break
+
+        raw_image = Image.open(os.path.join(images_path, image_file)).convert('RGB')
+        numbers = AD_PATTERN.findall(image_file)
+        ad_id = '_'.join(numbers) # extract ad id
+
+        # question answering
+        if task == "visual_question_answering":
+            # some checks first
+            if question is None:
+                print("No question provided.")
+                return
+        
+            dict = {'ad_id': ad_id}
+            for i in range(len(question)):
+                inputs_quest = processor(raw_image, question[i], return_tensors="pt")
+
+                out_quest = model_answering.generate(**inputs_quest, max_length = 30)
+                #print(processor.decode(out_quest[0], skip_special_tokens=True))
+                dict['img_content'] = processor.decode(out_quest[0], skip_special_tokens=True)
+
+        # image_captioning
+        else:
+            inputs_cpt = processor(raw_image, return_tensors="pt")
+            out_cpt = model_captioning.generate(**inputs_cpt, max_length = 20)
+            #print(processor.decode(out_cpt[0], skip_special_tokens=True))
+            dict = {'ad_id': ad_id, 'img_caption': processor.decode(out_cpt[0], skip_special_tokens=True)}
+
+        rows_list.append(dict)
+
+        i += 1
+        print(f'Done with {task} of ad with id {ad_id}') 
+        
+
+    img_content = pd.DataFrame(rows_list)
+    return(img_content)
 
 
-""" 
-# IMAGE CAPTIONING
-
-from PIL import Image
-from transformers import BlipProcessor, BlipForConditionalGeneration, BlipForQuestionAnswering
-
-processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-model_captioning = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
-model_answering = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base")
-
-questions = ["Does the ad contain food?", "Is the ad targeted at children?", "Does the ad contain toys/cartoons?",
-            "Is there a special offer or promotion mentioned?", "Are there any logos or brand names visible?",
-            "What meal of the day is likely being shown?", "What food items are shown in the ad?",
-            "What mood does the ad suggest?", "Does the ad contain people?"]
-
-folder = f"output/{project_name}/ads_images"
-imgs = os.listdir(folder)
-raw_image = Image.open(os.path.join(folder, imgs[2])).convert('RGB')
-
-question = "what objects do you see in this picture?"
-inputs_cpt = processor(raw_image, return_tensors="pt")
-inputs_quest = processor(raw_image, question, return_tensors="pt")
-
-out_cpt = model_captioning.generate(**inputs_cpt, max_length = 30)
-print(processor.decode(out_cpt[0], skip_special_tokens=True))
-
-out_quest = model_answering.generate(**inputs_quest, max_length = 20)
-print(processor.decode(out_quest[0], skip_special_tokens=True))
-
- """
 
 # IMAGE PROCESSING:
 
-"""
-# extract 3 dominant colors of the ad image
-def extract_dominant_color(image, num_colors = 3):
-    # Resize image to speed up processing
+def extract_dominant_colors(image_path, num_colors = 3):
+    """
+    Extracts the dominant colors from an image using KMeans clustering.
+
+    This function processes the image by resizing it for efficiency and reshaping it into a list of pixels. It then uses KMeans clustering to find the most common colors in the image. The dominant colors are returned as HEX codes along with their percentages in the image.
+
+    :param image_path: The file path of the image to be analyzed.
+    :type image_path: str
+    :param num_colors: The number of dominant colors to extract from the image. Defaults to 3.
+    :type num_colors: int, optional
+    :return: A tuple of two lists: the first list contains the HEX codes of the dominant colors, and the second list contains the percentages of these colors within the image.
+    :rtype: tuple(list, list)
+    """
+
+    image = cv2.imread(image_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    # resize image to speed up processing
     resized_image = cv2.resize(image, (64, 64), interpolation=cv2.INTER_AREA)
 
-    # Reshape the image to be a list of pixels
+    # reshape the image to be a list of pixels
     reshaped_image = resized_image.reshape((resized_image.shape[0] * resized_image.shape[1], 3))
 
-    # Find and display the most common colors
+    # find and display the most common colors
     clf = KMeans(n_clusters=num_colors, n_init=10)
     labels = clf.fit_predict(reshaped_image)
     counts = Counter(labels)
 
     center_colors = clf.cluster_centers_
-    ordered_colors = [center_colors[i] for i in counts.keys()]
-    hex_colors = [f'#{int(c[0]):02x}{int(c[1]):02x}{int(c[2]):02x}' for c in ordered_colors]
-    rgb_colors = [tuple(c) for c in ordered_colors]
 
-    # Calculate percentages
+    # calculate percentages
     total_pixels = len(reshaped_image)
     color_percentages = [(counts[i] / total_pixels) * 100 for i in counts.keys()]
+
+    colors_and_percentages = list(zip(center_colors, color_percentages))
+
+    # Sort the colors by percentage in descending order
+    sorted_colors_and_percentages = sorted(colors_and_percentages, key=lambda cp: cp[1], reverse=True)
+    ordered_colors = [cp[0] for cp in sorted_colors_and_percentages]
+    sorted_percentages = [cp[1] for cp in sorted_colors_and_percentages]
+
+    hex_colors = [f'#{int(c[0]):02x}{int(c[1]):02x}{int(c[2]):02x}' for c in ordered_colors]
 
     #plt.figure(figsize=(8, 6))
     #plt.pie(counts.values(), labels=hex_colors, colors=hex_colors)
     #plt.show()
 
-    return hex_colors, color_percentages
+    return hex_colors, sorted_percentages
 
-# assess image quality - resolution, brightness, sharpness and contrast
+
 def assess_image_quality(image_path):
+    """
+    Assesses the quality of an image based on its resolution, brightness, contrast, and sharpness.
+
+    This function calculates the resolution as the product of image width and height, evaluates brightness as the average value of the pixel intensity, measures contrast as the standard deviation of grayscale pixel intensities, and assesses sharpness by the variance of the Laplacian of the grayscale image. High values of sharpness and contrast generally indicate a higher-quality image.
+
+    :param image_path: The file path of the image to assess.
+    :type image_path: str
+    :return: A tuple containing the resolution (as a single integer value of width multiplied by height), brightness (average pixel intensity), contrast (standard deviation of pixel intensities), and sharpness (variance of the Laplacian) of the image.
+    :rtype: tuple(int, float, float, float)
+    """
     with Image.open(image_path) as img:
         # resolution
         width, height = img.size
@@ -520,19 +623,27 @@ def assess_image_quality(image_path):
 
 # analyse an image including all features of interest
 def analyse_image(image_path):
-    image = cv2.imread(image_path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    """
+    Analyzes an image by extracting its dominant colors, assessing image quality (resolution, brightness, contrast, sharpness), and detecting edges and corners.
+
+    This comprehensive analysis function performs multiple assessments on an image. It extracts the dominant colors and their proportions, calculates quality metrics such as resolution, brightness, contrast, and sharpness, and performs edge detection and corner detection to analyze the image's structure. Additionally, it extracts an advertisement ID from the image file path using a predefined pattern.
+
+    :param image_path: The file path of the image to be analyzed.
+    :type image_path: str
+    :return: A dictionary containing the analysis results, including ad ID, dominant colors and their proportions, resolution, brightness, contrast, sharpness, and the number of corners detected.
+    :rtype: dict
+    """
 
     # extract dominant colors
-    dominant_colors, percentages = extract_dominant_color(image, show_chart=True)
-    for col, percentage in zip(dominant_colors, percentages):
-        print(f"Color: {col}, Percentage: {percentage:.2f}%")
+    dominant_colors, percentages = extract_dominant_colors(image_path)
+    # for col, percentage in zip(dominant_colors, percentages):
+    #     print(f"Color: {col}, Percentage: {percentage:.2f}%")
 
     resolution, brightness, contrast, sharpness = assess_image_quality(image_path)
-    print(f"Resolution: {resolution} pixels, Brightness: {brightness}, Contrast: {contrast}, Sharpness: {sharpness}")
+    #print(f"Resolution: {resolution} pixels, Brightness: {brightness}, Contrast: {contrast}, Sharpness: {sharpness}")
 
     img = Image.open(image_path)
-    img = color.rgb2gray(img)
+    img = sk_color.rgb2gray(img)
 
     # edge detection
     # higher the sigma smoother the image (focus on the outside shape)
@@ -542,25 +653,54 @@ def analyse_image(image_path):
     measure_image = corner_harris(img)
     coords = corner_peaks(measure_image, min_distance=32, threshold_rel=0.02)
     ncorners = len(coords)
-    print("With a min_distance set to 32, we detect a total", len(coords), "corners in the image.")
+    #print("With a min_distance set to 32, we detect a total", len(coords), "corners in the image.")
 
-    numbers = pattern.findall(image_path)
+    numbers = AD_PATTERN.findall(image_path)
     ad_id = '_'.join(numbers) # extract ad id
 
-    dict = {'ad_id': ad_id, 'dom_colors': dominant_colors, 'dom_colors_prop': percentages, 'resolution': resolution,
-            'brightness': brightness, 'contrast': contrast, 'sharpness': sharpness, 'ncorners': ncorners}
-    return dict
+    dict = {'ad_id': ad_id, 'resolution': resolution, 'brightness': brightness, 'contrast': contrast, 
+            'sharpness': sharpness, 'ncorners': ncorners}
     
+    for i, (color, percentage) in enumerate(zip(dominant_colors, percentages), start=1):
+        dict[f'dom_color_{i}'] = color
+        dict[f'dom_color_{i}_prop'] = percentage
+    return dict
 
-# TODO: add a for loop to analyse a set of images
 
-images_path = f"output\\{project_name}\\ads_images"
-images = os.listdir(images_path)
-os.path.exists(data_path)
-row_list2 = []
-#row = analyse_image(image_path)
-#row_list2.append(row)
+def analyse_image_folder(folder_path, project_name, nr_images = None):
+    """
+    Analyzes a set of images in a specified folder and exports the results to an Excel file.
 
-img_results = pd.DataFrame(row_list2)
-img_results.to_excel(f'data\\img_features.xlsx', index=False)
-"""
+    This function iterates over image files in the specified folder, performing an analysis on each image using the `analyse_image` function. The analysis covers extracting dominant colors, assessing image quality (resolution, brightness, contrast, sharpness), and detecting edges and corners. The results are compiled into a pandas DataFrame and then exported to an Excel file.
+
+    :param folder_path: The path to the folder containing the image files to be analyzed. The folder can contain images in jpg, png, and jpeg formats.
+    :type folder_path: str
+    :param project_name: The name of the project, used to create a project-specific folder within the 'output' directory for storing the Excel file.
+    :type project_name: str
+    :param nr_images: The number of images to analyze from the folder. If None, all images in the folder are analyzed. This parameter allows for limiting the analysis to a subset of images.
+    :type nr_images: int, optional
+    :return: A pandas DataFrame containing the analysis results for each image.
+    :rtype: pandas.DataFrame
+
+    The generated Excel file is saved to 'output/{project_name}/ads_data/image_quality.xlsx'.
+    """
+
+    image_files = [f for f in os.listdir(folder_path) if f.endswith(('jpg', 'png', 'jpeg'))]
+    if nr_images is None:
+        nr_images = len(image_files)
+
+    analysis_results = []
+    i = 0
+
+    for image_file in image_files:
+        image_path = os.path.join(folder_path, image_file)
+        analysis_result = analyse_image(image_path)
+        analysis_results.append(analysis_result)
+        i += 1
+        if i == nr_images:
+            break
+
+    df = pd.DataFrame(analysis_results)
+    #df.to_excel(f'output/{project_name}/ads_data/image_quality.xlsx', index=False)
+
+    return df

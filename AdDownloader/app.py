@@ -1,5 +1,6 @@
 import base64
 import io
+import os
 from dash import Dash, dcc, html, callback, Input, Output, State, dash_table, no_update
 from matplotlib.pyplot import sca
 import plotly.express as px
@@ -43,10 +44,17 @@ app.layout = html.Div([
     ),
     html.Div(id='output-datatable'),
     html.Div(id='output-graphs'),
-    html.Div(id='output-image-analysis'),
     html.Div(id='output-text-analysis'),
     html.Div(id='output-topic-analysis'),
+    html.Div(id='output-image-download'),
+    html.Div(id='output-image-analysis'),
 ])
+
+
+def encode_image(image_path):
+    with open(image_path, 'rb') as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    return "data:image/png;base64," + encoded_string
 
 
 def parse_contents(contents, filename):
@@ -124,12 +132,12 @@ def parse_contents(contents, filename):
 
         html.Hr(),
 
-        # start image download
+        # start media download
         html.Div([
             html.H5('Or provide your access token and desired number of images to download.'),
             dcc.Input(id="access-tkn", type="text", placeholder="Insert your access token", debounce=True),
             dcc.Input(id="nr-ads", type="number", placeholder="Insert a number"),
-            html.Button(id="image-analysis-button", children="Generate Image Analysis"),
+            html.Button(id="media-download-button", children="Generate Image Analysis"),
             html.H5('The media download takes on average 1.5-2 minutes for every 50 ads.')
         ]),
 
@@ -187,6 +195,10 @@ def make_graphs(n, data):
             df = pd.DataFrame(data)
             # not working - list has no attribute groupby
             fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10 = analysis.get_graphs(df)
+
+            title = "Highest Average Impressions" if "impressions" in df.columns else "Biggest EU Reach"
+            max_nr = max(df["impressions_avg"]) if "impressions" in df.columns else max(df["eu_total_reach"])
+
         except Exception as e:
             return html.Div([html.H5(f"Failed to get graphs. Try uploading another file. Error: {e}")])
         
@@ -210,8 +222,8 @@ def make_graphs(n, data):
                 html.Div(max(df["campaign_duration"]), style={'textAlign': 'center', 'fontWeight': 'bold'})
             ], className='three columns'),
             html.Div([
-                html.Div('Biggest EU reach', style={'textAlign': 'center'}),
-                html.Div(max(df["eu_total_reach"]), style={'textAlign': 'center', 'fontWeight': 'bold'})
+                html.Div(title, style={'textAlign': 'center'}),
+                html.Div(max_nr, style={'textAlign': 'center', 'fontWeight': 'bold'})
             ], className='three columns')
         ], className='row'),
 
@@ -272,13 +284,13 @@ def make_graphs(n, data):
     return graphs_children
 
 
-@app.callback(Output('output-image-analysis', 'children'),
+@app.callback(Output('output-image-download', 'children'),
               Input('access-tkn', 'value'),
               Input('nr-ads', 'value'),
-              Input('image-analysis-button', 'n_clicks'),
+              Input('media-download-button', 'n_clicks'),
               State('stored-data', 'data'),
               State('stored-project-name', 'data'))
-def start_image_analysis(access_token, nr_ads, n, data, project_name):
+def start_image_download(access_token, nr_ads, n, data, project_name):
     if n is None or access_token is None or nr_ads is None:
         return no_update
     
@@ -287,16 +299,147 @@ def start_image_analysis(access_token, nr_ads, n, data, project_name):
             df = pd.DataFrame(data)
             df = update_access_token(df, str(access_token))
             start_media_download(str(project_name), int(nr_ads), data = df)
+            img_path = f"output/{project_name}/ads_images"
+            images = os.listdir(img_path)
+
+            displayed_images = images[:5] if len(images) > 5 else images
+
+            df = analysis.analyse_image_folder(img_path, project_name, nr_images=int(nr_ads))
+            color_long_df = df.melt(value_vars=['dom_color_1', 'dom_color_2', 'dom_color_3'], 
+                                    var_name='Color_Type', value_name='Color')
+            color_counts = color_long_df['Color'].value_counts().reset_index()
+            top_colors = color_counts.head(5)
+
+            fig_colors = px.bar(top_colors, x='Color', y='count', title=f'Top 5 Dominant Colors Across All Images',
+                        color='Color', text='count', color_discrete_map={color: color for color in top_colors['Color']})
+            fig_colors.update_traces(textposition='inside', marker_line_color='black')
+
+            # image quality
+            df_quality = df.melt(value_vars=['brightness', 'contrast', 'sharpness'], 
+                            var_name='Metric', value_name='Value')
+            fig_qual = px.box(df_quality, x='Metric', y='Value', color='Metric',
+                        title='Distribution of Image Quality Metrics')
+            fig_qual.update_layout(xaxis_title="Quality Metric", yaxis_title="Value", legend_title="Metric")            
 
         except Exception as e:
-            return html.Div([html.H5(f"Failed to perform ad text analysis. Error: {e}")])
+            return html.Div([html.H5(f"Failed to start media download. Error: {e}")])
         
     img_children = html.Div([
         html.H2('Ad Images Download and Analysis.'),
-        html.H3("Finished downloading media.")
+        html.H4(f"Finished downloading media. Image examples (5 out of {len(images)}):"),
+        html.Div(
+            children=[html.Img(src=encode_image(os.path.join(img_path, img)), style={'width': '20%', 'display': 'inline-block'}) for img in displayed_images]
+        ),
+        # basic image analysis
+        html.Div([
+            html.Div([
+                dcc.Graph(id='top-colors', figure=fig_colors)
+            ], className='six columns'),
+            html.Div([
+                dcc.Graph(id='img-quality', figure=fig_qual)
+            ], className='six columns')
+        ], className='row'),
+        html.Div([
+            # generate img captioning
+            html.Button(id="image-captioning-button", children="Generate Image Captioning Using BLIP"),
+            html.H5('This takes on average 2 minutes for every 50 ads.', style={'marginLeft': '20px'}),
+        ], style={'display': 'flex', 'alignItems': 'center'}),
+        html.Hr()
     ])
         
     return img_children
+
+
+@app.callback(Output('output-image-analysis', 'children'),
+              Input('image-captioning-button', 'n_clicks'),
+              Input('nr-ads', 'value'),
+              State('stored-project-name', 'data'))
+def start_media_analysis(n, nr_ads, project_name):
+    if n is None:
+        return no_update
+    
+    else:
+        try:
+            img_path = f"output/{project_name}/ads_images"
+
+            # image captioning with BLIP
+            img_captions = analysis.blip_call(img_path, nr_images=int(nr_ads))
+
+            # processing of the captions
+            tokens, freq_dist, word_cl, textblb_sent, nltk_sent = analysis.start_text_analysis(img_captions["img_caption"])
+
+            top_10_words = freq_dist.most_common(10)
+            fig1=px.bar(x=[word for word, count in top_10_words], y=[count for word, count in top_10_words], 
+                        labels={'x': 'Words', 'y': 'Frequency'}, title='Top 10 Most Frequent Words')
+            fig1.update_xaxes(tickfont=dict(size=14))
+            fig1.update_traces(text=[count for word, count in top_10_words], textposition='outside')
+
+            lda_model, coherence, topics_df = analysis.get_topics(tokens)
+            topics = [f"Topic {topic[0]}: {topic[1]}" for topic in lda_model.print_topics(num_words=8)]
+            topic_distribution = topics_df['dom_topic'].value_counts().reset_index()
+
+            fig2 = px.bar(topic_distribution, x='dom_topic', y='count', 
+                        labels={'dom_topic': 'Dominant Topic', 'count': 'Count'}, 
+                        title='Topic Distribution Across all Ads', color='dom_topic')
+            fig2.update_layout(xaxis=dict(categoryorder='total descending'))
+
+            if coherence < 0.4:
+                qual = 'bad'
+                qual_color = 'red'
+            elif coherence >= 0.6:
+                qual = 'good'
+                qual_color = 'green'
+            else:
+                qual = 'average'
+                qual_color = 'orange'
+
+        except Exception as e:
+            return html.Div([html.H5(f"Failed to perform ad media content analysis. Error: {e}")])
+        
+    img_analysis_children = html.Div([
+        html.H2('Ad Media Captioning.'),
+        #TODO: change column width in the table
+        dash_table.DataTable(
+            data=img_captions.to_dict('records'),
+            columns=[{'name': i, 'id': i} for i in img_captions.columns],
+            fixed_rows={'headers': True},
+            fixed_columns={'headers': True},
+            page_size=15,
+            # add scrolling option
+            style_table={'overflowX': 'auto', 'overflowY': 'auto', 'height': '300px'},
+            style_cell={
+                'overflow': 'hidden',
+                'textOverflow': 'ellipsis',
+                'minWidth': '150px', 
+                'width': '150px', 
+                'maxWidth': '150px',
+            },
+
+            # hover over a cell to see its contents
+            tooltip_data=[
+                {
+                    column: {'value': str(value), 'type': 'markdown'} for column, value in row.items()
+                } for row in img_captions.to_dict('records')
+            ],
+            tooltip_duration=None
+        ),
+        html.Div([
+            html.Div([
+                dcc.Graph(id='top-10-words-captions', figure=fig1)
+            ], className='six columns'),
+            html.Div([
+                dcc.Graph(id='topic-dist-captions', figure=fig2)
+            ], className='six columns')
+        ], className='row'),
+        html.Div([
+            html.H4("Topics:"),
+            html.Ul([html.Li(topic) for topic in topics]),
+            html.H4("Coherence Score:"),
+            html.P([f"{coherence} - ", html.Span(qual, style={'color': qual_color})])
+        ]),
+    ])
+        
+    return img_analysis_children
 
 
 @app.callback(Output('output-text-analysis', 'children'),
@@ -309,7 +452,7 @@ def make_text_analysis(n, data):
         try:
             df = pd.DataFrame(data)
             df = df.dropna(subset = ["ad_creative_bodies"])
-            tokens, freq_dist, word_cl, textblb_sent, nltk_sent = analysis.start_text_analysis(df)
+            tokens, freq_dist, word_cl, textblb_sent, nltk_sent = analysis.start_text_analysis(df["ad_creative_bodies"])
             # add these to the dataframe and save it
             top_10_words = freq_dist.most_common(10)
             fig1=px.bar(x=[word for word, count in top_10_words], y=[count for word, count in top_10_words], 
@@ -427,35 +570,3 @@ def make_topic_analysis(n, data):
 
 if __name__ == '__main__':
     app.run_server(debug=True)
-
-
-""" 
-    html.Div([
-        html.H2(f'Creating analytics for project {project_name}.', className='sub-header'),
-
-        html.Div([
-            html.H3('Quick stats for your data', className='sub-header'),
-            html.Div([
-                html.Div([
-                    html.H4('Total ads'),
-                    html.P(len(data))
-                ]),
-                html.Div([
-                    html.H4('Unique pages'),
-                    html.P(data['page_id'].nunique())
-                ]),
-                html.Div([
-                    html.H4('Ads targeted at teenagers'),
-                    html.P(len(data[data['target_ages'].str.contains("'13'")]))
-                ]),
-                html.Div([
-                    html.H4('Longest ad campaign'),
-                    html.P(max(data['campaign_duration']))
-                ]),
-                html.Div([
-                    html.H4('Biggest EU reach'),
-                    html.P(max(data['eu_total_reach']))
-                ]),
-            ]),
-        ]),
-    ]), """

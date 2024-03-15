@@ -3,6 +3,7 @@
 import json
 import pandas as pd
 import os
+import math
 from datetime import datetime, timedelta
 from prompt_toolkit.validation import Validator, ValidationError
 import logging
@@ -132,6 +133,7 @@ def load_json_from_folder(folder_path):
 
     # concatenate all data frames a single one
     result_df = pd.concat(dfs, ignore_index=True)
+    
     return result_df
 
 
@@ -234,8 +236,11 @@ def transform_data(project_name, country, ad_type):
         wide_df = pd.DataFrame(df['age_country_gender_reach_breakdown'].apply(flatten_age_country_gender, target_country=country).tolist())
     else:
         wide_df = pd.DataFrame(df['demographic_distribution'].apply(flatten_demographic_distribution).tolist())
+ 
+        # create new column with average impressions
+        df['impressions'] = df['impressions'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
+        df['impressions_avg'] = df['impressions'].apply(lambda x: math.ceil((int(x['lower_bound']) + int(x['upper_bound'])) / 2))
               
-
     # reorder the columns alphabetically and save the processed data to a different file
     wide_df = wide_df.reindex(sorted(wide_df.columns), axis=1)
     final_data = pd.concat([df, wide_df], axis=1)
