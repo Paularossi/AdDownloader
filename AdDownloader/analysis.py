@@ -451,10 +451,10 @@ def get_graphs(data):
     data_by_gender = transform_data_by_gender(data)
 
     # reach across age ranges (all ads)
-    fig9 = px.violin(data_by_age, y='Reach', x='Age Range', color='Age Range', template = "seaborn", title="Reach Across Age Ranges for all ads (Violin plot)")
+    fig9 = px.violin(data_by_age, y='Reach', x='Age Range', color='Age Range', template = "seaborn", title="Reach Across Age Ranges for all")
     
     # reach across genders (all ads)
-    fig10 = px.violin(data_by_gender, y ='Reach', x='Gender', color='Gender', title="Reach Across Genders for all ads (Violin plot)")
+    fig10 = px.violin(data_by_gender, y ='Reach', x='Gender', color='Gender', title="Reach Across Genders for all ads")
     
 
     return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10
@@ -701,6 +701,5 @@ def analyse_image_folder(folder_path, project_name, nr_images = None):
             break
 
     df = pd.DataFrame(analysis_results)
-    #df.to_excel(f'output/{project_name}/ads_data/image_quality.xlsx', index=False)
 
     return df
