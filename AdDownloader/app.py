@@ -47,7 +47,8 @@ app.layout = html.Div([
     html.Div(id='output-text-analysis'),
     html.Div(id='output-topic-analysis'),
     html.Div(id='output-image-download'),
-    html.Div(id='output-image-analysis'),
+    html.Div(id='output-image-caption'),
+    html.Div(id='output-image-question'),
 ])
 
 
@@ -118,7 +119,7 @@ def parse_contents(contents, filename):
         html.H2("Choose a task by clicking a button below."),
         html.Div([
             # generate graphs
-            html.Button(id="graphs-button", children="Generate Graphs")
+            html.Button(id="graphs-button", children="Generate Descriptive Graphs")
         ]),
         html.Div([
             # generate text analysis
@@ -156,7 +157,7 @@ def update_output(contents, filename):
     if contents is not None:
         children = parse_contents(contents, filename)
         return children
-    
+
 
 @app.callback(Output("download-sent-dataframe", "data"),
              Input("btn_xlsx_sent", "n_clicks"),
@@ -366,18 +367,24 @@ def start_image_download(access_token, nr_ads, n, data, project_name):
         ], className='row'),
         dcc.Store(id='img-features-data', data=df.to_dict('records')),
         html.H2('Optional - Image Analysis using the BLIP model.'),
+        html.H6('BLIP (Bootstrapped Language Image Pre-training) is a model trained on large datasets of images and text that can perform tasks like captioning and question answering on images by understanding and describing the content within them. '), 
         html.Div([
-            html.Button(id='image-captioning-button', children="Generate Image Captioning Using BLIP"),
+            html.Button(id='image-captioning-button', children="Generate Image Captioning"),
             html.H5('This takes on average 2 minutes for every 50 ads.', style={'marginLeft': '20px'}),
         ], style={'display': 'flex', 'alignItems': 'center'}),
+        html.Div([
+            dcc.Input(id="blip_quest", type="text", placeholder="Insert one or more questions, separated by a question mark.",
+                      style={'width': '60%', 'display': 'inline-block'}),
+            html.Button(id='quest-answer-button', children="Generate Question Answering", style={'display': 'inline-block', 'marginLeft': '10px'}),
+            html.H5('This takes on average 4 minutes for every 50 ads (for 1 question).', style={'display': 'block', 'marginTop': '20px', 'marginLeft': '20px'}),
+        ], style={'display': 'flex', 'alignItems': 'center'}),
         html.Hr(),
-        #TODO: add option to input a question
     ])
     
     return img_children
 
 
-@app.callback(Output('output-image-analysis', 'children'),
+@app.callback(Output('output-image-caption', 'children'),
               Input('image-captioning-button', 'n_clicks'),
               Input('nr-ads', 'value'),
               State('stored-project-name', 'data'),
@@ -475,6 +482,68 @@ def start_media_captioning(n, nr_ads, project_name, data):
         dcc.Store(id='all-img-features-data', data=features_data.to_dict('records')),
         html.Button("Download Image Features Data", id="btn_xlsx_img_ft"),
         dcc.Download(id="download-img-dataframe"),
+        html.Hr(),
+    ])
+        
+    return img_analysis_children
+
+
+@app.callback(Output('output-image-question', 'children'),
+              Input('quest-answer-button', 'n_clicks'),
+              Input('nr-ads', 'value'),
+              Input('blip_quest', 'value'),
+              State('stored-project-name', 'data'),
+              State('img-features-data', 'data'),
+              prevent_initial_call=True)
+def start_question_answering(n, nr_ads, questions, project_name, data):
+    if n is None:
+        return no_update
+    
+    else:
+        try:
+            img_path = f"output/{project_name}/ads_images"
+            features_data = pd.DataFrame(data)
+
+            # image captioning with BLIP
+            img_questions = analysis.blip_call(img_path, task='visual_question_answering', nr_images=int(nr_ads), questions=questions)
+
+            # gather all img features
+            #all_features_data = features_data.merge(img_questions, how='inner', on='ad_id')
+
+
+        except Exception as e:
+            return html.Div([html.H5(f"Failed to perform ad media content analysis. Error: {e}")])
+        
+    img_analysis_children = html.Div([
+        html.H2('Ad Media Captioning.'),
+        #TODO: change column width in the table
+        dash_table.DataTable(
+            data=img_questions.to_dict('records'),
+            columns=[{'name': i, 'id': i} for i in img_questions.columns],
+            fixed_rows={'headers': True},
+            fixed_columns={'headers': True},
+            page_size=15,
+            # add scrolling option
+            style_table={'overflowX': 'auto', 'overflowY': 'auto', 'height': '300px'},
+            style_cell={
+                'overflow': 'hidden',
+                'textOverflow': 'ellipsis',
+                'minWidth': '150px', 
+                'width': '150px', 
+                'maxWidth': '150px',
+            },
+
+            # hover over a cell to see its contents
+            tooltip_data=[
+                {
+                    column: {'value': str(value), 'type': 'markdown'} for column, value in row.items()
+                } for row in img_questions.to_dict('records')
+            ],
+            tooltip_duration=None
+        ),
+        #dcc.Store(id='all-img-features-data', data=features_data.to_dict('records')),
+        #html.Button("Download Image Features Data", id="btn_xlsx_img_ft"),
+        #dcc.Download(id="download-img-dataframe"),
         html.Hr(),
     ])
         

@@ -102,6 +102,7 @@ def start_media_download(project_name, nr_ads, data=[]):
     print(f"Downloading media content for project {project_name}.")
     logger.info('Downloading media content for project %s', project_name)
     nr_ads_processed = 0
+    nr_ads_failed = 0
 
     # initialize folders for the images and videos of current category
     folder_path_img = f"output\\{project_name}\\ads_images"
@@ -202,11 +203,13 @@ def start_media_download(project_name, nr_ads, data=[]):
             pass
 
         if not success:
+            nr_ads_failed += 1
             print(f"No media were downloaded for ad {data['id'][i]}.")
             logger.error('No media were downloaded for ad %s', data['id'][i])
 
     print(f'Finished saving media content for {nr_ads_processed} ads for project {project_name}.')
     logger.info('Finished saving media content for %i ads for project %s.', nr_ads_processed, project_name)
+    logger.info('Media failed to download for %i ads.', nr_ads_failed)
 
     # close the driver once it's done downloading
     driver.quit()

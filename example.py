@@ -56,6 +56,26 @@ start_media_download(project_name = "test2", nr_ads = 20, data = plt_data)
 
 
 
+# branded content
+import requests
+url = "https://graph.facebook.com/v19.0/branded_content_search"
+access_token = input()
+# fields from https://developers.facebook.com/docs/graph-api/reference/branded-content-search/
+params = {
+    "fields": "type,creation_date,creator,partners,url",
+    "ig_username": "mcdonaldsnl", # either ig or fb
+    "page_url": None,
+    "creation_date_min": "2023-09-01",
+    "creation_date_max": "2023-12-12",
+    "access_token": access_token
+}
+response = requests.get(url, params = params)
+data = response.json()
+data_list = data.get('data', [])
+df = pd.DataFrame(data_list)
+
+
+
 # ===========================================================
 # 
 # Download ad data and media content using the automated CLI.
@@ -88,10 +108,9 @@ from AdDownloader.analysis import *
 import matplotlib.pyplot as plt
 
 ##### TEXT AND TOPIC ANALYSIS
-data_path = "output/test77/ads_data/test77_processed_data.xlsx"
+data_path = "output/testbig/ads_data/testbig_processed_data.xlsx"
 data = load_data(data_path)
 data.head(20)
-
 
 
 # create graphs with EDA

@@ -5,31 +5,37 @@ from AdDownloader.media_download import start_media_download
 from AdDownloader.helpers import update_access_token
 import time
 
+sample_sizes = [100, 500, 1000, 2000, 5000, 10000, 20000]
+sample_nrs = [20, 50, 100, 200, 500, 1000]
 
 def text_time_by_sample_size(data):
     text_times = pd.DataFrame(columns = ['sample_size', 'text_analysis_time', 'topic_analysis_time'])
 
-    for i in range(500, len(data), 500):
+    for i in sample_sizes:
         print(f'===== Starting experiments for sample size {i} =====')
-        df = data.sample(i)
+        if i > len(data):
+            df = data.sample(i, replace=True)
+        else:
+            df = data.sample(i)
 
         start_time = time.time()
-        tokens, freq_dist, word_cl, textblb_sent, nltk_sent = start_text_analysis(df)
+        tokens, freq_dist, word_cl, textblb_sent, nltk_sent = start_text_analysis(df["ad_creative_bodies"])
         end_time = time.time()
         time_text = end_time - start_time
 
         start_time = time.time()
-        lda_model, coherence, sent_topics_df = get_topics(tokens, df["ad_creative_bodies"])
+        lda_model, coherence, sent_topics_df = get_topics(tokens)
         end_time = time.time()
         topic_time = end_time - start_time
 
         new_row = {'sample_size': i, 'text_analysis_time' : time_text, 'topic_analysis_time': topic_time}
         text_times = pd.concat([text_times, pd.DataFrame([new_row], index=[0])], ignore_index=True)
 
-    text_times["minutes"] = text_times["topic_analysis_time"].apply(lambda x: x // 60)
-    text_times["seconds"] = text_times["topic_analysis_time"].apply(lambda x: x % 60)
+    text_times["topic_minutes"] = text_times["topic_analysis_time"].apply(lambda x: x // 60)
+    text_times["topic_seconds"] = text_times["topic_analysis_time"].apply(lambda x: x % 60)
 
-    text_times.to_excel("tests/experiments/text_analysis_time_by_sample_size.xlsx", index=False)
+    text_times["text_minutes"] = text_times["text_analysis_time"].apply(lambda x: x // 60)
+    text_times["text_seconds"] = text_times["text_analysis_time"].apply(lambda x: x % 60)
 
     return text_times
 
@@ -59,42 +65,122 @@ def get_best_nr_of_topics(data):
     return topics_nr
 
 
-def img_download_by_sample_size(data):
+def img_download_by_sample_size(data, project_name):
     media_download_time = pd.DataFrame(columns = ['sample_size', 'img_download_time'])
 
-    for i in range(50, 510, 50):
+    for i in sample_nrs:
         print(f'===== Starting experiments for downloading media content for {i} ads =====')
         start_time = time.time()
-        start_media_download(project_name = "testbig2", nr_ads = i, data = data.sample(600))
+        start_media_download(project_name = "testbig", nr_ads = i, data = data.sample(1500))
         end_time = time.time()
         download_time = end_time - start_time
 
-        new_row = {'sample_size': i, 'img_download_time': download_time}
+        new_row = {'sample_size': i, 'img_download_time': 4122.1218831}
         media_download_time = pd.concat([media_download_time, pd.DataFrame([new_row], index=[0])], ignore_index=True)
 
     media_download_time["minutes"] = media_download_time["img_download_time"].apply(lambda x: x // 60)
     media_download_time["seconds"] = media_download_time["img_download_time"].apply(lambda x: x % 60)
 
-    media_download_time.to_excel("tests/experiments/media_download_times_pol.xlsx", index=False)
-
     return media_download_time
 
+
+def img_analysis_by_sample_size(project_name):
+    img_analysis_time = pd.DataFrame(columns = ['sample_size', 'img_analysis_time'])
+    images_path = f"output/{project_name}/ads_images"
+    image_files = [f for f in os.listdir(images_path) if f.endswith(('jpg', 'png', 'jpeg'))]
+
+    #analysis_result = analyse_image(os.path.join(images_path, image_files[2]))
+        
+    for i in sample_nrs:
+        print(f'===== Starting experiments for analysing {i} images. =====')
+
+        start_time = time.time()
+        df = analyse_image_folder(images_path, project_name=project_name, nr_images=i)
+        end_time = time.time()
+        download_time = end_time - start_time
+
+        new_row = {'sample_size': i, 'img_analysis_time': download_time}
+        img_analysis_time = pd.concat([img_analysis_time, pd.DataFrame([new_row], index=[0])], ignore_index=True)
+
+    img_analysis_time["minutes"] = img_analysis_time["img_analysis_time"].apply(lambda x: x // 60)
+    img_analysis_time["seconds"] = img_analysis_time["img_analysis_time"].apply(lambda x: x % 60)
+
+    return img_analysis_time
+
+
+def blip_call_by_sample_size(project_name):
+    blip_analysis_time = pd.DataFrame(columns = ['sample_size', 'captioning_time'])
+    images_path = f"output/{project_name}/ads_images"
+
+    #analysis_result = analyse_image(os.path.join(images_path, image_files[2]))
+    
+    for i in sample_nrs:
+        print(f'===== Starting experiments for captioning {i} images. =====')
+
+        start_time = time.time()
+        img_caption = blip_call(images_path, nr_images=i)
+        # img_content = blip_call(images_path, task="visual_question_answering", nr_images=20, question="What items do you see in this image?")
+
+        end_time = time.time()
+        download_time = end_time - start_time
+
+        new_row = {'sample_size': i, 'captioning_time': download_time}
+        blip_analysis_time = pd.concat([blip_analysis_time, pd.DataFrame([new_row], index=[0])], ignore_index=True)
+
+    blip_analysis_time["minutes"] = blip_analysis_time["captioning_time"].apply(lambda x: x // 60)
+    blip_analysis_time["seconds"] = blip_analysis_time["captioning_time"].apply(lambda x: x % 60)
+
+    return blip_analysis_time
     
 
-
-data_path = "output/testbig3/ads_data/testbig3_processed_data.xlsx"
+### TEXT
+data_path = "output/testbig/ads_data/testbig_original_data.xlsx"
+data_path = "output/testbig2/ads_data/testbig2_original_data.xlsx" # political
 data = load_data(data_path)
 data = data.dropna(subset = ["ad_creative_bodies"])
+
+# data[data['target_ages'].str.contains("'13'")]
 
 access_token = input()
 data = update_access_token(data, access_token)
 
 text_times = text_time_by_sample_size(data)
-print(text_times)
+text_times_2 = text_time_by_sample_size(data)
+text_times_3 = text_time_by_sample_size(data)
+text_times_4 = text_time_by_sample_size(data)
+text_times_5 = text_time_by_sample_size(data)
+text_times_6 = text_time_by_sample_size(data)
+text_times_7 = text_time_by_sample_size(data)
+text_times_8 = text_time_by_sample_size(data)
+text_times_9 = text_time_by_sample_size(data)
+text_times_10 = text_time_by_sample_size(data)
+
+text_times_final = pd.concat([text_times, text_times_2, text_times_3, text_times_4, text_times_5, text_times_6,
+                              text_times_7, text_times_8, text_times_9, text_times_10], ignore_index=True)
+text_times_final.to_excel("tests/experiments/text_analysis_by_sample_size_new_pol.xlsx", index=False)
+
+
+media_download_time = img_download_by_sample_size(data, "testbig") # all
+media_download_time.to_excel("tests/experiments/media_download_times_all.xlsx", index=False)
+
 
 topics_nr_coherence = get_best_nr_of_topics(data)
 print(topics_nr_coherence)
 
+### IMAGES
+img_analysis_time = img_analysis_by_sample_size("testbig")
+img_analysis_time2 = img_analysis_by_sample_size("testbig2") # political
+img_analysis_time2.to_excel("tests/experiments/img_analysis_times_pol.xlsx", index=False)
+
+
+### CAPTIONING WITH BLIP
+blip_analysis_time = blip_call_by_sample_size(project_name="testbig")
+blip_analysis_time = blip_call_by_sample_size(project_name="testbig2") # political
+# sample_size  captioning_time
+# 0          20        93.994181
+# 1          50       244.201977
+# 2         100       523.061657
+# 3         200      1070.955401
 
 
 ##### ANALYZE THE DIFFERENCES BETWEEN SAMPLE SIZES #####
@@ -111,6 +197,7 @@ d2['ad_type'] = 'POL'
 
 merged_df = pd.concat([d1, d2], ignore_index=True)
 merged_df = merged_df.dropna()
+merged_df.groupby(["sample_size", "ad_type"])["img_download_time"].mean().round(2)
 
 # avg download time by ad type
 plt.figure(figsize=(10, 6))
@@ -157,15 +244,21 @@ mse = mean_squared_error(y_test, predictions)
 print(f'Mean Squared Error when predicting media download time: {mse}')
 
 
+
+
+
+
 ### Text and topic analysis
-d1 = pd.read_excel("tests/experiments/text_analysis_time_by_sample_size_all.xlsx", )
-d2 = pd.read_excel("tests/experiments/text_analysis_time_by_sample_size_pol.xlsx")
+d1 = pd.read_excel("tests/experiments/text_analysis_by_sample_size_all.xlsx")
+d2 = pd.read_excel("tests/experiments/text_analysis_by_sample_size_pol.xlsx")
 
 d1['ad_type'] = 'ALL'
 d2['ad_type'] = 'POL'
 
-merged_df = pd.concat([d1, d2], ignore_index=True, join='inner')
+merged_df = pd.concat([d1, d2], ignore_index=True)
 merged_df = merged_df.dropna()
+merged_df.groupby(["sample_size", "ad_type"])["text_analysis_time"].mean().round(2)
+merged_df.groupby(["sample_size", "ad_type"])["topic_analysis_time"].mean().round(2)
 
 # text analysis time by size per ad type
 plt.figure(figsize=(10, 6))
@@ -196,6 +289,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 model = LinearRegression()
 model.fit(X_train, y_train)
 predictions = model.predict(X_test)
+model.coef_
 
 mse = mean_squared_error(y_test, predictions)
 print(f'Mean Squared Error when predicting text analysis time: {mse}')
@@ -219,6 +313,8 @@ print(f'Mean Squared Error when predicting topic analysis time: {mse}')
 # calculate the average time for 500 ads
 merged_df['avg_topic_time_per_ad'] = merged_df['topic_analysis_time'] / merged_df['sample_size']
 avg_topic_time_1000_ads = merged_df['avg_topic_time_per_ad'].mean() * 1000
+
+
 
 ### Number of topics (also coherence)
 d1 = pd.read_excel("tests/experiments/get_best_nr_of_topics_all_3000.xlsx")
@@ -256,25 +352,3 @@ g.figure.suptitle('Topic Analysis Time by Number of Topics, Ad Type, and Sample 
 g.figure.subplots_adjust(top=0.9)  
 plt.show()
 
-
-
-
-
-# plt.figure(figsize=(12, 6))
-# g = sns.lineplot(data=merged_df, x='nr_topics', y='coherence', hue='ad_type', style='sample_size', markers=True, dashes=False)
-# g.set_title('Coherence by Number of Topics, Ad Type, and Sample Size')
-# g.set_xlabel('Number of Topics')
-# g.set_ylabel('Coherence')
-# plt.legend(title='Ad Type & Sample Size', bbox_to_anchor=(1.05, 1), loc='upper left')
-# plt.tight_layout()
-# plt.show()
-
-
-# plt.figure(figsize=(12, 6))
-# g = sns.lineplot(data=merged_df, x='nr_topics', y='topic_analysis_time', hue='ad_type', style='sample_size', markers=True, dashes=False)
-# g.set_title('Topic Analysis Time by Number of Topics, Ad Type, and Sample Size')
-# g.set_xlabel('Number of Topics')
-# g.set_ylabel('Topic Analysis Time (seconds)')
-# plt.legend(title='Ad Type & Sample Size', bbox_to_anchor=(1.05, 1), loc='upper left')
-# plt.tight_layout()
-# plt.show()

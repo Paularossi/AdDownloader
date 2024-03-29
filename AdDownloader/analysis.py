@@ -5,11 +5,12 @@ import numpy as np
 import pandas as pd
 import os
 import re
+import random
 from collections import Counter
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.sentiment import SentimentIntensityAnalyzer
-from nltk.stem import WordNetLemmatizer
+from nltk.stem import WordNetLemmatizer, SnowballStemmer
 from nltk import FreqDist
 import nltk
 #import spacy # use to lemmatize other languages than english
@@ -78,6 +79,7 @@ def preprocess(text):
     """
     processed_text = []
     lemmatizer = WordNetLemmatizer()
+    stemmer = SnowballStemmer(language='english')
     try: # otherwise throws an error if Nan
         #text = [word.lower() for word in word_tokenize(text) if word.isalnum() and word.lower() not in all_stopwords]
         # check if the stopwords are reliable
@@ -87,10 +89,12 @@ def preprocess(text):
         words = word_tokenize(text)
         for word in words:
             lower_word = word.lower()
+            print(f'showing word: {lower_word}')
             if lower_word.isalnum() and lower_word not in all_stopwords and not lower_word.isdigit():
                 # lemmatization
                 lemmatized_word = lemmatizer.lemmatize(lower_word)
-                processed_text.append(lemmatized_word)
+                stemmed_word = stemmer.stem(lemmatized_word)
+                processed_text.append(stemmed_word)
     except Exception as e:
         # text analysis
         nltk.download('stopwords')
@@ -161,7 +165,9 @@ def get_topics(tokens, nr_topics = 3):
     # the dictionary represents the index of the word and its frequency
 
     # filter out words that occur less than 20 documents, or more than 80% of the documents.
-    if len(tokens) < 100:
+    if len(tokens) < 50:
+        pass
+    elif len(tokens) < 100:
         dictionary.filter_extremes(no_below = 5, no_above=0.9)
     else:
         dictionary.filter_extremes(no_below = 20, no_above=0.9)
@@ -456,11 +462,18 @@ def get_graphs(data):
     # reach across genders (all ads)
     fig10 = px.violin(data_by_gender, y ='Reach', x='Gender', color='Gender', title="Reach Across Genders for all ads")
     
-
     return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10
 
 
 def show_topics_top_pages(topic_data):
+    """
+    Visualize the distribution of dominant topics for the top 20 pages by the number of ads.
+
+    :param topic_data: A pandas DataFrame containing data with dominant topics.
+    :type topic_data: pandas.DataFrame
+    :return: A Plotly figure showing the distribution of dominant topics for the top 20 pages.
+    :rtype: plotly.graph_objs._figure.Figure
+    """
     nr_ads_per_page = topic_data.groupby(["page_id", "page_name"])["id"].count().reset_index(name="nr_ads")
     top_20_pages = nr_ads_per_page.sort_values(by="nr_ads", ascending=False)['page_id'].head(20) 
 
@@ -482,22 +495,43 @@ def show_topics_top_pages(topic_data):
 
 
 # image captioning
-def blip_call(images_path, task = "image_captioning", nr_images = None, question = None):
+def blip_call(images_path, task = "image_captioning", nr_images = None, questions = None):
+    """
+    Perform image captioning or visual question answering using the BLIP model on a set of images.
+
+    :param images_path: Path to the directory containing images.
+    :type images_path: str
+    :param task: The task to perform ("image_captioning" is default or "visual_question_answering").
+    :type task: str, optional
+    :param nr_images: The number of images to process (default is None, which processes all images in the directory).
+    :type nr_images: int, optional
+    :param questions: A string containing one or more questions separated by question marks, used for visual question answering (default is None).
+    :type questions: str, optional
+    :return: A pandas DataFrame containing image captions or answers to the provided questions.
+    :rtype: pandas.DataFrame
+    """
+    print(f"nr_images: {nr_images}, questions: {questions}")
     processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
     model_captioning = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
     model_answering = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base")
 
+    if task == "visual_question_answering": 
+        if questions is None:
+            print("No question provided.")
+            return
+        else:
+            # extract the questions
+            questions_all = [question.strip() + "?" for question in questions.split('?')[:-1]]
+    
     image_files = [f for f in os.listdir(images_path) if f.endswith(('jpg', 'png', 'jpeg'))]
 
-    if nr_images is None:
+    if nr_images is None or nr_images > len(image_files):
         nr_images = len(image_files)
-    tasks = ["image_captioning", "visual_question_answering"]
+    image_files = random.sample(image_files, nr_images)
+    #tasks = ["image_captioning", "visual_question_answering"]
     rows_list = []
-    i = 0
 
     for image_file in image_files:
-        if i == nr_images:
-            break
 
         raw_image = Image.open(os.path.join(images_path, image_file)).convert('RGB')
         numbers = AD_PATTERN.findall(image_file)
@@ -505,18 +539,14 @@ def blip_call(images_path, task = "image_captioning", nr_images = None, question
 
         # question answering
         if task == "visual_question_answering":
-            # some checks first
-            if question is None:
-                print("No question provided.")
-                return
         
             dict = {'ad_id': ad_id}
-            for i in range(len(question)):
-                inputs_quest = processor(raw_image, question[i], return_tensors="pt")
+            for question in questions_all:
+                inputs_quest = processor(raw_image, question, return_tensors="pt")
 
                 out_quest = model_answering.generate(**inputs_quest, max_length = 30)
                 #print(processor.decode(out_quest[0], skip_special_tokens=True))
-                dict['img_content'] = processor.decode(out_quest[0], skip_special_tokens=True)
+                dict[question] = processor.decode(out_quest[0], skip_special_tokens=True)
 
         # image_captioning
         else:
@@ -527,16 +557,12 @@ def blip_call(images_path, task = "image_captioning", nr_images = None, question
 
         rows_list.append(dict)
 
-        i += 1
         print(f'Done with {task} of ad with id {ad_id}') 
         
 
     img_content = pd.DataFrame(rows_list)
     return(img_content)
 
-
-
-# IMAGE PROCESSING:
 
 def extract_dominant_colors(image_path, num_colors = 3):
     """
@@ -636,12 +662,8 @@ def analyse_image(image_path):
 
     # extract dominant colors
     dominant_colors, percentages = extract_dominant_colors(image_path)
-    # for col, percentage in zip(dominant_colors, percentages):
-    #     print(f"Color: {col}, Percentage: {percentage:.2f}%")
 
     resolution, brightness, contrast, sharpness = assess_image_quality(image_path)
-    #print(f"Resolution: {resolution} pixels, Brightness: {brightness}, Contrast: {contrast}, Sharpness: {sharpness}")
-
     img = Image.open(image_path)
     img = sk_color.rgb2gray(img)
 
