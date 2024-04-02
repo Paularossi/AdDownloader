@@ -219,7 +219,7 @@ def transform_data(project_name, country, ad_type):
     :returns: If ad_type = "All" then a dataframe with the processed age_gender_reach data, if not then the original JSON processed data.
     :rtype: pandas.DataFrame
     """
-    
+
     folder_path = f'output/{project_name}/json'
     df = load_json_from_folder(folder_path)
 
@@ -239,7 +239,7 @@ def transform_data(project_name, country, ad_type):
  
         # create new column with average impressions
         df['impressions'] = df['impressions'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
-        df['impressions_avg'] = df['impressions'].apply(lambda x: math.ceil((int(x['lower_bound']) + int(x['upper_bound'])) / 2))
+        df['impressions_avg'] = df['impressions'].apply(lambda x: math.ceil((int(x['lower_bound']) + int(x.get('upper_bound', x['lower_bound']))) / 2))
               
     # reorder the columns alphabetically and save the processed data to a different file
     wide_df = wide_df.reindex(sorted(wide_df.columns), axis=1)

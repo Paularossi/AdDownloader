@@ -526,7 +526,7 @@ def start_question_answering(n, nr_ads, questions, project_name, data, stored_da
             return html.Div([html.H5(f"Failed to perform ad media content analysis. Error: {e}")])
         
     img_analysis_children = html.Div([
-        html.H2('Ad Media Captioning.'),
+        html.H2('Ad Media Captioning & Question Answering.'),
         #TODO: change column width in the table
         dash_table.DataTable(
             data=df.to_dict('records'),
@@ -544,7 +544,6 @@ def start_question_answering(n, nr_ads, questions, project_name, data, stored_da
                 'maxWidth': '150px',
             },
 
-            # hover over a cell to see its contents
             tooltip_data=[
                 {
                     column: {'value': str(value), 'type': 'markdown'} for column, value in row.items()
@@ -649,7 +648,6 @@ def make_topic_analysis(n, data):
                         title='Topic Distribution Across all Ads', color='dom_topic')
             fig1.update_layout(xaxis=dict(categoryorder='total descending'))
 
-            topics_df = pd.concat([df, topics_df], axis=1)
             if coherence < 0.4:
                 qual = 'bad'
                 qual_color = 'red'
@@ -661,6 +659,7 @@ def make_topic_analysis(n, data):
                 qual_color = 'orange'
 
             fig2 = analysis.show_topics_top_pages(topics_df, df)
+            topics_df = pd.concat([df, topics_df], axis=1)
 
         except Exception as e:
             return html.Div([html.H5(f"Failed to perform ad topic analysis. Error: {e}")])

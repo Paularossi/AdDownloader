@@ -143,7 +143,7 @@ def run_task_A(project_name, answers):
     print(f"Download finished in {minutes} minutes and {seconds} seconds.")    
 
 
-def run_task_B(project_name, answers, file_name=None):
+def run_task_B(project_name, answers):
     """
     Run task B: Download ads media content based on user's choices.
 
@@ -155,10 +155,7 @@ def run_task_B(project_name, answers, file_name=None):
     :type file_name: str
     """
     try:
-        if file_name is not None:
-            file_path = f'output/{project_name}/ads_data/{file_name}.xlsx'
-        else:
-            file_path = f'output/{project_name}/ads_data/{project_name}_original_data.xlsx'
+        file_path = f'output/{project_name}/ads_data/{project_name}_original_data.xlsx'
         
         data = pd.read_excel(file_path)
         total_ads = len(data)
@@ -230,12 +227,16 @@ def intro_messages():
                         {
                             'name': 'C - download both ads data and media content',
                         },
+                        {
+                            'name': 'D - open dashboard (using existing data)'
+                        },
             ],
         },
         {
             'type': 'password',
             'name': 'access_token',
-            'message': 'Please provide a valid access token'
+            'message': 'Please provide a valid access token',
+            'when': lambda answers: answers['task'] != 'D - open dashboard (using existing data)',
         },
         {
             'type': 'confirm',
@@ -254,17 +255,22 @@ def intro_messages():
         run_task_A(project_name, answers)
     
     if answers['task'] == 'B - download ads media content only':
-        rprint("[yellow]Please enter the name of the project you have ads data for.\n The data needs to be in the output\project_name\\ads_data folder.[yellow]")
+        rprint("[yellow]Please enter the project_name you have ads data for.\n The data needs to be in the output\<project_name>\\ads_data folder.[yellow]")
         project_name = input()
-        rprint("[yellow]Please enter the name of the excel file containing ads data.\n The data needs to be in the output\project_name\\ads_data folder.[yellow]")
-        file_name = input()
-        run_task_B(project_name, answers, file_name)
+        #rprint("[yellow]Please enter the name of the excel file containing ads data (without .xlsx).\n The data needs to be in the output\<project_name>\\ads_data folder.[yellow]")
+        #file_name = input()
+        run_task_B(project_name, answers)
 
     if answers['task'] == 'C - download both ads data and media content':
         rprint("[yellow]Please enter a name for your project. All created folders will use this name:[yellow]")
         project_name = input()
         run_task_A(project_name, answers)
         run_task_B(project_name, answers)
+
+    if answers['task'] == 'D - open dashboard (using existing data)':
+        rprint("[yellow]The link to open the dashboard will appear below:[yellow]")
+        from AdDownloader.start_app import start_gui # takes some time to load...
+        start_gui()
         
 
     rprint("[yellow]=============================================[yello]")
