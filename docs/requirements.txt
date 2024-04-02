@@ -16,7 +16,7 @@ pytest>=6.2.4
 requests==2.31.0
 rich==13.6.0
 scikit-image==0.22.0
-scikit-learn==1.4.1.post
+scikit-learn==1.4.1.post1
 selenium==4.16.0
 setuptools>=43.0.0
 Sphinx==7.2.6

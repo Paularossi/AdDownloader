@@ -373,11 +373,12 @@ def start_image_download(access_token, nr_ads, n, data, project_name):
             html.H5('This takes on average 2 minutes for every 50 ads.', style={'marginLeft': '20px'}),
         ], style={'display': 'flex', 'alignItems': 'center'}),
         html.Div([
-            dcc.Input(id="blip_quest", type="text", placeholder="Insert one or more questions, separated by a question mark.",
+            dcc.Input(id="blip_quest", type="text", placeholder="Insert one or more questions, separated by a question mark.", debounce=True,
                       style={'width': '60%', 'display': 'inline-block'}),
             html.Button(id='quest-answer-button', children="Generate Question Answering", style={'display': 'inline-block', 'marginLeft': '10px'}),
             html.H5('This takes on average 4 minutes for every 50 ads (for 1 question).', style={'display': 'block', 'marginTop': '20px', 'marginLeft': '20px'}),
         ], style={'display': 'flex', 'alignItems': 'center'}),
+        dcc.Store(id='stored-answers'), # for storing the BLIP answers
         html.Hr(),
     ])
     
@@ -489,18 +490,23 @@ def start_media_captioning(n, nr_ads, project_name, data):
 
 
 @app.callback(Output('output-image-question', 'children'),
+              Output('stored-answers', 'data'),
               Input('quest-answer-button', 'n_clicks'),
               Input('nr-ads', 'value'),
               Input('blip_quest', 'value'),
               State('stored-project-name', 'data'),
               State('img-features-data', 'data'),
+              State('stored-answers', 'data'),
               prevent_initial_call=True)
-def start_question_answering(n, nr_ads, questions, project_name, data):
-    if n is None:
+def start_question_answering(n, nr_ads, questions, project_name, data, stored_data):
+    if n is None or n <= 0:
         return no_update
     
     else:
         try:
+            if stored_data is None:
+                stored_data = []
+
             img_path = f"output/{project_name}/ads_images"
             features_data = pd.DataFrame(data)
 
@@ -509,7 +515,12 @@ def start_question_answering(n, nr_ads, questions, project_name, data):
 
             # gather all img features
             #all_features_data = features_data.merge(img_questions, how='inner', on='ad_id')
-
+            df = pd.DataFrame(stored_data)
+            if not df.empty:
+                df = pd.merge(df, img_questions, on='ad_id', how='outer')  # add/update column for the new question
+            else:
+                # if the df is empty, initialize it with the new answers
+                df = img_questions.copy()
 
         except Exception as e:
             return html.Div([html.H5(f"Failed to perform ad media content analysis. Error: {e}")])
@@ -518,8 +529,8 @@ def start_question_answering(n, nr_ads, questions, project_name, data):
         html.H2('Ad Media Captioning.'),
         #TODO: change column width in the table
         dash_table.DataTable(
-            data=img_questions.to_dict('records'),
-            columns=[{'name': i, 'id': i} for i in img_questions.columns],
+            data=df.to_dict('records'),
+            columns=[{'name': i, 'id': i} for i in df.columns],
             fixed_rows={'headers': True},
             fixed_columns={'headers': True},
             page_size=15,
@@ -547,7 +558,7 @@ def start_question_answering(n, nr_ads, questions, project_name, data):
         html.Hr(),
     ])
         
-    return img_analysis_children
+    return img_analysis_children, df.to_dict('records')
 
 
 @app.callback(Output('output-text-analysis', 'children'),
@@ -649,7 +660,7 @@ def make_topic_analysis(n, data):
                 qual = 'average'
                 qual_color = 'orange'
 
-            fig2 = analysis.show_topics_top_pages(topics_df)
+            fig2 = analysis.show_topics_top_pages(topics_df, df)
 
         except Exception as e:
             return html.Div([html.H5(f"Failed to perform ad topic analysis. Error: {e}")])

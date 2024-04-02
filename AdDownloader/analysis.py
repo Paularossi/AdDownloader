@@ -89,7 +89,6 @@ def preprocess(text):
         words = word_tokenize(text)
         for word in words:
             lower_word = word.lower()
-            print(f'showing word: {lower_word}')
             if lower_word.isalnum() and lower_word not in all_stopwords and not lower_word.isdigit():
                 # lemmatization
                 lemmatized_word = lemmatizer.lemmatize(lower_word)
@@ -465,15 +464,20 @@ def get_graphs(data):
     return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10
 
 
-def show_topics_top_pages(topic_data):
+def show_topics_top_pages(topic_data, original_data):
     """
     Visualize the distribution of dominant topics for the top 20 pages by the number of ads.
 
     :param topic_data: A pandas DataFrame containing data with dominant topics.
     :type topic_data: pandas.DataFrame
+    :param original_data: A pandas DataFrame containing the original ad data.
+    :type original_data: pandas.DataFrame
     :return: A Plotly figure showing the distribution of dominant topics for the top 20 pages.
     :rtype: plotly.graph_objs._figure.Figure
     """
+    original_data = original_data.dropna(subset = ["ad_creative_bodies"])
+    original_data = original_data.reset_index(drop=True)
+    topic_data = pd.concat([original_data, topic_data], axis=1)
     nr_ads_per_page = topic_data.groupby(["page_id", "page_name"])["id"].count().reset_index(name="nr_ads")
     top_20_pages = nr_ads_per_page.sort_values(by="nr_ads", ascending=False)['page_id'].head(20) 
 
