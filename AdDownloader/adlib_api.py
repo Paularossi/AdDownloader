@@ -46,11 +46,15 @@ class AdLibAPI:
         :param page_number: The page number for tracking the progress. Default is 1.
         :type page_number: int
         """
-        
         print("##### Starting reading page", page_number, "#####")
         self.logger.info('Starting reading page %i', page_number)
         response = requests.get(url, params = params)
-        data = response.json()
+        try:
+            data = response.json()
+        except:
+            print(f"Unknown error occured on page {page_number}: {response}. Finishing the download.")
+            self.logger.error("Unknown error occured on page %i: %s. Finishing the download.", page_number, response)
+            return
 
         # check if the output json file is empty and return
         if not "data" in data:
@@ -62,7 +66,7 @@ class AdLibAPI:
             self.logger.warning('Page %i is empty.', page_number)
             return
         
-        folder_path = f"output\\{self.project_name}\\json"
+        folder_path = f"output/{self.project_name}/json"
         # check if the folder exists
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
@@ -127,8 +131,15 @@ class AdLibAPI:
         if page_ids is not None:
             if is_valid_excel_file(page_ids):
                 path = os.path.join("data", page_ids)
-                data = pd.read_excel(path)
-                search_page_ids_list = data['page_id'].tolist()
+                try:
+                    data = pd.read_excel(path)
+                except:
+                    try:
+                        data = pd.read_csv(path)
+                    except:
+                        print('Unable to load page ids data.')
+
+                search_page_ids_list = data['page_id'].astype(str).tolist()
                 params["search_page_ids"] = search_page_ids_list
                 self.request_parameters = params
 

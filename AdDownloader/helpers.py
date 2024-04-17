@@ -81,7 +81,7 @@ class CountryValidator(Validator):
 
 def is_valid_excel_file(file):
     """
-    Initialize the AdLibAPI object.
+    Checks whether the input file name is a valid excel/csv file.
 
     :param file: A path to an excel file.
     :type file: str
@@ -91,11 +91,11 @@ def is_valid_excel_file(file):
     try:
         # check if the path exists and has an Excel file extension
         path = os.path.join("data", file)
-        if not os.path.exists(path) or not path.lower().endswith(('.xlsx', '.xls', '.xlsm')):
+        if not os.path.exists(path) or not path.lower().endswith(('.xlsx', '.xls', '.xlsm', '.csv')):
             print(f"Excel file not found.")
             return False
         # try to read the excel file
-        pd.read_excel(path)
+        #pd.read_excel(path)
         return True
     except Exception as e:  # catch any exception when trying to read
         return False
@@ -216,7 +216,7 @@ def transform_data(project_name, country, ad_type):
     :type country: str
     :param ad_type: The type of the ads that were retrieved (can be "All" or "Political"). Depending on the `ad_type` different processing will be done.
     :type ad_type: str
-    :returns: If ad_type = "All" then a dataframe with the processed age_gender_reach data, if not then the original JSON processed data.
+    :returns: If ad_type = "All" then a dataframe with the processed age_country_gender_reach_breakdown data, if not then a dataframe with the processed demographic_distribution.
     :rtype: pandas.DataFrame
     """
 
@@ -237,16 +237,18 @@ def transform_data(project_name, country, ad_type):
     else:
         wide_df = pd.DataFrame(df['demographic_distribution'].apply(flatten_demographic_distribution).tolist())
  
-        # create new column with average impressions
+        # create new columns with average impressions and spend
         df['impressions'] = df['impressions'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
         df['impressions_avg'] = df['impressions'].apply(lambda x: math.ceil((int(x['lower_bound']) + int(x.get('upper_bound', x['lower_bound']))) / 2))
+        df['spend'] = df['spend'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
+        df['spend_avg'] = df['spend'].apply(lambda x: math.ceil((int(x['lower_bound']) + int(x.get('upper_bound', x['lower_bound']))) / 2))
               
     # reorder the columns alphabetically and save the processed data to a different file
     wide_df = wide_df.reindex(sorted(wide_df.columns), axis=1)
     final_data = pd.concat([df, wide_df], axis=1)
     
-    final_data = hide_access_token(final_data)
-    final_data.to_excel(f'{data_path}/{project_name}_processed_data.xlsx', index=False)
+    final_data_censored = hide_access_token(final_data)
+    final_data_censored.to_excel(f'{data_path}/{project_name}_processed_data.xlsx', index=False)
     return final_data
 
 
@@ -303,8 +305,9 @@ def hide_access_token(data):
     :returns: A dataframe with the access token removed from the `ad_snapshot_url` column.
     :rtype: pandas.DataFrame
     """
-    data['ad_snapshot_url'] = data['ad_snapshot_url'].str.replace(r'access_token=.*$', 'access_token={access_token}', regex=True)
-    return data
+    data_copy = data.copy()
+    data_copy['ad_snapshot_url'] = data_copy['ad_snapshot_url'].str.replace(r'access_token=.*$', 'access_token={access_token}', regex=True)
+    return data_copy
 
 
 def update_access_token(data, new_access_token=None):
@@ -320,8 +323,10 @@ def update_access_token(data, new_access_token=None):
     """
     if new_access_token is None:
         new_access_token = input("Please provide an updated access token: ")
-    data['ad_snapshot_url'] = data['ad_snapshot_url'].str.replace(r'access_token=.*$', f'access_token={new_access_token}', regex=True)
-    return data
+
+    data_copy = data.copy()
+    data_copy['ad_snapshot_url'] = data_copy['ad_snapshot_url'].str.replace(r'access_token=.*$', f'access_token={new_access_token}', regex=True)
+    return data_copy
 
 
 def get_long_lived_token(access_token = None, app_id = None, app_secret = None, version = "v19.0"):

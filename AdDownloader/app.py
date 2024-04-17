@@ -187,7 +187,7 @@ def download_topic_data(n_clicks, topic_data, project_name):
 
 @app.callback(Output("download-img-dataframe", "data"),
              Input("btn_xlsx_img_ft", "n_clicks"),
-             State('all-img-features-data', 'data'),
+             State('img-features-data', 'data'),
              State('stored-project-name', 'data'),
              prevent_initial_call=True)
 def download_img_features_data(n_clicks, data, project_name):
@@ -196,6 +196,19 @@ def download_img_features_data(n_clicks, data, project_name):
         return dcc.send_data_frame(df.to_excel, f"{project_name}_img_features_data.xlsx", index=False)
     except:
         print('Unable to save image features data.')
+
+
+@app.callback(Output("download-blip-questions", "data"),
+             Input("btn_xlsx_blip_quest", "n_clicks"),
+             State('blip-answers-data', 'data'),
+             State('stored-project-name', 'data'),
+             prevent_initial_call=True)
+def download_blip_answers_data(n_clicks, data, project_name):
+    try:
+        df = pd.DataFrame(data)
+        return dcc.send_data_frame(df.to_excel, f"{project_name}_blip_answers_data.xlsx", index=False)
+    except:
+        print('Unable to save BLIP question answers data.')
 
 
 @app.callback(Output('output-graphs', 'children'),
@@ -325,7 +338,7 @@ def start_image_download(access_token, nr_ads, n, data, project_name):
 
             displayed_images = images[:5] if len(images) > 5 else images
 
-            df = analysis.analyse_image_folder(img_path, project_name, nr_images=int(nr_ads))
+            df = analysis.analyse_image_folder(img_path, nr_images=int(nr_ads))
             color_long_df = df.melt(value_vars=['dom_color_1', 'dom_color_2', 'dom_color_3'], 
                                     var_name='Color_Type', value_name='Color')
             color_counts = color_long_df['Color'].value_counts().reset_index()
@@ -366,6 +379,9 @@ def start_image_download(access_token, nr_ads, n, data, project_name):
             ], className='six columns')
         ], className='row'),
         dcc.Store(id='img-features-data', data=df.to_dict('records')),
+        html.Button("Download Image Features Data", id="btn_xlsx_img_ft"),
+        dcc.Download(id="download-img-dataframe"),
+
         html.H2('Optional - Image Analysis using the BLIP model.'),
         html.H6('BLIP (Bootstrapped Language Image Pre-training) is a model trained on large datasets of images and text that can perform tasks like captioning and question answering on images by understanding and describing the content within them. '), 
         html.Div([
@@ -479,10 +495,8 @@ def start_media_captioning(n, nr_ads, project_name, data):
             html.H4("Coherence Score:"),
             html.P([f"{coherence} - ", html.Span(qual, style={'color': qual_color})])
         ]),
-
-        dcc.Store(id='all-img-features-data', data=features_data.to_dict('records')),
-        html.Button("Download Image Features Data", id="btn_xlsx_img_ft"),
-        dcc.Download(id="download-img-dataframe"),
+        
+        dcc.Store(id='all-img-features-data', data=all_features_data.to_dict('records')),
         html.Hr(),
     ])
         
@@ -495,10 +509,9 @@ def start_media_captioning(n, nr_ads, project_name, data):
               Input('nr-ads', 'value'),
               Input('blip_quest', 'value'),
               State('stored-project-name', 'data'),
-              State('img-features-data', 'data'),
               State('stored-answers', 'data'),
               prevent_initial_call=True)
-def start_question_answering(n, nr_ads, questions, project_name, data, stored_data):
+def start_question_answering(n, nr_ads, questions, project_name, stored_data):
     if n is None or n <= 0:
         return no_update
     
@@ -508,13 +521,10 @@ def start_question_answering(n, nr_ads, questions, project_name, data, stored_da
                 stored_data = []
 
             img_path = f"output/{project_name}/ads_images"
-            features_data = pd.DataFrame(data)
 
             # image captioning with BLIP
             img_questions = analysis.blip_call(img_path, task='visual_question_answering', nr_images=int(nr_ads), questions=questions)
 
-            # gather all img features
-            #all_features_data = features_data.merge(img_questions, how='inner', on='ad_id')
             df = pd.DataFrame(stored_data)
             if not df.empty:
                 df = pd.merge(df, img_questions, on='ad_id', how='outer')  # add/update column for the new question
@@ -551,9 +561,9 @@ def start_question_answering(n, nr_ads, questions, project_name, data, stored_da
             ],
             tooltip_duration=None
         ),
-        #dcc.Store(id='all-img-features-data', data=features_data.to_dict('records')),
-        #html.Button("Download Image Features Data", id="btn_xlsx_img_ft"),
-        #dcc.Download(id="download-img-dataframe"),
+        dcc.Store(id='blip-answers-data', data=df.to_dict('records')),
+        html.Button("Download Question Answering Data", id="btn_xlsx_blip_quest"),
+        dcc.Download(id="download-blip-questions"),
         html.Hr(),
     ])
         

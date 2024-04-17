@@ -1,12 +1,12 @@
 # AdDownloader
-AdDownloader is a Python command-line tool designed for downloading ads and their associated media content from the Meta Ad Library. This tool provides an efficient and user-friendly way to access ad data for analysis and research purposes.
+AdDownloader is a Python command-line tool designed for downloading ads and their associated media content from the Meta Ad Library. This tool provides an efficient and user-friendly way to access ad data for analysis and research purposes, offering additional analytical functionalities for the ad creatives.
 
 *Key Features:*
 
 * 🚀 Choose your fighter: easy-to-use Command-Line Interface or intuitive Python package.
 * 🔐 Access Meta Ad Library data effortlessly by only providing your access token.
 * 🔎 Answer questions based on your search target and download ads and their media content.
-* 💡 Use the downloaded ad data for research and analysis of ad campaigns.
+* 💡 Use the downloaded ad data for research and analysis of ad campaigns, embedded in a Dashboard.
 
 ## Table of Contents
 - [Introduction](#introduction)
@@ -49,7 +49,7 @@ Researchers are currently able to obtain the following data:
 - Targeting and reach demographic information specific to the EU (estimated)
 - Beneficiary and payer information
 
-For more information on getting access to the API, available fields, search parameters and API call examples, refer to the Meta Ad Library API <a href="https://www.facebook.com/ads/library/api/" target="_blank">Documentation</a>.
+For more information on getting access to the API, available fields, search parameters and API call examples, refer to the  <a href="https://www.facebook.com/ads/library/api/" target="_blank"> Meta Ad Library API Documentation</a>.
 
 ### AdDownloader functionalities
 The AdDownloader has two main functionalities: (1) download general ad data based on user-inputed parameters; and (2) download media content for ads
@@ -69,6 +69,8 @@ Currently, Meta doesn't provide ad media content directly from an API call, but 
 6. 📥 **Download Media Content** → Access each `ad_snapshot_url` provided in the data to download the corresponding media content.
 
 7. 📁 **Check Output** → Review all the downloaded media content and data inside the output folder with your `project_name`.
+
+8. 📈 **Optional - Explore Insights** → Perform ad creatives (text & image) analysis and visualize the outputs in a Dashboard.
 
 Each step in this pipeline is designed to ensure a smooth and efficient user experience, from data retrieval to processing and final output. Please note that this tool should only be used for research purposes.
 
@@ -103,12 +105,12 @@ venv\Scripts\activate.bat
 Once you're inside your repository and the virtual environment, to install from the source file run:
 
 ```bash
-python -m pip install "dist/AdDownloader-0.2.4.1.tar.gz"
+python -m pip install "dist/AdDownloader-0.2.5.tar.gz"
 ```
 
 To install from the built distribution run:
 ```bash
-python -m pip install "dist/AdDownloader-0.2.4.1-py3-none-any.whl"
+python -m pip install "dist/AdDownloader-0.2.5-py3-none-any.whl"
 ```
 
 ### From pip
@@ -191,10 +193,15 @@ run_analysis()
 
 Once the CLI tool is running, more instructions and questions will appear in the cmd/terminal that will guide the API call.
 
-For further help see the AdDownloader [documentation](https://addownloader.readthedocs.io/en/latest/index.html). 
+For further help and additional functionalities see the [AdDownloader documentation](https://addownloader.readthedocs.io/en/latest/index.html). 
 
 ## Contributing
-To contribute to this project...
+The AdDownloader project is released with a [Contributor Code of Conduct](https://github.com/Paularossi/AdDownloader/blob/main/LICENSE.txt). By contributing to this project, you agree to abide by its terms. To contribute, follow the "forg-and-pull" Git workflow:
+1. Fork the repo on GitHub and create your branch from `master`
+2. Clone the project to your own machine
+3. Commit changes to your own branch
+4. Push your work back up to your fork
+5. Submit a Pull Request so that we can review your changes
 
 ## License
 This project is licensed under the GNU General Public License v3.0. You can read the license [here](https://github.com/Paularossi/AdDownloader/blob/main/LICENSE.txt). 

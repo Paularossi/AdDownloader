@@ -63,7 +63,7 @@ def accept_cookies(driver):
     """
     # accept the cookies if needed
     try:
-        # Wait up to 10 seconds for the accept cookies element to be present
+        # wait up to 10 seconds for the accept cookies element to be present
         cookies = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='cookie-policy-manage-dialog-accept-button']")))
         cookies.click()
@@ -115,13 +115,11 @@ def start_media_download(project_name, nr_ads, data=[]):
     if not os.path.exists(folder_path_vid):
         os.makedirs(folder_path_vid)
     
-    # define some constants first
+    # define some constants for the xpaths
     img_xpath_1 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/a/div[1]/img'
     img_xpath_2 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/img'
     video_xpath_1 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/video'
     video_xpath_2 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/video'
-    #multpl_img_xpath = '//*[@id="content"]/div/div/div/div/div/div/div[3]/div/div/div/div[{}]/div/div/a/div[1]/img'
-    # //*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/img
     multpl_img_xpath = '//*[@id="content"]/div/div/div/div/div/div/div[3]/div/div/div/div[{}]/div/div/div/img'
 
     # sample the nr_ads
@@ -206,6 +204,14 @@ def start_media_download(project_name, nr_ads, data=[]):
             nr_ads_failed += 1
             print(f"No media were downloaded for ad {data['id'][i]}.")
             logger.error('No media were downloaded for ad %s', data['id'][i])
+        
+        if i/nr_ads == 0.25:
+            print("===== 25% done =====")
+        elif i/nr_ads == 0.5:
+            print("===== 50% done =====")
+        elif i/nr_ads == 0.75:
+            print("===== 75% done =====")
+
 
     print(f'Finished saving media content for {nr_ads_processed} ads for project {project_name}.')
     logger.info('Finished saving media content for %i ads for project %s.', nr_ads_processed, project_name)
@@ -218,7 +224,7 @@ def start_media_download(project_name, nr_ads, data=[]):
     close_logger(logger)
 
 
-def extract_frames(video, project_name, interval=3):
+def extract_frames(video, project_name, interval = None, num_frames = None):
     """
     Extract a number of frames from ad videos
 
@@ -226,8 +232,10 @@ def extract_frames(video, project_name, interval=3):
     :type video: str
     :param project_name: The name of the current project.
     :type project_name: str
-    :param interval: The interval between the (in seconds), optional. Default = 3 seconds.
+    :param interval: The interval between the (in seconds), optional. Should be specified instead of `num_frames`.
     :type interval: int
+    :param num_frames: The number of frames to extract, distributed evenly, optional. Should be specified instead of the `interval`.
+    :type num_frames: int
     """
     video_path = f"output/{project_name}/ads_videos/{video}"
     # create a VideoCapture object
@@ -243,28 +251,39 @@ def extract_frames(video, project_name, interval=3):
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration = frame_count / fps
 
-    print(f"Processing {video_path} | FPS: {fps} | Total Frames: {frame_count} | Duration: {duration}s")
-
     # get the ad id
     ad_id = os.path.basename(video_path).split('_')[1]
-    frame_dir = f"{project_name}/video_frames"
+    frame_dir = f"output/{project_name}/video_frames"
     if not os.path.exists(frame_dir):
         os.makedirs(frame_dir)
 
-    # read the video and save frames every interval
-    frame_number = 0
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
+    if interval is not None:
+        print(f"Processing {video_path} | FPS: {fps} | Total Frames: {frame_count} | Duration: {duration}s")
+        # read the video and save frames every interval
+        frame_number = 0
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-        # check if the current frame number is the one we want to save
-        if frame_number % (interval * fps) == 0:
-            frame_path = f"{frame_dir}/ad_{ad_id}_frame{frame_number}.png"
-            cv2.imwrite(frame_path, frame)
-            print(f"Saved {frame_path}")
+            # check if the current frame number is the one we want to save
+            if frame_number % (interval * fps) == 0:
+                frame_path = f"{frame_dir}/ad_{ad_id}_frame{frame_number}.png"
+                cv2.imwrite(frame_path, frame)
+                print(f"Saved {frame_path}")
 
-        frame_number += 1
+            frame_number += 1
+    elif num_frames is not None:
+        frames_to_capture = [(x * frame_count) // (num_frames + 1) for x in range(1, num_frames + 1)]
+        print(f"Processing {video_path} | FPS: {fps} | Total Frames: {frame_count} | Frames to capture: {frames_to_capture}")
+        for frame_number in frames_to_capture:
+            # set the frame position
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+            ret, frame = cap.read()
+            if ret:
+                frame_path = f"{frame_dir}/ad_{ad_id}_frame{frame_number}.png"
+                cv2.imwrite(frame_path, frame)
+                print(f"Saved {frame_path}")
 
     # release the VideoCapture object
     cap.release()

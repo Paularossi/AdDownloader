@@ -229,7 +229,7 @@ analyse_image_folder Function
 
    Example::
    
-      >>> df = analyse_image_folder(images_path, project_name="test7", nr_images=20)
+      >>> df = analyse_image_folder(images_path, nr_images=20)
       >>> df.head(3)
                   ad_id  resolution  brightness   contrast    sharpness  ncorners dom_color_1  dom_color_1_prop dom_color_2  dom_color_2_prop dom_color_3  dom_color_3_prop
       0  1039719343827470      187800  172.399936  60.601719  1585.668739        21     #ced2ce         55.395508     #a48b7d         28.369141     #464347         16.235352

@@ -39,7 +39,7 @@ DATE_MAX = 'ad_delivery_stop_time'
 GENDERS = ['female', 'male', 'unknown']
 AGE_RANGES = ['13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+']
 
-AD_PATTERN = re.compile(r"ad_(\d+(?:_\d+)?)_img\.png")
+AD_PATTERN = re.compile(r"ad_([0-9]+)_(img|frame[0-9]+)\.(png|jpeg|jpg)")
 
 
 
@@ -456,7 +456,7 @@ def get_graphs(data):
     data_by_gender = transform_data_by_gender(data)
 
     # reach across age ranges (all ads)
-    fig9 = px.violin(data_by_age, y='Reach', x='Age Range', color='Age Range', template = "seaborn", title="Reach Across Age Ranges for all")
+    fig9 = px.violin(data_by_age, y='Reach', x='Age Range', color='Age Range', title="Reach Across Age Ranges for all ads")
     
     # reach across genders (all ads)
     fig10 = px.violin(data_by_gender, y ='Reach', x='Gender', color='Gender', title="Reach Across Genders for all ads")
@@ -514,7 +514,6 @@ def blip_call(images_path, task = "image_captioning", nr_images = None, question
     :return: A pandas DataFrame containing image captions or answers to the provided questions.
     :rtype: pandas.DataFrame
     """
-    print(f"nr_images: {nr_images}, questions: {questions}")
     processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
     model_captioning = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
     model_answering = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base")
@@ -531,15 +530,17 @@ def blip_call(images_path, task = "image_captioning", nr_images = None, question
 
     if nr_images is None or nr_images > len(image_files):
         nr_images = len(image_files)
-    image_files = random.sample(image_files, nr_images)
+    else:
+        image_files = random.sample(image_files, nr_images)
     #tasks = ["image_captioning", "visual_question_answering"]
     rows_list = []
+    print(f"nr_images: {nr_images}, questions: {questions}")
 
     for image_file in image_files:
-
         raw_image = Image.open(os.path.join(images_path, image_file)).convert('RGB')
         numbers = AD_PATTERN.findall(image_file)
-        ad_id = '_'.join(numbers) # extract ad id
+        ad_ids = [match[0] for match in numbers]
+        ad_id = '_'.join(ad_ids) # extract ad id
 
         # question answering
         if task == "visual_question_answering":
@@ -682,7 +683,8 @@ def analyse_image(image_path):
     #print("With a min_distance set to 32, we detect a total", len(coords), "corners in the image.")
 
     numbers = AD_PATTERN.findall(image_path)
-    ad_id = '_'.join(numbers) # extract ad id
+    ad_ids = [match[0] for match in numbers]
+    ad_id = '_'.join(ad_ids) # extract ad id
 
     dict = {'ad_id': ad_id, 'resolution': resolution, 'brightness': brightness, 'contrast': contrast, 
             'sharpness': sharpness, 'ncorners': ncorners}
@@ -693,7 +695,7 @@ def analyse_image(image_path):
     return dict
 
 
-def analyse_image_folder(folder_path, project_name, nr_images = None):
+def analyse_image_folder(folder_path, nr_images = None):
     """
     Analyzes a set of images in a specified folder and exports the results to an Excel file.
 
@@ -701,14 +703,10 @@ def analyse_image_folder(folder_path, project_name, nr_images = None):
 
     :param folder_path: The path to the folder containing the image files to be analyzed. The folder can contain images in jpg, png, and jpeg formats.
     :type folder_path: str
-    :param project_name: The name of the project, used to create a project-specific folder within the 'output' directory for storing the Excel file.
-    :type project_name: str
     :param nr_images: The number of images to analyze from the folder. If None, all images in the folder are analyzed. This parameter allows for limiting the analysis to a subset of images.
     :type nr_images: int, optional
     :return: A pandas DataFrame containing the analysis results for each image.
     :rtype: pandas.DataFrame
-
-    The generated Excel file is saved to 'output/{project_name}/ads_data/image_quality.xlsx'.
     """
 
     image_files = [f for f in os.listdir(folder_path) if f.endswith(('jpg', 'png', 'jpeg'))]
