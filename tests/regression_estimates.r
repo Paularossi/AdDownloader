@@ -18,12 +18,12 @@ periods <- list(
 )
 pages <- c("Democratic Party", "GOP")
 
-
+# filter only the relevant period
 df <- df %>%
   filter(ad_delivery_start_time >= as.Date("2020-10-03") & ad_delivery_stop_time <= as.Date("2020-11-03")) %>%
   filter(languages == "['en']")
 
-
+# sample 250 ads per period per page
 sampled_dfs <- lapply(pages, function(page) {
   lapply(periods, function(period) {
     df %>%
@@ -35,27 +35,11 @@ sampled_dfs <- lapply(pages, function(page) {
   bind_rows() # combine samples from all periods for the current page
 }) %>%
 bind_rows()
-.
 
-df_sampled <- read_excel("output/uselections/ads_data/uselections-sample.xlsx")
-# sampled_df <- df %>%
-#   filter(page_name %in% c("Democratic Party", "GOP")) %>%
-#   filter(!is.na(demographic_distribution)) %>%
-#   # distinct(ad_creative_bodies, .keep_all = TRUE) %>%
-#   group_by(page_name) %>%
-#   sample_n(size = 1000, replace = FALSE) %>%
-#   ungroup()
-
-
-
+df_sampled <- write.xlsx(sampled_dfs, "output/uselections/ads_data/uselections-sample.xlsx")
 
 
 # ========= Impressions modelling =========
-
-library(randomForest)
-library(ggplot2)
-library(stargazer)
-library(broom)
 
 # set decimals to digits instead of scientific
 options(scipen = 999)
@@ -71,7 +55,7 @@ data$masks <- as.factor(data$masks)
 data$`afr-amer` <- as.factor(data$`afr-amer`)
 data$asian <- as.factor(data$asian)
 data$white <- as.factor(data$white)
-str(data)
+
 
 # normalize the img data
 min_max_normalize <- function(x) {
@@ -82,11 +66,10 @@ data$brightness_norm <- min_max_normalize(data$brightness)
 data$sharpness_norm <- min_max_normalize(data$sharpness)
 data$contrast_norm <- min_max_normalize(data$contrast)
 data$resolution_norm <- min_max_normalize(data$resolution)
-data$spend_avg_norm <- min_max_normalize(data$spend_avg)
 
-hist(data$log_impressions_avg)
+
 # model 1 - ad library features
-model1 <- glm(log_impressions_avg ~ page_name + campaign_duration + log(spend_avg), data = data)
+model1 <- lm(log_impressions_avg ~ page_name + campaign_duration + log(spend_avg), data = data)
 summary(model1) 
 
 # model 2 - ad library + text analysis
@@ -105,38 +88,18 @@ model4 <- lm(log_impressions_avg ~ page_name + campaign_duration + log(spend_avg
               `afr-amer` + asian + white + masks + people + emotion, data = data)
 summary(model4)
 
-model1_tidy <- tidy(model1)
-model2_tidy <- tidy(model2)
-model3_tidy <- tidy(model3)
-model4_tidy <- tidy(model4)
-output <- merge(model3_tidy, model4_tidy, by='term', all.x=T, all.y=T)
-stargazer(output, type='latex', summary=FALSE, single.row=TRUE)
-
-anova(model1, model2, test = "F")
-anova(model2, model3, test = "F")
-anova(model3, model4, test = "F")
-
 # model 5 - significant parameters only
 model5 <- lm(log_impressions_avg ~ page_name + campaign_duration + spend_avg + dom_topic +
               contrast + dom_topic_caption + `afr-amer`, data = data)
 summary(model5)
 
-# ad text:
-# 0 - early voting
-# 1 - urgency
-# 2 - patriotic appeal
 
-# ad image caption:
-# 0 - civic duty
-# 1 - progressive (left) activist
-# 2 - republican poster other (no logo)
-# 3 - right activist
-# 4 - republic poster logo
-
-cor(cbind(data$is_man, data$is_woman, data$is_no_people, data$is_both))
+cor(cbind(data$is_man, data$is_woman, data$is_no_people, data$is_both,
+          data$white, data$`afr-amer`, data$asian))
 
 
-summary(data$people)
+
+
 
 
 ########### Radlibrary

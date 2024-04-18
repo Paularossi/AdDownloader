@@ -100,7 +100,7 @@ def start_media_download(project_name, nr_ads, data=[]):
     if nr_ads > len(data):
         nr_ads = len(data)
     print(f"Downloading media content for project {project_name}.")
-    logger.info('Downloading media content for project %s', project_name)
+    logger.info(f'Downloading media content for project {project_name}.')
     nr_ads_processed = 0
     nr_ads_failed = 0
 
@@ -203,19 +203,19 @@ def start_media_download(project_name, nr_ads, data=[]):
         if not success:
             nr_ads_failed += 1
             print(f"No media were downloaded for ad {data['id'][i]}.")
-            logger.error('No media were downloaded for ad %s', data['id'][i])
+            logger.error(f"No media were downloaded for ad {data['id'][i]}")
         
-        if i/nr_ads == 0.25:
+        if (i+1)/nr_ads == 0.25:
             print("===== 25% done =====")
-        elif i/nr_ads == 0.5:
+        elif (i+1)/nr_ads == 0.5:
             print("===== 50% done =====")
-        elif i/nr_ads == 0.75:
+        elif (i+1)/nr_ads == 0.75:
             print("===== 75% done =====")
 
 
     print(f'Finished saving media content for {nr_ads_processed} ads for project {project_name}.')
-    logger.info('Finished saving media content for %i ads for project %s.', nr_ads_processed, project_name)
-    logger.info('Media failed to download for %i ads.', nr_ads_failed)
+    logger.info(f'Finished saving media content for {nr_ads_processed} ads for project {project_name}.')
+    logger.info(f'Media failed to download for {nr_ads_failed} ads. Success rate: {nr_ads_processed / nr_ads}')
 
     # close the driver once it's done downloading
     driver.quit()

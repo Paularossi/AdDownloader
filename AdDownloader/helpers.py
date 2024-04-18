@@ -79,11 +79,43 @@ class CountryValidator(Validator):
                 cursor_position=len(document.text))
 
 
+class ExcelValidator(Validator):
+    """A class representing a valid Excel file validator."""
+    def validate(self, document):
+        """
+        Checks whether the input is a valid Excel file.
+
+        :param document: A document representing user's Excel file name input.
+        :type document: document
+        :returns: True if the text of the document represents a valid Excel file containing a column `page_id`, False otherwise.
+        :rtype: bool
+        """
+        if (not is_valid_excel_file(document.text)):
+            raise ValidationError(
+                    message='Excel file not found.',
+                    cursor_position=len(document.text))
+        try:
+            data_path = os.path.join("data", document.text)
+            data = pd.read_excel(data_path)
+        except:
+            raise ValidationError(
+                message='Unable to load page ids data.',
+                cursor_position=len(document.text))
+            
+        try:
+            data['page_id'].astype(str).tolist()
+        except:
+            raise ValidationError(
+                message='Unable to read the page ids. Check if there exists a column `page_id` in your data.',
+                cursor_position=len(document.text))
+            
+        
+
 def is_valid_excel_file(file):
     """
-    Checks whether the input file name is a valid excel/csv file.
+    Checks whether the input file name is a valid Excel file.
 
-    :param file: A path to an excel file.
+    :param file: A path to an Excel file.
     :type file: str
     :returns: True if the string represents a valid path to an excel file, False otherwise.
     :rtype: bool
@@ -91,13 +123,12 @@ def is_valid_excel_file(file):
     try:
         # check if the path exists and has an Excel file extension
         path = os.path.join("data", file)
-        if not os.path.exists(path) or not path.lower().endswith(('.xlsx', '.xls', '.xlsm', '.csv')):
-            print(f"Excel file not found.")
+        if not os.path.exists(path) or not path.lower().endswith(('.xlsx', '.xls', '.xlsm')):
             return False
         # try to read the excel file
-        #pd.read_excel(path)
+        pd.read_excel(path)
         return True
-    except Exception as e:  # catch any exception when trying to read
+    except:  # catch any exception when trying to read
         return False
 
 

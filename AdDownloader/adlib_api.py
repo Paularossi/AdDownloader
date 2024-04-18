@@ -47,23 +47,23 @@ class AdLibAPI:
         :type page_number: int
         """
         print("##### Starting reading page", page_number, "#####")
-        self.logger.info('Starting reading page %i', page_number)
+        self.logger.info(f'Starting reading page {page_number}')
         response = requests.get(url, params = params)
         try:
             data = response.json()
         except:
             print(f"Unknown error occured on page {page_number}: {response}. Finishing the download.")
-            self.logger.error("Unknown error occured on page %i: %s. Finishing the download.", page_number, response)
+            self.logger.error(f"Unknown error occured on page {page_number}: {response}. Finishing the download.")
             return
 
         # check if the output json file is empty and return
         if not "data" in data:
             print("No data on page", page_number)
-            self.logger.error('No data on page %i', page_number)
+            self.logger.error(f'No data on page {page_number}')
             return
         if not bool(data["data"]):
             print("Page", page_number, "is empty.")
-            self.logger.warning('Page %i is empty.', page_number)
+            self.logger.warning(f'Page {page_number} is empty.')
             return
         
         folder_path = f"output/{self.project_name}/json"
@@ -86,23 +86,23 @@ class AdLibAPI:
             self.fetch_data(next_page_url, params, page_ids, page_number + 1)
 
 
-    def add_parameters(self, fields = None, countries = 'NL', start_date = "2023-01-01", end_date = datetime.today().strftime('%Y-%m-%d'),
-                       page_ids = None, search_terms = None, ad_type = "ALL", **kwargs):
+    def add_parameters(self, fields = None, ad_reached_countries = 'NL', ad_delivery_date_min = "2023-01-01", ad_delivery_date_max = datetime.today().strftime('%Y-%m-%d'),
+                       search_page_ids = None, search_terms = None, ad_type = "ALL", **kwargs):
         """
         Add parameters for the API request. Mandatory parameters are reached countries, start and end date, and either page_ids or search_terms.
         See available parameters here: https://developers.facebook.com/docs/marketing-api/reference/ads_archive/
 
         :param fields: The fields to include in the API response. Default is None, fields are retrieved from the created AdLibApi object.
         :type fields: str
-        :param countries: The reached country for ad targeting. Default is 'NL'.
-        :type countries: str
-        :param start_date: The start date for ad delivery. Default is "2023-01-01".
-        :type start_date: str
-        :param end_date: The end date for ad delivery. Default is the current date.
-        :type end_date: str
-        :param page_ids: The name of the file containing page IDs. Default is None. Complementary with search_terms.
-        :type page_ids: str
-        :param search_terms: The search terms for ad filtering, in one string separated by a comma. Default is None. Complementary with page_ids.
+        :param ad_reached_countries: The reached country for ad targeting. Default is 'NL'.
+        :type ad_reached_countries: str
+        :param ad_delivery_date_min: The minimum start date of ad delivery. Default is "2023-01-01".
+        :type ad_delivery_date_min: str
+        :param ad_delivery_date_max: The maximum start date of ad delivery. Default is the current date.
+        :type ad_delivery_date_max: str
+        :param search_page_ids: The name of the file containing page IDs. Default is None. Complementary with search_terms.
+        :type search_page_ids: str
+        :param search_terms: The search terms for ad filtering, in one string separated by a comma. Default is None. Complementary with search_page_ids.
         :type search_terms: str
         :param ad_type: The type of the ads to be retrieved. Default is "ALL", can also be "POLITICAL_AND_ISSUE_ADS".
         :type ad_type: str
@@ -114,12 +114,12 @@ class AdLibAPI:
 
         params = {
             "fields": fields,
-            "ad_reached_countries": countries,
+            "ad_reached_countries": ad_reached_countries,
             "ad_type": ad_type,
             "search_page_ids": None,
             "search_terms": None,
-            "ad_delivery_date_min": start_date,
-            "ad_delivery_date_max": end_date,
+            "ad_delivery_date_min": ad_delivery_date_min,
+            "ad_delivery_date_max": ad_delivery_date_max,
             "limit": "300",
             "access_token": self.access_token
         }
@@ -127,10 +127,10 @@ class AdLibAPI:
         # accept additional parameters through kwargs**
         params.update(kwargs)
 
-        # page ids - the file must contain at least one column called page_id
-        if page_ids is not None:
-            if is_valid_excel_file(page_ids):
-                path = os.path.join("data", page_ids)
+        # search page ids - the file must contain at least one column called page_id
+        if search_page_ids is not None:
+            if is_valid_excel_file(search_page_ids):
+                path = os.path.join("data", search_page_ids)
                 try:
                     data = pd.read_excel(path)
                 except:
@@ -138,10 +138,16 @@ class AdLibAPI:
                         data = pd.read_csv(path)
                     except:
                         print('Unable to load page ids data.')
-
-                search_page_ids_list = data['page_id'].astype(str).tolist()
-                params["search_page_ids"] = search_page_ids_list
-                self.request_parameters = params
+                        self.logger.error('Unable to load page ids data.')
+                try:
+                    search_page_ids_list = data['page_id'].astype(str).tolist()
+                    params["search_page_ids"] = search_page_ids_list
+                    self.request_parameters = params
+                except:
+                    print('Unable to read the page ids. Check if there exists a column `page_id` in your data.')
+                    self.logger.error('Unable to read the page ids. Check if there exists a column `page_id` in your data.')
+            else:
+                print(f"Excel file not found.")
 
         elif search_terms is not None:
             params["search_terms"] = search_terms
@@ -151,7 +157,7 @@ class AdLibAPI:
             print('You need to specify either pages ids or search terms.')
             self.logger.warning('You need to specify either pages ids or search terms.')
 
-        self.logger.info('You added the following parameters: %s', self.request_parameters)
+        self.logger.info(f'You added the following parameters: {self.request_parameters}')
             
     
     def start_download(self, params = None):
@@ -190,7 +196,7 @@ class AdLibAPI:
             final_data = transform_data(self.project_name, country = params["ad_reached_countries"], ad_type = params["ad_type"]) 
             total_ads = len(final_data)
             print(f"Done processing and saving ads data for {total_ads} ads for project {self.project_name}.")
-            self.logger.info('Done processing and saving ads data for %i ads for project %s.', total_ads,  self.project_name)
+            self.logger.info(f'Done processing and saving ads data for {total_ads} ads for project {self.project_name}.')
 
             # close the logger
             close_logger(self.logger)

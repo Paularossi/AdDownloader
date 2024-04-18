@@ -137,7 +137,8 @@ ads_api = adlib_api.AdLibAPI(access_token, project_name = "test1")
 
 2. Add parameters to your search:
 ```bash
-ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza")
+ads_api.add_parameters(ad_reached_countries = 'BE', ad_delivery_date_min = "2023-12-01", ad_delivery_date_max = "2023-12-31", 
+                       search_terms = "McDonald's")
 ```
 Note that `search_terms` and `search_pages_id` cannot both be empty.
 
@@ -163,7 +164,8 @@ plt_ads_api = adlib_api.AdLibAPI(access_token, project_name = "test2")
 
 2. Add parameters to your search:
 ```bash
-plt_ads_api.add_parameters(countries = 'US', start_date = "2023-02-01", end_date = "2023-03-01", ad_type = "POLITICAL_AND_ISSUE_ADS", ad_active_status = "ALL", estimated_audience_size_max = 10000, languages = 'es', search_terms = "Biden")
+plt_ads_api.add_parameters(ad_reached_countries = 'US', ad_delivery_date_min = "2020-10-01", ad_delivery_date_max = "2020-10-03", 
+                           ad_type = "POLITICAL_AND_ISSUE_ADS", search_page_ids = "us_parties.xlsx")
 ```
 
 3. Check the parameters and start the download of ads data:
@@ -178,6 +180,21 @@ start_media_download(project_name = "test2", nr_ads = 20, data = plt_data)
 ```
 
 All the ouput can be found inside the '`output/<project_name>`' folder.
+
+#### Run the Analytics Dashboard:
+Create a dashboard with various graphs and statistics.
+From the cmd/terminal: (inside your folder with venv activated)
+```bash
+python -m AdDownloader.app
+```
+
+From an IDE:
+```bash
+from AdDownloader.start_app import start_gui # takes some time to load...
+start_gui()
+```
+
+Access http://127.0.0.1:8050/ once Dash is running.
 
 ### As a CLI
 #### From the cmd/terminal: (inside your folder with venv activated)

@@ -5,20 +5,9 @@ Created on January 11, 2024
 @author: Paula G
 """
 ########
-# to run the tool: open a cmd and go to the directory of the project 'cd My Documents\AdDownloader'
-# inside your directory, create a virtual environment with 'python -m venv venv'
-# activate the virtual environment with 'venv\Scripts\activate.bat'
-# then start the app with 'python -m AdDownloader.cli'
-
 # to build new distributions (new versions), in the cmd inside the venv run 'python -m build'
-# then, to upload the dist archives to TestPyPi, run 'python -m twine upload --repository testpypi dist/*'
-# to upload to PyPi, run 'python -m twine upload dist/AdDownloader-0.2.4-py3-none-any.whl'
+# to upload to PyPi, run 'python -m twine upload dist/AdDownloader-0.2.5-py3-none-any.whl'
 # to install the package, inside the directory with venv run: 'python -m pip install AdDownloader'
-
-# any time you change the source of your project or the configuration inside pyproject.toml, 
-# you need to rebuild these files again before you can distribute the changes to PyPI.
-
-# to generate the sphinx documentation run 'sphinx-build -M html docs/source docs'
 ########
 
 import typer
@@ -27,7 +16,7 @@ from rich import print as rprint
 
 from AdDownloader.adlib_api import *
 from AdDownloader.media_download import *
-from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator, update_access_token
+from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator, ExcelValidator, update_access_token
 import time
 import pandas as pd
 
@@ -41,7 +30,6 @@ default_style = style_from_dict({
 })
 
 
-#TODO: add option to go back or change already defined parameters
 def request_params_task_AC():
     """
     Prompt user for additional parameters for the API request in tasks A and C that involve ad data download from the Meta Ad Library.
@@ -58,19 +46,19 @@ def request_params_task_AC():
         },
         {
             'type': 'input',
-            'name': 'countries',
+            'name': 'ad_reached_countries',
             'message': 'What reached countries do you want? (Provide the code, default is "NL")',
             'validate': CountryValidator
         },
         {
             'type': 'input',
-            'name': 'start_date',
+            'name': 'ad_delivery_date_min',
             'message': 'What is the minimum ad delivery date you want? (default is "2023-01-01")',
             'validate': DateValidator
         },
         {
             'type': 'input',
-            'name': 'end_date',
+            'name': 'ad_delivery_date_max',
             'message': 'What is the maximum ad delivery date you want? (default is today\'s date)',
             'validate': DateValidator
         },
@@ -85,6 +73,7 @@ def request_params_task_AC():
             'name': 'pages_id_path',
             'message': 'Please provide the name of your Excel file with pages ID (needs to be inside the data folder)',
             'when': lambda answers: answers['search_by'] == 'Pages ID',
+            'validate': ExcelValidator
         },
         {
             'type': 'input',
@@ -122,10 +111,10 @@ def run_task_A(project_name, answers):
     search_by = add_answers['search_by']
     ad_type = add_answers['ad_type']
     ads.add_parameters(
-        countries = add_answers['countries'], 
-        start_date = add_answers['start_date'], 
-        end_date = add_answers['end_date'], 
-        page_ids = add_answers['pages_id_path'] if search_by == 'Pages ID' else None,
+        ad_reached_countries = add_answers['ad_reached_countries'], 
+        ad_delivery_date_min = add_answers['ad_delivery_date_min'], 
+        ad_delivery_date_max = add_answers['ad_delivery_date_max'], 
+        search_page_ids = add_answers['pages_id_path'] if search_by == 'Pages ID' else None,
         search_terms = add_answers['search_terms'] if search_by == 'Search Terms' else None,
         ad_type = "ALL" if ad_type == 'All' else "POLITICAL_AND_ISSUE_ADS"
     )
@@ -268,7 +257,7 @@ def intro_messages():
         run_task_B(project_name, answers)
 
     if answers['task'] == 'D - open dashboard (using existing data)':
-        rprint("[yellow]The link to open the dashboard will appear below:[yellow]")
+        rprint("[yellow]The link to open the dashboard will appear below. Click Ctrl+C to close the dashboard.[yellow]")
         from AdDownloader.start_app import start_gui # takes some time to load...
         start_gui()
         

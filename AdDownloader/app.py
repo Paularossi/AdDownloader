@@ -224,8 +224,9 @@ def make_graphs(n, data):
             # not working - list has no attribute groupby
             fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10 = analysis.get_graphs(df)
 
-            title = "Highest Average Impressions" if "impressions" in df.columns else "Biggest EU Reach"
+            card_title = "Highest Average Impressions" if "impressions" in df.columns else "Biggest EU Reach"
             max_nr = max(df["impressions_avg"]) if "impressions" in df.columns else max(df["eu_total_reach"])
+            title = "Total Average Impressions per Page" if "impressions" in df.columns else "Total EU Reach per Page"
 
         except Exception as e:
             return html.Div([html.H5(f"Failed to get graphs. Try uploading another file. Error: {e}")])
@@ -246,7 +247,7 @@ def make_graphs(n, data):
                 html.Div(max(df["campaign_duration"]), style={'textAlign': 'center', 'fontWeight': 'bold'})
             ], className='three columns'),
             html.Div([
-                html.Div(title, style={'textAlign': 'center'}),
+                html.Div(card_title, style={'textAlign': 'center'}),
                 html.Div(max_nr, style={'textAlign': 'center', 'fontWeight': 'bold'})
             ], className='three columns')
         ], className='row'),
@@ -275,7 +276,7 @@ def make_graphs(n, data):
             ], className='six columns')
         ], className='row'),
 
-        html.H2('Total EU Reach per Page'),
+        html.H2(title),
         html.Div([
             html.Div([
                 dcc.Graph(id='graph5', figure=fig5),

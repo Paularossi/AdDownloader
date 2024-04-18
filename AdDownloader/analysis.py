@@ -163,7 +163,7 @@ def get_topics(tokens, nr_topics = 3):
     dictionary = corpora.Dictionary(tokens) # only accepts an array of unicode tokens on input
     # the dictionary represents the index of the word and its frequency
 
-    # filter out words that occur less than 20 documents, or more than 80% of the documents.
+    # filter out words that occur less than 5/20 documents, or more than 90% of the documents.
     if len(tokens) < 50:
         pass
     elif len(tokens) < 100:
@@ -172,8 +172,8 @@ def get_topics(tokens, nr_topics = 3):
         dictionary.filter_extremes(no_below = 20, no_above=0.9)
 
     corpus = [dictionary.doc2bow(text) for text in tokens]
-    print('Number of unique tokens: %d' % len(dictionary))
-    print('Number of documents: %d' % len(corpus))
+    print(f'Number of unique tokens: {len(dictionary)}')
+    print(f'Number of documents: {len(corpus)}')
 
     # create a gensim lda model
     lda_model = LdaModel(corpus, id2word = dictionary, num_topics = nr_topics, update_every = 1, passes = 20, alpha='auto', eval_every = None)
@@ -393,7 +393,7 @@ def get_graphs(data):
 
         fig5 = px.histogram(reach_by_page, x='impressions_avg', 
                         title='Distribution of Total Average Impressions per Page',
-                        labels={'impressions_avg': 'Total EU reach', 'page_name': 'Page Name'}, nbins=nbins)
+                        labels={'impressions_avg': 'Total Average Impressions', 'page_name': 'Page Name'}, nbins=nbins)
         fig5.update_traces(marker_color='yellowgreen', marker_line_color='black')
         fig5.update_layout(bargap=0.1, bargroupgap=0.05)
 

@@ -37,9 +37,9 @@ AdLibAPI.add_parameters Method
 
    Example::
       >>> # add only required parameters
-      >>> ads_api.add_parameters(countries = 'NL', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza")
+      >>> ads_api.add_parameters(ad_reached_countries = 'NL', ad_delivery_date_min = "2023-09-01", ad_delivery_date_max = "2023-09-02", search_terms = "pizza")
       >>> # can also add additional parameters
-      >>> ads_api.add_parameters(countries = 'US', start_date = "2023-02-01", end_date = "2023-03-01", ad_type = "POLITICAL_AND_ISSUE_ADS",
+      >>> ads_api.add_parameters(ad_reached_countries = 'US', ad_delivery_date_min = "2023-02-01", ad_delivery_date_max = "2023-03-01", ad_type = "POLITICAL_AND_ISSUE_ADS",
                    ad_active_status = "ALL", estimated_audience_size_max = 10000, languages = 'es', search_terms = "Biden")
 
 
