@@ -24,6 +24,12 @@ CountryValidator Class
 .. autoclass:: CountryValidator
    :members:
 
+ExcelValidator Class
+--------------------
+
+.. autoclass:: ExcelValidator
+   :members:
+
 is_valid_excel_file Function
 ----------------------------
 
