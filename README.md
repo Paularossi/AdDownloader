@@ -77,7 +77,7 @@ Each step in this pipeline is designed to ensure a smooth and efficient user exp
 ## Prerequisities
 To download and run the AdDownloader, several prerequisities must be fullfilled:
 
-* Python 3.9.*
+* Python 3.9, 3.10 or 3.11
 * Verified identity and location on Facebook
 * A valid Meta developer access token
 
@@ -105,12 +105,12 @@ venv\Scripts\activate.bat
 Once you're inside your repository and the virtual environment, to install from the source file run:
 
 ```bash
-python -m pip install "dist/AdDownloader-0.2.5.tar.gz"
+python -m pip install "dist/AdDownloader-0.2.6.tar.gz"
 ```
 
 To install from the built distribution run:
 ```bash
-python -m pip install "dist/AdDownloader-0.2.5-py3-none-any.whl"
+python -m pip install "dist/AdDownloader-0.2.6-py3-none-any.whl"
 ```
 
 ### From pip

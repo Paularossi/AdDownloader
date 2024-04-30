@@ -71,11 +71,11 @@ def img_download_by_sample_size(data, project_name):
     for i in sample_nrs:
         print(f'===== Starting experiments for downloading media content for {i} ads =====')
         start_time = time.time()
-        start_media_download(project_name = "testbig", nr_ads = i, data = data.sample(1500))
+        start_media_download(project_name = project_name, nr_ads = i, data = data.sample(1500))
         end_time = time.time()
         download_time = end_time - start_time
 
-        new_row = {'sample_size': i, 'img_download_time': 4122.1218831}
+        new_row = {'sample_size': i, 'img_download_time': download_time}
         media_download_time = pd.concat([media_download_time, pd.DataFrame([new_row], index=[0])], ignore_index=True)
 
     media_download_time["minutes"] = media_download_time["img_download_time"].apply(lambda x: x // 60)
@@ -101,6 +101,7 @@ def img_analysis_by_sample_size(project_name):
 
         new_row = {'sample_size': i, 'img_analysis_time': download_time}
         img_analysis_time = pd.concat([img_analysis_time, pd.DataFrame([new_row], index=[0])], ignore_index=True)
+        print(f"Analysing {i} images took {download_time} seconds.")
 
     img_analysis_time["minutes"] = img_analysis_time["img_analysis_time"].apply(lambda x: x // 60)
     img_analysis_time["seconds"] = img_analysis_time["img_analysis_time"].apply(lambda x: x % 60)
@@ -160,8 +161,8 @@ text_times_final = pd.concat([text_times, text_times_2, text_times_3, text_times
 text_times_final.to_excel("tests/experiments/text_analysis_by_sample_size_new_pol.xlsx", index=False)
 
 
-media_download_time = img_download_by_sample_size(data, "testbig") # all
-media_download_time.to_excel("tests/experiments/media_download_times_all.xlsx", index=False)
+media_download_time = img_download_by_sample_size(data, "testbig2") # pol
+media_download_time.to_excel("tests/experiments/media_download_times_pol.xlsx", index=False)
 
 
 topics_nr_coherence = get_best_nr_of_topics(data)
@@ -170,17 +171,21 @@ print(topics_nr_coherence)
 ### IMAGES
 img_analysis_time = img_analysis_by_sample_size("testbig")
 img_analysis_time2 = img_analysis_by_sample_size("testbig2") # political
+img_analysis_time.to_excel("tests/experiments/img_analysis_times_all.xlsx", index=False)
 img_analysis_time2.to_excel("tests/experiments/img_analysis_times_pol.xlsx", index=False)
+
+df = pd.read_excel("tests/experiments/img_analysis_times_old.xlsx")
+d3 = df.groupby(["sample_size", "ad_type"])["img_analysis_time"].mean().round(2)
 
 
 ### CAPTIONING WITH BLIP
 blip_analysis_time = blip_call_by_sample_size(project_name="testbig")
-blip_analysis_time = blip_call_by_sample_size(project_name="testbig2") # political
-# sample_size  captioning_time
-# 0          20        93.994181
-# 1          50       244.201977
-# 2         100       523.061657
-# 3         200      1070.955401
+blip_analysis_time2 = blip_call_by_sample_size(project_name="testbig2") # political
+blip_analysis_time.to_excel("tests/experiments/blip_analysis_times_all.xlsx", index=False)
+blip_analysis_time2.to_excel("tests/experiments/blip_analysis_times_pol.xlsx", index=False)
+
+
+
 
 
 ##### ANALYZE THE DIFFERENCES BETWEEN SAMPLE SIZES #####
@@ -352,3 +357,19 @@ g.figure.suptitle('Topic Analysis Time by Number of Topics, Ad Type, and Sample 
 g.figure.subplots_adjust(top=0.9)  
 plt.show()
 
+
+
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
+import requests
+
+
+driver = webdriver.Chrome()
+
+driver.get("https://www.funda.nl/zoeken/koop?selected_area=%5B%22maastricht%22%5D")
+
+temp = driver.find_element(By.CLASS_NAME, "mt-4 font-semibold sm:mt-0")
