@@ -13,7 +13,6 @@ from nltk.sentiment import SentimentIntensityAnalyzer
 from nltk.stem import WordNetLemmatizer, SnowballStemmer
 from nltk import FreqDist
 import nltk
-#import spacy # use to lemmatize other languages than english
 import gensim.corpora as corpora
 from gensim.models.ldamodel import LdaModel
 from gensim.models.coherencemodel import CoherenceModel
@@ -28,10 +27,7 @@ from skimage.feature import canny, corner_harris, corner_peaks
 import cv2
 from transformers import BlipProcessor, BlipForConditionalGeneration, BlipForQuestionAnswering
 
-# add to the dependencies: spacy==3.7.4
-
-#nltk.download('omw-1.4')
-
+#nltk.download('omw-1.4')s
 
 DATE_MIN = 'ad_delivery_start_time'
 DATE_MAX = 'ad_delivery_stop_time'
@@ -40,7 +36,6 @@ GENDERS = ['female', 'male', 'unknown']
 AGE_RANGES = ['13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+']
 
 AD_PATTERN = re.compile(r"ad_([0-9]+)_(img|frame[0-9]+)\.(png|jpeg|jpg)")
-
 
 
 def load_data(data_path):

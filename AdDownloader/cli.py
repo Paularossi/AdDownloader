@@ -1,9 +1,5 @@
 """This module provides the AdDownloader Command-line Interface."""
-"""
-Created on January 11, 2024
 
-@author: Paula G
-"""
 ########
 # to build new distributions (new versions), in the cmd inside the venv run 'python -m build'
 # to upload to PyPi, run 'python -m twine upload dist/AdDownloader-0.2.5-py3-none-any.whl'
@@ -11,23 +7,30 @@ Created on January 11, 2024
 ########
 
 import typer
-from PyInquirer import prompt, style_from_dict, Token
+import inquirer3 
+from inquirer3.themes import load_theme_from_dict
 from rich import print as rprint
+import time
+import pandas as pd
 
 from AdDownloader.adlib_api import *
 from AdDownloader.media_download import *
 from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator, ExcelValidator, update_access_token
-import time
-import pandas as pd
 
-# global style for the cmd
-default_style = style_from_dict({
-    Token.QuestionMark: '#E91E63 bold',
-    Token.Selected: '#673AB7 bold',
-    Token.Instruction: '',  # default
-    Token.Answer: '#2196f3 bold',
-    Token.Question: '#FFD700 bold',
-})
+default_style = load_theme_from_dict(
+    {
+        "Question": {
+            "mark_color": "bold_firebrick3",
+            "brackets_color": "mediumpurple",
+            "default_color": "bold_blue"
+        },
+        "List": {
+            "selection_color": "bold_dodgerblue3_on_goldenrod1",
+            "selection_cursor": "➤",
+            "unselected_color": "dodgerblue2"
+        }
+    }
+)
 
 
 def request_params_task_AC():
@@ -38,61 +41,45 @@ def request_params_task_AC():
     :rtype: dict
     """
     add_questions = [
-        {
-            'type': 'list',
-            'name': 'ad_type',
-            'message': 'What type of ads do you want to search?',
-            'choices': ['All', 'Political/Elections']
-        },
-        {
-            'type': 'input',
-            'name': 'ad_reached_countries',
-            'message': 'What reached countries do you want? (Provide the code, default is "NL")',
-            'validate': CountryValidator
-        },
-        {
-            'type': 'input',
-            'name': 'ad_delivery_date_min',
-            'message': 'What is the minimum ad delivery date you want? (default is "2023-01-01")',
-            'validate': DateValidator
-        },
-        {
-            'type': 'input',
-            'name': 'ad_delivery_date_max',
-            'message': 'What is the maximum ad delivery date you want? (default is today\'s date)',
-            'validate': DateValidator
-        },
-        {
-            'type': 'list',
-            'name': 'search_by',
-            'message': 'Do you want to search by pages ID or by search terms?',
-            'choices': ['Pages ID', 'Search Terms']
-        },
-        {
-            'type': 'input',
-            'name': 'pages_id_path',
-            'message': 'Please provide the name of your Excel file with pages ID (needs to be inside the data folder)',
-            'when': lambda answers: answers['search_by'] == 'Pages ID',
-            'validate': ExcelValidator
-        },
-        {
-            'type': 'input',
-            'name': 'search_terms',
-            'message': 'Please provide one or more search terms, separated by a comma',
-            'when': lambda answers: answers['search_by'] == 'Search Terms'
-        }
+        inquirer3.List(
+            "ad_type", 
+            message="What type of ads do you want to search?", 
+            choices=['All', 'Political/Elections'],
+        ),
+        inquirer3.Text(
+            "ad_reached_countries",
+            message="What reached countries do you want? (Provide the code, default is 'NL')",
+            validate=CountryValidator.validate_country,
+        ),
+        inquirer3.Text(
+            "ad_delivery_date_min",
+            message="What is the minimum ad delivery date you want? (default is '2023-01-01')",
+            validate=DateValidator.validate_date,
+        ),
+        inquirer3.Text(
+            "ad_delivery_date_max",
+            message="What is the maximum ad delivery date you want? (default is today\'s date)",
+            validate=DateValidator.validate_date,
+        ),
+        inquirer3.List(
+            "search_by", 
+            message="Do you want to search by pages ID or by search terms?", 
+            choices=['Pages ID', 'Search Terms'],
+        ),
+        inquirer3.Text(
+            "pages_id_path",
+            message="Please provide the name of your Excel file with pages ID (needs to be inside the data folder)",
+            ignore=lambda answers: answers['search_by'] == 'Search Terms',
+            validate=ExcelValidator.validate_excel,
+        ),
+        inquirer3.Text(
+            "search_terms",
+            message="Please provide one or more search terms, separated by a comma",
+            ignore=lambda answers: answers['search_by'] == 'Pages ID',
+        )
     ]
-    #TODO: check if the excel file is valid
-    """
-        {
-            'type': 'input',
-            'name': 'pages_id_path',
-            'message': 'Excel file not found or unable to open. Please provide a new path',
-            'when': lambda answers: (not is_valid_excel_file(answers['pages_id_path'])) and answers['search_by'] == 'Pages ID'
-        },
-    """
 
-    answers = prompt(add_questions, style=default_style)
+    answers = inquirer3.prompt(add_questions, theme=default_style)
     return answers
 
 
@@ -155,34 +142,19 @@ def run_task_B(project_name, answers):
 
         # if task C was chosen - continue with downloading media content
         questions_down = [
-            {
-                'type': 'list',
-                'name': 'nr_ads',
-                'message': f'You currently have {total_ads} ads in your search. For how many do you want to download media content?',
-                'choices': [
-                            {
-                                'name': 'A - 50',
-                            },
-                            {
-                                'name': 'B - 100',
-                            },
-                            {
-                                'name': 'C - 200',
-                            },
-                            {
-                                'name': 'D - insert a custom number',
-                            },
-                ]
-            },
-            { # if the user wants a custom number of media content
-                'type': 'input',
-                'name': 'custom_ads_nr',
-                'message': 'Please provide the number of ads you want to download media content for',
-                'when': lambda answers: answers['nr_ads'] == 'D - insert a custom number',
-                'validate': NumberValidator
-            }
+            inquirer3.List(
+                "nr_ads", 
+                message=f"You currently have {total_ads} ads in your search. For how many do you want to download media content?", 
+                choices=['A - 50', 'B - 100', 'C - 200', 'D - insert a custom number'],
+            ),
+            inquirer3.Text( # if the user wants a custom number of media content
+                "custom_ads_nr",
+                message="Please provide the number of ads you want to download media content for",
+                ignore=lambda answers: answers['nr_ads'] != 'D - insert a custom number',
+                validate=NumberValidator.validate_number,
+            ),
         ]
-        answers_down = prompt(questions_down, style=default_style)
+        answers_down = inquirer3.prompt(questions_down, theme=default_style)
         if answers_down["nr_ads"] == 'A - 50':
             nr_ads = 50
         elif answers_down["nr_ads"] == 'B - 100':
@@ -202,39 +174,21 @@ def intro_messages():
     After selecting the task, the respective function will be run.
     """
     questions = [
-        {
-            'type': 'list',
-            'name': 'task',
-            'message': 'Welcome to the AdDownloader! Select the task you want to perform: ',
-            'choices': [
-                        {
-                            'name': 'A - download ads data only',
-                        },
-                        {
-                            'name': 'B - download ads media content only',
-                        },
-                        {
-                            'name': 'C - download both ads data and media content',
-                        },
-                        {
-                            'name': 'D - open dashboard (using existing data)'
-                        },
-            ],
-        },
-        {
-            'type': 'password',
-            'name': 'access_token',
-            'message': 'Please provide a valid access token',
-            'when': lambda answers: answers['task'] != 'D - open dashboard (using existing data)',
-        },
-        {
-            'type': 'confirm',
-            'name': 'start',
-            'message': 'Are you sure you want to proceed?',
-        }
+        inquirer3.List(
+            "task", 
+            message="Welcome to the AdDownloader! Select the task you want to perform: ", 
+            choices=['A - download ads data only', 'B - download ads media content only', 'C - download both ads data and media content',
+                     'D - open dashboard (using existing data)'],
+        ),
+        inquirer3.Password(
+            name="access_token", 
+            message='Please provide a valid access token',
+            ignore=lambda answers: answers['task'] == 'D - open dashboard (using existing data)',
+        ),
+        inquirer3.Confirm("start", message="Are you sure you want to proceed?", default=True),
     ]
 
-    answers = prompt(questions, style=default_style)
+    answers = inquirer3.prompt(questions, theme=default_style)
 
     rprint(f"[green bold]You have chosen task {answers['task']}.[green bold]")
 
@@ -277,7 +231,7 @@ def run_analysis():
     while True:
         intro_messages()
 
-        # Prompt to ask if the user wants to perform another analysis
+        # ask if the user wants to perform another analysis
         rerun = typer.confirm("Do you want to perform a new analysis?")
         if not rerun:
             rprint("[yellow]=============================================[yello]")

@@ -3,25 +3,27 @@ name = "AdDownloader"
 # $ pip install AdDownloader
 # And where it will live on PyPI: https://pypi.org/project/AdDownloader/
 
-version = "0.2.5"
+version = "0.2.6"
 authors = [
   {name = "Paula-Alexandra Gitu", email = "paula.gitu@maastrichtuniversity.nl"},
 ]
 maintainers = [
-  {name = "Paula-Alexandra Gitu", email = "paula.gitu@maastrichtuniversity.nl"} # Optional
+  {name = "Paula-Alexandra Gitu", email = "paula.gitu@maastrichtuniversity.nl"}
 ]
 
 # the description corresponds to the "Summary" metadata field:
 description = "A cmd tool for downloading ads and their media content from the Meta Ad Library."
 readme = "README.md"
-requires-python = "==3.9.*"
+requires-python = ">=3.9"
 license = {file = "LICENSE.txt"}
-keywords = ["CLI tool", "MetaAPI", "AdLibrary", "image scraping"]  # Optional
+keywords = ["CLI tool", "MetaAPI", "AdLibrary", "image scraping"]
 
 # For a list of valid classifiers, see https://pypi.org/classifiers/
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",    
+    "Programming Language :: Python :: 3.11",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: Microsoft :: Windows",
     "Intended Audience :: Developers",
@@ -36,6 +38,7 @@ dependencies = [
   "dash==2.15.0",
   "datetime==5.4",
   "gensim==4.3.2",
+  "inquirer3==0.4.0"
   "meson==1.3.1",
   "ninja==1.11.1.1",
   "nltk==3.8.1",
@@ -44,8 +47,6 @@ dependencies = [
   "openpyxl==3.1.2",
   "pandas==2.0.3",
   "pillow==10.2.0",
-  "prompt_toolkit==1.0.14",
-  "PyInquirer==1.0.3",
   "pytest>=6.2.4",
   "requests==2.31.0",
   "rich==13.6.0",
@@ -76,5 +77,5 @@ requires = ["setuptools>=43.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-exclude = ["data", "dist", "docs", "tests", "venv"]
+exclude = ["data", "dist", "docs", "tests", "myenv", "output"]
 namespaces = false

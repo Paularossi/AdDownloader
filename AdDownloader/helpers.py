@@ -5,33 +5,36 @@ import pandas as pd
 import os
 import math
 from datetime import datetime, timedelta
-from prompt_toolkit.validation import Validator, ValidationError
+from inquirer3 import errors
 import logging
 import ast
+from collections.abc import Mapping
 import requests
 
 
-class NumberValidator(Validator):
-    """A class representing a number validator."""
-    def validate(self, document):
-        """
-        Checks whether the input is a valid number.
+class NumberValidator:
+    @staticmethod
+    def validate_number(answers, current):
+            """
+            Checks whether the input is a valid number.
 
-        :param document: A document representing user's number input.
-        :type document: document
-        :returns: True if the text of the document represents a valid number, False otherwise.
-        :rtype: bool
-        """
-        try:
-            int(document.text)
-        except ValueError:
-            raise ValidationError(
-                message='Please enter a number',
-                cursor_position=len(document.text))  # move cursor to end
+            :param document: A document representing user's number input.
+            :type document: document
+            :returns: True if the text of the document represents a valid number, False otherwise.
+            :rtype: bool
+            """
+            try:
+                int(current)
+            except ValueError:
+                raise errors.ValidationError('', reason='Please enter a valid number.')
+            
+            return True
+
         
-class DateValidator(Validator):
+class DateValidator:
     """A class representing a date validator."""
-    def validate(self, document):
+    @staticmethod
+    def validate_date(answers, current):
         """
         Checks whether the input is a valid date in the format Y-m-d (e.g. "2023-12-31").
 
@@ -41,15 +44,17 @@ class DateValidator(Validator):
         :rtype: bool
         """
         try:
-            datetime.strptime(document.text, '%Y-%m-%d')
+            datetime.strptime(current, '%Y-%m-%d')
         except ValueError:
-            raise ValidationError(
-                message='Please enter a valid date',
-                cursor_position=len(document.text))
+            raise errors.ValidationError('', reason='Please enter a valid date.')
+        
+        return True
 
-class CountryValidator(Validator):
+# check what argument to input here (was Validator before)
+class CountryValidator:
     """A class representing a country code validator."""
-    def validate(self, document):
+    @staticmethod
+    def validate_country(answers, current):
         """
         Checks whether the input is a valid country code.
 
@@ -72,16 +77,16 @@ class CountryValidator(Validator):
                 KI, ST, TV, NR, RE, LR, ZW, CI, MM, AN, AQ, BQ, BV, IO, CX, CC, CK, CW, TF, GW, HM, 
                 XK, MS, NU, NF, PN, BL, SH, MF, PM, SX, GS, SS, SJ, TL, TK, UM, WF, EH"""
         country_codes = [code.strip() for code in country_codes.split(",")]
-        ok = document.text in country_codes
-        if not ok:
-            raise ValidationError(
-                message='Please enter a valid country code.',
-                cursor_position=len(document.text))
+        if not current in country_codes:
+            raise errors.ValidationError('', reason='Please enter a valid country code.')
+        
+        return True
 
 
-class ExcelValidator(Validator):
+class ExcelValidator:
     """A class representing a valid Excel file validator."""
-    def validate(self, document):
+    
+    def validate_excel(answers, current):
         """
         Checks whether the input is a valid Excel file.
 
@@ -90,24 +95,20 @@ class ExcelValidator(Validator):
         :returns: True if the text of the document represents a valid Excel file containing a column `page_id`, False otherwise.
         :rtype: bool
         """
-        if (not is_valid_excel_file(document.text)):
-            raise ValidationError(
-                    message='Excel file not found.',
-                    cursor_position=len(document.text))
+        if (not is_valid_excel_file(current)):
+            raise errors.ValidationError('', reason='Excel file not found.')
         try:
-            data_path = os.path.join("data", document.text)
+            data_path = os.path.join("data", current)
             data = pd.read_excel(data_path)
         except:
-            raise ValidationError(
-                message='Unable to load page ids data.',
-                cursor_position=len(document.text))
+            raise errors.ValidationError('', reason='Unable to load page ids data.')
             
         try:
             data['page_id'].astype(str).tolist()
         except:
-            raise ValidationError(
-                message='Unable to read the page ids. Check if there exists a column `page_id` in your data.',
-                cursor_position=len(document.text))
+            raise errors.ValidationError('', reason='Unable to read the page ids. Check if there exists a column `page_id` in your data.')
+        
+        return True
             
         
 
@@ -301,13 +302,14 @@ def configure_logging(project_name):
         os.makedirs(log_path)
 
     logger = logging.getLogger(project_name)
-    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
+    logger.setLevel(logging.INFO)
 
     log_file = logging.FileHandler(os.path.join(log_path, "logs.log"), 'a')  # append mode
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
     log_file.setFormatter(formatter)
 
-    # Check if the logger already has handlers to prevent adding multiple handlers that do the same thing
+    # check if the logger already has handlers to prevent adding multiple handlers that do the same thing
     if not logger.handlers:
         logger.addHandler(log_file)
 

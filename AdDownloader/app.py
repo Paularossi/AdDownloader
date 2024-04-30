@@ -1,8 +1,9 @@
+"""This module provides the AdDownloader Analytics Dashboard."""
+
 import base64
 import io
 import os
 from dash import Dash, dcc, html, callback, Input, Output, State, dash_table, no_update
-from matplotlib.pyplot import sca
 import plotly.express as px
 import pandas as pd
 from AdDownloader import analysis

@@ -1,6 +1,7 @@
 """This module provides the call to the Meta Ad Library API for ad data retrieval."""
 
 import pandas as pd
+from collections.abc import Mapping
 import requests
 import os
 
