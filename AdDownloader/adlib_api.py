@@ -74,10 +74,10 @@ class AdLibAPI:
 
         # save the data to a JSON file
         if page_ids is None:
-            with open(f"{folder_path}\\{page_number}.json", "w") as json_file:
+            with open(f"{folder_path}/{page_number}.json", "w") as json_file:
                 json.dump(data, json_file, indent = 4)
         else:
-            with open(f"{folder_path}\\{page_ids}_{page_number}.json", "w") as json_file:
+            with open(f"{folder_path}/{page_ids}_{page_number}.json", "w") as json_file:
                 json.dump(data, json_file, indent = 4)
         
 
