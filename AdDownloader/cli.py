@@ -198,10 +198,8 @@ def intro_messages():
         run_task_A(project_name, answers)
     
     if answers['task'] == 'B - download ads media content only':
-        rprint("[yellow]Please enter the project_name you have ads data for.\n The data needs to be in the output\<project_name>\\ads_data folder.[yellow]")
+        rprint("[yellow]Please enter the project_name you have ads data for.\n The data needs to be in the output/<project_name>/ads_data folder.[yellow]")
         project_name = input()
-        #rprint("[yellow]Please enter the name of the excel file containing ads data (without .xlsx).\n The data needs to be in the output\<project_name>\\ads_data folder.[yellow]")
-        #file_name = input()
         run_task_B(project_name, answers)
 
     if answers['task'] == 'C - download both ads data and media content':

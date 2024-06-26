@@ -31,9 +31,9 @@ def download_media(media_url, media_type, ad_id, media_folder):
 
         # determine the path based on the media type - also change the folder here 
         if media_type == 'image':
-            file_path = f"{media_folder}\\ad_{ad_id}_img.png"
+            file_path = f"{media_folder}/ad_{ad_id}_img.png"
         elif media_type == 'video':
-            file_path = f"{media_folder}\\ad_{ad_id}_video.mp4"
+            file_path = f"{media_folder}/ad_{ad_id}_video.mp4"
         else:
             print("Wrong media type.")
 
@@ -105,8 +105,8 @@ def start_media_download(project_name, nr_ads, data=[]):
     nr_ads_failed = 0
 
     # initialize folders for the images and videos of current category
-    folder_path_img = f"output\\{project_name}\\ads_images"
-    folder_path_vid = f"output\\{project_name}\\ads_videos"
+    folder_path_img = f"output/{project_name}/ads_images"
+    folder_path_vid = f"output/{project_name}/ads_videos"
 
     # check if the folders exist
     if not os.path.exists(folder_path_img):
