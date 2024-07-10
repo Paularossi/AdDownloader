@@ -10,6 +10,9 @@ import logging
 import ast
 from collections.abc import Mapping
 import requests
+import hashlib
+from PIL import Image
+import shutil
 
 
 class NumberValidator:
@@ -362,7 +365,7 @@ def update_access_token(data, new_access_token=None):
     return data_copy
 
 
-def get_long_lived_token(access_token = None, app_id = None, app_secret = None, version = "v19.0"):
+def get_long_lived_token(access_token = None, app_id = None, app_secret = None, version = "v20.0"):
     """
     Generate a Meta long-lived access token, that lasts around 60 days, given a valid short-lived access token.
     The long-lived access token and the expiration time will be saved in a `meta_long_lived_token.txt` file. The `app_id` and `app_secret` can be found inside your app at https://developers.facebook.com/apps/.
@@ -405,3 +408,61 @@ def get_long_lived_token(access_token = None, app_id = None, app_secret = None, 
         json.dump(response, file, indent = 4)
     
     print(f"Long-lived token generated and saved successfully inside {file.name}.")
+    
+    
+def calculate_image_hash(image_path):
+    """
+    Calculate the MD5 hash of an image file. The MD5 hash is a 32-character hexadecimal number that uniquely represents the image's pixel data,
+    useful for verifying integrity and identifying duplicates.
+
+    :param image_path: The path to the image file.
+    :type image_path: str
+    :returns: The MD5 hash of the image.
+    :rtype: str
+    """
+    with Image.open(image_path) as img:
+        # convert image to RGB
+        img = img.convert('RGB')
+        # generate a hash for the image
+        img_hash = hashlib.md5(img.tobytes()).hexdigest()
+    return img_hash
+
+
+def deduplicate_images(image_folder, unique_img_folder):
+    """
+    Deduplicate images in a folder and save unique images to a specified folder.
+
+    This function scans a folder for PNG images, calculates the MD5 hash of each image,
+    identifies duplicates, and saves only the unique images to a separate folder.
+
+    :param image_folder: The path to the folder containing the original images.
+    :type image_folder: str
+    :param unique_img_folder: The path to the folder where unique images will be saved.
+    :type unique_img_folder: str
+    """
+    # first check if destination folder exists
+    if not os.path.exists(unique_img_folder):
+        os.makedirs(unique_img_folder)
+        
+    unique_images = {}
+    duplicate_images = []
+
+    images = os.listdir(image_folder)
+    for filename in images:
+        if filename.endswith('.png'):
+            image_path = os.path.join(image_folder, filename)
+            # calculate the MD5 hash and check if it already exists
+            img_hash = calculate_image_hash(image_path)
+
+            if img_hash not in unique_images:
+                unique_images[img_hash] = image_path
+            else:
+                #print(f"Image {filename} is a duplicate...\n")
+                duplicate_images.append(image_path)
+    
+    # save the unique images in a folder
+    for img_hash, unique_image_path in unique_images.items():
+        destination_path = os.path.join(unique_img_folder, os.path.basename(unique_image_path))
+        shutil.copy(unique_image_path, destination_path)
+    
+    print(f"Found {len(duplicate_images)} duplicates and saved {len(unique_images)} unique images inside {unique_img_folder}.")

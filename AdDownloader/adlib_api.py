@@ -59,8 +59,8 @@ class AdLibAPI:
 
         # check if the output json file is empty and return
         if not "data" in data:
-            print("No data on page", page_number)
-            self.logger.error(f'No data on page {page_number}')
+            print(f"No data on page {page_number}: {response}.")
+            self.logger.error(f'No data on page {page_number}: {response}.')
             return
         if not bool(data["data"]):
             print("Page", page_number, "is empty.")

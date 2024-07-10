@@ -128,3 +128,26 @@ get_long_lived_token Function
 ----------------------------
 
 .. autofunction:: get_long_lived_token
+
+calculate_image_hash Function
+-----------------------------
+
+.. autofunction:: calculate_image_hash
+
+   Example::
+
+      >>> image_path = 'path-to-your-image'
+      >>> calculate_image_hash(image_path)
+      '108f46130f45639cf388892306235fd5'
+
+deduplicate_images Function
+---------------------------
+
+.. autofunction:: deduplicate_images
+
+   Example::
+
+      >>> image_folder = 'output/<project_name>/ads_images'
+      >>> unique_img_folder = 'output/<project_name>/unique_images'
+      >>> deduplicate_images(image_folder, unique_img_folder)
+      Found 57 duplicates and saved 143 unique images inside output/<project_name>/unique_images.
