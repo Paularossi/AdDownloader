@@ -52,10 +52,17 @@ class AdLibAPI:
         response = requests.get(url, params = params)
         try:
             data = response.json()
-        except:
-            print(f"Unknown error occured on page {page_number}: {response}. Finishing the download.")
-            self.logger.error(f"Unknown error occured on page {page_number}: {response}. Finishing the download.")
-            return
+        except Exception as e:
+            print(f"Error ({type(e).__name__} - {str(e)}) occured on page {page_number}: {response}. Retrying...")
+            self.logger.error(f"Error ({type(e).__name__} - {str(e)}) occured on page {page_number}: {response}. Retrying...")
+            try:
+                # retry calling the API one more time
+                response = requests.get(url, params = params)
+                data = response.json()
+            except Exception as e:
+                print(f"Error ({type(e).__name__} - {str(e)}) occured on page {page_number}: {response}. Finishing the download.")
+                self.logger.error(f"Error ({type(e).__name__} - {str(e)}) occured on page {page_number}: {response}. Finishing the download.")
+                return
 
         # check if the output json file is empty and return
         if not "data" in data:
@@ -179,34 +186,40 @@ class AdLibAPI:
         
         if params["search_page_ids"] is not None:
             search_page_ids_list = params["search_page_ids"]
-            for i in range(0, len(search_page_ids_list), 10):
+            for i in range(0, len(search_page_ids_list), 10):                
                 end_index = min(i + 9, len(search_page_ids_list) - 1)
-                print(f"Fetching data starting for indexes [{i},{end_index}]")
-                params["search_page_ids"] = str(search_page_ids_list[i:end_index])
+                print(f"Fetching data starting for indexes [{i},{end_index+1}]")
+                params["search_page_ids"] = str(search_page_ids_list[i:end_index+1])
 
                 # call the function with the initial API endpoint and parameters
                 self.fetch_data(self.base_url, params, page_ids = f"[{i},{end_index}]", page_number = 1)
         
-        print("Done downloading json files for the given parameters.")
-        self.logger.info('Done downloading json files for the given parameters.')
+        if not os.path.exists(f"output/{self.project_name}/json"):
+            print("JSON files were not downloaded. Try a new request.")
+            self.logger.info("JSON files were not downloaded. Try a new request.")
+            return None
+            
+        nr_json_files = len([file for file in os.listdir(f"output/{self.project_name}/json") if file.endswith('.json')])
+        print(f"Done downloading {nr_json_files} json files for the given parameters.")
+        self.logger.info(f'Done downloading {nr_json_files} json files for the given parameters.')
         print("Data processing will start now.")
         self.logger.info('Data processing will start now.')
 
         # process into excel files:
         try:
-            final_data = transform_data(self.project_name, country = params["ad_reached_countries"], ad_type = params["ad_type"]) 
+            final_data = transform_data(self.project_name, country = params["ad_reached_countries"], ad_type = params["ad_type"])
             total_ads = len(final_data)
             print(f"Done processing and saving ads data for {total_ads} ads for project {self.project_name}.")
             self.logger.info(f'Done processing and saving ads data for {total_ads} ads for project {self.project_name}.')
-
-            # close the logger
-            close_logger(self.logger)
 
             return(final_data)
 
         except Exception:
             print("No data was downloaded. Please try a new request.")
             self.logger.warning('No data was downloaded. Please try a new request.')
+            
+        # close the logger
+        close_logger(self.logger)
 
 
     def get_parameters(self):

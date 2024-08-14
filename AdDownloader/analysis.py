@@ -26,6 +26,7 @@ from skimage import color as sk_color
 from skimage.feature import canny, corner_harris, corner_peaks
 import cv2
 from transformers import BlipProcessor, BlipForConditionalGeneration, BlipForQuestionAnswering
+import logging
 
 #nltk.download('omw-1.4')s
 
@@ -153,6 +154,8 @@ def get_topics(tokens, nr_topics = 3):
     :return: A tuple containing the trained LDA model and the coherence score.
     :rtype: tuple
     """
+    # disable gensim logging
+    logging.getLogger('gensim').setLevel(logging.WARNING)
     
     # create a dictionary and a corpus
     dictionary = corpora.Dictionary(tokens) # only accepts an array of unicode tokens on input
@@ -162,9 +165,9 @@ def get_topics(tokens, nr_topics = 3):
     if len(tokens) < 50:
         pass
     elif len(tokens) < 100:
-        dictionary.filter_extremes(no_below = 5, no_above=0.9)
+        dictionary.filter_extremes(no_below = 3, no_above=0.9)
     else:
-        dictionary.filter_extremes(no_below = 20, no_above=0.9)
+        dictionary.filter_extremes(no_below = 10, no_above=0.95)
 
     corpus = [dictionary.doc2bow(text) for text in tokens]
     print(f'Number of unique tokens: {len(dictionary)}')

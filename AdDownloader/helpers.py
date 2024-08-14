@@ -256,7 +256,11 @@ def transform_data(project_name, country, ad_type):
     """
 
     folder_path = f'output/{project_name}/json'
-    df = load_json_from_folder(folder_path)
+    try:
+        df = load_json_from_folder(folder_path)
+    except Exception as e:
+        print(f"JSON files couldn't be loaded: {e}. Try a new request.")
+        return None
 
     # save original data
     data_path = f'output/{project_name}/ads_data'
@@ -264,27 +268,35 @@ def transform_data(project_name, country, ad_type):
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     # save the original data as it came from the API
-    df.to_excel(f'{data_path}/{project_name}_original_data.xlsx', index=False)
+    df_censored = hide_access_token(df)
+    df_censored.to_excel(f'{data_path}/{project_name}_original_data.xlsx', index=False)
 
-    # flatten the reach data (age-country-gender or demographic-distribution)
-    if ad_type == "ALL":
-        wide_df = pd.DataFrame(df['age_country_gender_reach_breakdown'].apply(flatten_age_country_gender, target_country=country).tolist())
-    else:
-        wide_df = pd.DataFrame(df['demographic_distribution'].apply(flatten_demographic_distribution).tolist())
- 
-        # create new columns with average impressions and spend
-        df['impressions'] = df['impressions'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
-        df['impressions_avg'] = df['impressions'].apply(lambda x: math.ceil((int(x['lower_bound']) + int(x.get('upper_bound', x['lower_bound']))) / 2))
-        df['spend'] = df['spend'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
-        df['spend_avg'] = df['spend'].apply(lambda x: math.ceil((int(x['lower_bound']) + int(x.get('upper_bound', x['lower_bound']))) / 2))
-              
-    # reorder the columns alphabetically and save the processed data to a different file
-    wide_df = wide_df.reindex(sorted(wide_df.columns), axis=1)
-    final_data = pd.concat([df, wide_df], axis=1)
+    try:
+        # flatten the reach data (age-country-gender or demographic-distribution)
+        if ad_type == "ALL":
+            wide_df = pd.DataFrame(df['age_country_gender_reach_breakdown'].apply(flatten_age_country_gender, target_country=country).tolist())
+        else:
+            wide_df = pd.DataFrame(df['demographic_distribution'].apply(flatten_demographic_distribution).tolist())
     
-    final_data_censored = hide_access_token(final_data)
-    final_data_censored.to_excel(f'{data_path}/{project_name}_processed_data.xlsx', index=False)
-    return final_data
+            # create new columns with average impressions and spend
+            df['impressions'] = df['impressions'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
+            df['impressions_avg'] = df['impressions'].apply(lambda x: math.ceil((int(x['lower_bound']) + int(x.get('upper_bound', x['lower_bound']))) / 2))
+            df['spend'] = df['spend'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
+            df['spend_avg'] = df['spend'].apply(lambda x: math.ceil((int(x['lower_bound']) + int(x.get('upper_bound', x['lower_bound']))) / 2))
+                
+        # reorder the columns alphabetically and save the processed data to a different file
+        wide_df = wide_df.reindex(sorted(wide_df.columns), axis=1)
+        final_data = pd.concat([df, wide_df], axis=1)
+        
+        final_data_censored = hide_access_token(final_data)
+        final_data_censored.to_excel(f'{data_path}/{project_name}_processed_data.xlsx', index=False)
+        
+        return final_data
+    
+    except Exception as e:
+        print(f"Error occured while transforming the data: {type(e).__name__} - {str(e)}. Only original data saved.")
+        return df
+        
 
 
 def configure_logging(project_name):
