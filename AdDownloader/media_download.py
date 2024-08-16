@@ -95,10 +95,12 @@ def start_media_download(project_name, nr_ads, data=[]):
         logger.error("No data was provided for media download. Please try again.")
         return(print("No data was provided for media download. Please try again."))
 
-
     # check if the nr of ads to download is within the length of the data
     if nr_ads > len(data):
+        print(f'More ad media requested than available in the data. Downloading the maximum number ({len(data)}).')
+        logger.warning(f'More ads requested than available in the data. Downloading the maximum number ({len(data)}).')
         nr_ads = len(data)
+        
     print(f"Downloading media content for project {project_name}.")
     logger.info(f'Downloading media content for project {project_name}.')
     nr_ads_processed = 0

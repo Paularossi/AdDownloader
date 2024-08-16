@@ -3,7 +3,7 @@ name = "AdDownloader"
 # $ pip install AdDownloader
 # And where it will live on PyPI: https://pypi.org/project/AdDownloader/
 
-version = "0.2.6"
+version = "0.2.7"
 authors = [
   {name = "Paula-Alexandra Gitu", email = "paula.gitu@maastrichtuniversity.nl"},
 ]
@@ -21,11 +21,13 @@ keywords = ["CLI tool", "MetaAPI", "AdLibrary", "image scraping"]
 # For a list of valid classifiers, see https://pypi.org/classifiers/
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Programming Language :: Python",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",    
     "Programming Language :: Python :: 3.11",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Topic :: Software Development :: Libraries :: Python Modules",

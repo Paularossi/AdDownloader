@@ -119,6 +119,14 @@ class AdLibAPI:
 
         if fields is None:
             fields = self.get_fields(ad_type)
+            
+        # check if the dates are valid
+        if ad_delivery_date_min > ad_delivery_date_max:
+            print('Minimum delivery date is greater than maximum delivery date. Swithching the dates around.')
+            self.logger.warning('Minimum delivery date is greater than maximum delivery date. Swithching the dates around.')
+            temp_min = ad_delivery_date_min
+            ad_delivery_date_min = ad_delivery_date_max
+            ad_delivery_date_max = temp_min
 
         params = {
             "fields": fields,

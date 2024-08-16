@@ -89,28 +89,42 @@ AdDownloader can be installed in three different ways: from source, from a built
 
 Open a command-line tool (or a terminal) and navigate to your folder with:
 ```bash
-cd "[path-to-your-project]/AdDownloader"
+cd [path-to-your-project]/AdDownloader
 ```
 Then, create a virtual environment (venv) with:
+
+*Windows*
 ```bash
 python -m venv venv
 ```
 
+*MacOS*
+```bash
+python3 -m venv myenv
+```
+
 And activate the venv:
+
+*Windows*
 ```bash
 venv\Scripts\activate.bat
+```
+
+*MacOS*
+```bash
+source myenv/bin/activate
 ```
 
 ### From source or built distribution
 Once you're inside your repository and the virtual environment, to install from the source file run:
 
 ```bash
-python -m pip install "dist/AdDownloader-0.2.6.tar.gz"
+python -m pip install "dist/AdDownloader-0.2.7.tar.gz"
 ```
 
 To install from the built distribution run:
 ```bash
-python -m pip install "dist/AdDownloader-0.2.6-py3-none-any.whl"
+python -m pip install "dist/AdDownloader-0.2.7-py3-none-any.whl"
 ```
 
 ### From pip
