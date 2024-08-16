@@ -2,7 +2,7 @@
 
 ########
 # to build new distributions (new versions), in the cmd inside the venv run 'python -m build'
-# to upload to PyPi, run 'python -m twine upload dist/AdDownloader-0.2.5-py3-none-any.whl'
+# to upload to PyPi, run 'python -m twine upload dist/AdDownloader-0.2.7-py3-none-any.whl'
 # to install the package, inside the directory with venv run: 'python -m pip install AdDownloader'
 ########
 
