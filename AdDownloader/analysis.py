@@ -118,7 +118,11 @@ def get_word_freq(tokens):
     # fd.tabulate()
 
     wc_tokens = ' '.join(merged_tkn)
-    wc = WordCloud(collocations = False, background_color="white").generate(wc_tokens) # only takes a string as input
+    try:
+        wc = WordCloud(collocations = False, background_color="white").generate(wc_tokens) # only takes a string as input
+    except Exception as e:
+        print(f"Error: {e}. The word cloud could not be generated.")
+        wc = None
 
     return fd, wc
 
@@ -230,10 +234,11 @@ def get_topic_per_caption(lda_model, corpus, captions = None):
 def start_text_analysis(text_data, topics = False):
     """
     Perform text analysis including preprocessing, word frequency calculation, sentiment analysis, and topic modeling.
+    If `topics = False`, the function will only return the tokens, frequency distribution, word cloud, and text sentiment, otherwise it will additionally return the LDA model, coherence and a dataframe with assigned topics to each ad.
 
     :param data: A pandas DataFrame containing an `ad_creative_bodies` column with ad captions.
     :type data: pandas.DataFrame
-    :param topics: 
+    :param topics: If True, topic modelling will be performed in addition to the text and sentiment analysis.
     :type topics: bool
     :return: A tuple containing the word frequency distribution, word cloud, sentiment scores using TextBlob and Vader, LDA model, and coherence score.
     :rtype: tuple
@@ -247,8 +252,8 @@ def start_text_analysis(text_data, topics = False):
     textblb_sent, nltk_sent = get_sentiment(captions)
 
     if topics:
-        lda_model, coherence, sent_topics_df = get_topics(tokens, captions)
-        return tokens, freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence, sent_topics_df
+        lda_model, coherence, topics_df = get_topics(tokens)
+        return tokens, freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence, topics_df
     else: 
         return tokens, freq_dist, word_cl, textblb_sent, nltk_sent
 

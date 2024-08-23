@@ -8,6 +8,8 @@ AdDownloader is a Python command-line tool designed for downloading ads and thei
 * 🔎 Answer questions based on your search target and download ads and their media content.
 * 💡 Use the downloaded ad data for research and analysis of ad campaigns, embedded in a Dashboard.
 
+Below, you can find information about the installing process and basic usage of AdDownloader. For a detailed description of the full features of this package, visit the official [AdDownloader documentation](https://addownloader.readthedocs.io/en/latest/index.html).
+
 ## Table of Contents
 - [Introduction](#introduction)
     - [Meta Ad Library API](#meta-ad-libray-api)
@@ -75,13 +77,11 @@ Currently, Meta doesn't provide ad media content directly from an API call, but 
 Each step in this pipeline is designed to ensure a smooth and efficient user experience, from data retrieval to processing and final output. Please note that this tool should only be used for research purposes.
 
 ## Prerequisities
-To download and run the AdDownloader, several prerequisities must be fullfilled:
+AdDownloader runs on both Windows and MacOS machines. To download and run the package, several prerequisities must be fullfilled:
 
 * Python 3.9, 3.10 or 3.11
 * Verified identity and location on Facebook
 * A valid Meta developer access token
-
-
 
 ## Installation
 

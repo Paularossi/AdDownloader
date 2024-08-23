@@ -106,7 +106,8 @@ start_text_analysis Function
 
    Example::
    
-      >>> freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence = start_text_analysis(data, topics = True)
+      >>> text_data = data['ad_creative_bodies'].dropna() # remove missing captions
+      >>> tokens, freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence, topics_df = start_text_analysis(text_data, topics = True)
       >>> # for output see all examples from above
 
 transform_data_by_age Function

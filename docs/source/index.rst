@@ -109,7 +109,7 @@ with various EDA and statistics, or (2) Analyze your data locally.
 This function will open an html page at http://127.0.0.1:8050/ once Dash is running.
 
 
-**Example 2:** *Analyze data manually*.
+**Example 2.1:** *Analyze text data manually*.
 
 .. code-block:: python
 
@@ -124,7 +124,7 @@ This function will open an html page at http://127.0.0.1:8050/ once Dash is runn
    fig1.show() # will open a webpage with the graph, which can also be saved locally
 
    # perform text analysis of the ad captions
-   freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence = start_text_analysis(data, topics = True)
+   tokens, freq_dist, word_cl, textblb_sent, nltk_sent = start_text_analysis(data['ad_creative_bodies'])
    print(f"Most common 10 keywords: {freq_dist.most_common(10)}")
 
    # show the word cloud
@@ -135,11 +135,47 @@ This function will open an html page at http://127.0.0.1:8050/ once Dash is runn
    # check the sentiment
    textblb_sent.head(20) # or textblb_sent
 
-   # print the top 3 topics and the coherence score
+   # get the topics
+   lda_model, coherence, topics_df = get_topics(tokens, num_topics = 5)
+
+   # print the top 5 words for each topic and the coherence score
    for idx, topic in lda_model.print_topics(num_words=5):
       print("Topic: {} \nWords: {}".format(idx + 1, topic))
 
    print('Coherence Score:', coherence)
+
+**Example 2.2:** *Analyze media data manually*.
+
+.. code-block:: python
+
+   images_path = f"output/test2/ads_images"
+   image_files = [f for f in os.listdir(images_path) if f.endswith(('jpg', 'png', 'jpeg'))]
+
+   ### for an individual image
+   # dominant colors:
+   dominant_colors, percentages = extract_dominant_colors(os.path.join(images_path, image_files[2]))
+   for col, percentage in zip(dominant_colors, percentages):
+      print(f"Color: {col}, Percentage: {percentage:.2f}%")
+   
+   # image quality
+   resolution, brightness, contrast, sharpness = assess_image_quality(os.path.join(images_path, image_files[2]))
+   print(f"Resolution: {resolution} pixels, Brightness: {brightness}, Contrast: {contrast}, Sharpness: {sharpness}")
+
+   # OR - all features together
+   analysis_result = analyse_image(os.path.join(images_path, image_files[2]))
+   print(analysis_result)
+
+   ### for a folder with images
+   df = analyse_image_folder(images_path)
+   df.head(5)
+
+
+   ### CAPTIONING AND QUESTION ANSWERING WITH BLIP
+   img_caption = blip_call(images_path, nr_images=20)
+   img_caption.head(5)
+
+   img_content = blip_call(images_path, task="visual_question_answering", nr_images=20, questions="Are there people in this ad?")
+   img_content.head(5)
 
 
 Indices and tables

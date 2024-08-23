@@ -46,7 +46,7 @@ data["textblb_sent"] = textblb_sent
 data["nltk_sent"] = nltk_sent
 
 # topics
-lda_model, coherence, topics_df = get_topics(tokens, nr_topics=3) # change nr of topics
+lda_model, coherence, topics_df = get_topics(tokens, nr_topics=8) # change nr of topics
 topics_df.head(20)
 
 fig = show_topics_top_pages(topics_df, data)
@@ -71,7 +71,7 @@ data_img_new = pd.merge(data, img_df, left_on='id', right_on='ad_id', how='inner
 data_img_new2 = pd.merge(data, img_df2, left_on='id', right_on='ad_id', how='inner')
 
 final_data = pd.concat([data_img_new, data_img_new2], axis=0)
-final_data.to_excel("output/uselections/topic_img_data.xlsx", index=False)
+final_data.to_excel("output/uselections/new_topic_data.xlsx", index=False)
 
 
 # ===== BLIP ANALYSIS (CAPTIONING & QUESTION ANSWERING) =====
