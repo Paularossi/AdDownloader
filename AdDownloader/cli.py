@@ -197,18 +197,18 @@ def intro_messages():
         project_name = input()
         run_task_A(project_name, answers)
     
-    if answers['task'] == 'B - download ads media content only':
+    elif answers['task'] == 'B - download ads media content only':
         rprint("[yellow]Please enter the project_name you have ads data for.\n The data needs to be in the output/<project_name>/ads_data folder.[yellow]")
         project_name = input()
         run_task_B(project_name, answers)
 
-    if answers['task'] == 'C - download both ads data and media content':
+    elif answers['task'] == 'C - download both ads data and media content':
         rprint("[yellow]Please enter a name for your project. All created folders will use this name:[yellow]")
         project_name = input()
         run_task_A(project_name, answers)
         run_task_B(project_name, answers)
 
-    if answers['task'] == 'D - open dashboard (using existing data)':
+    elif answers['task'] == 'D - open dashboard (using existing data)':
         rprint("[yellow]The link to open the dashboard will appear below. Click Ctrl+C to close the dashboard.[yellow]")
         from AdDownloader.start_app import start_gui # takes some time to load...
         start_gui()

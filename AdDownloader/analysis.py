@@ -11,14 +11,10 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.sentiment import SentimentIntensityAnalyzer
 from nltk.stem import WordNetLemmatizer, SnowballStemmer
-from nltk import FreqDist
 import nltk
 import gensim.corpora as corpora
-from gensim.models.ldamodel import LdaModel
 from gensim.models.coherencemodel import CoherenceModel
-from wordcloud import WordCloud
 from textblob import TextBlob
-from gensim.parsing.preprocessing import remove_stopwords
 import plotly.express as px
 from PIL import Image
 from sklearn.cluster import KMeans
@@ -26,7 +22,9 @@ from skimage import color as sk_color
 from skimage.feature import canny, corner_harris, corner_peaks
 import cv2
 from transformers import BlipProcessor, BlipForConditionalGeneration, BlipForQuestionAnswering
-import logging
+from sklearn.decomposition import LatentDirichletAllocation
+from sklearn.feature_extraction.text import CountVectorizer
+import ast
 
 #nltk.download('omw-1.4')s
 
@@ -38,6 +36,7 @@ AGE_RANGES = ['13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+']
 
 AD_PATTERN = re.compile(r"ad_([0-9]+)_(img|frame[0-9]+)\.(png|jpeg|jpg)")
 
+stop_words = set(stopwords.words('english')) # need to add more languages
 
 def load_data(data_path):
     """
@@ -73,31 +72,23 @@ def preprocess(text):
     :return: A list of preprocessed words.
     :rtype: list
     """
-    processed_text = []
     lemmatizer = WordNetLemmatizer()
     stemmer = SnowballStemmer(language='english')
-    try: # otherwise throws an error if Nan
-        #text = [word.lower() for word in word_tokenize(text) if word.isalnum() and word.lower() not in all_stopwords]
-        # check if the stopwords are reliable
-        all_stopwords = set(stopwords.words('english')) | \
-                        set(stopwords.words('french')) | \
-                        set(stopwords.words('dutch'))
+    try:
         words = word_tokenize(text)
-        for word in words:
-            lower_word = word.lower()
-            if lower_word.isalnum() and lower_word not in all_stopwords and not lower_word.isdigit():
-                # lemmatization
-                lemmatized_word = lemmatizer.lemmatize(lower_word)
-                stemmed_word = stemmer.stem(lemmatized_word)
-                processed_text.append(stemmed_word)
+        # first lemmatize then stem the words to create tokens
+        tokens = [lemmatizer.lemmatize(word) for word in words if word.isalnum() and word.lower() not in stop_words]
+        tokens = [stemmer.stem(token) for token in tokens]
+        processed_text = " ".join(tokens)
     except Exception as e:
         # text analysis
         nltk.download('stopwords')
         nltk.download('punkt')
         nltk.download('vader_lexicon')
         nltk.download('wordnet')
+        print(f"exception {e} occured for text {text}.")
         pass
-        #print(f"exception {e} occured for text {text}.")
+    
     return processed_text
 
 
@@ -107,24 +98,20 @@ def get_word_freq(tokens):
 
     :param tokens: A list of tokenized words, created using the `preprocess` function from this module.
     :type tokens: list
-    :return: A tuple containing the word frequency distribution (FreqDist) and the generated word cloud (WordCloud).
+    :return: A tuple containing the word frequency distribution (FreqDist).
     :rtype: tuple
     """
-    # calculate word frequencies
-    merged_tkn = []
-    for lst in tokens:
-        merged_tkn += lst
-    fd = FreqDist(merged_tkn) # takes a list of strings as input
-    # fd.tabulate()
+    vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000, min_df = 5, max_df = 0.95)
+    vect_text = vectorizer.fit_transform(tokens)
+    tf_feature_names = vectorizer.get_feature_names_out()
+    
+    # sum the occurrences of each word across all documents
+    freq = np.asarray(vect_text.sum(axis=0)).flatten()
+    # create a dictionary mapping words to their frequencies
+    word_freq = dict(zip(tf_feature_names, freq))
+    sorted_word_freq = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
 
-    wc_tokens = ' '.join(merged_tkn)
-    try:
-        wc = WordCloud(collocations = False, background_color="white").generate(wc_tokens) # only takes a string as input
-    except Exception as e:
-        print(f"Error: {e}. The word cloud could not be generated.")
-        wc = None
-
-    return fd, wc
+    return sorted_word_freq
 
 
 def get_sentiment(captions):
@@ -157,105 +144,133 @@ def get_topics(tokens, nr_topics = 3):
     :type nr_topics: int, optional
     :return: A tuple containing the trained LDA model and the coherence score.
     :rtype: tuple
-    """
-    # disable gensim logging
-    logging.getLogger('gensim').setLevel(logging.WARNING)
-    
-    # create a dictionary and a corpus
-    dictionary = corpora.Dictionary(tokens) # only accepts an array of unicode tokens on input
+    """    
+    tokenized_docs = [doc.split() for doc in tokens]
+    dictionary = corpora.Dictionary(tokenized_docs)
+    corpus = [dictionary.doc2bow(doc) for doc in tokenized_docs]
+
     # the dictionary represents the index of the word and its frequency
-
-    # filter out words that occur less than 5/20 documents, or more than 90% of the documents.
-    if len(tokens) < 50:
-        pass
-    elif len(tokens) < 100:
-        dictionary.filter_extremes(no_below = 3, no_above=0.9)
-    else:
-        dictionary.filter_extremes(no_below = 10, no_above=0.95)
-
-    corpus = [dictionary.doc2bow(text) for text in tokens]
     print(f'Number of unique tokens: {len(dictionary)}')
     print(f'Number of documents: {len(corpus)}')
-
+    
+    vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000, min_df = 5, max_df = 0.95)
+    vect_text = vectorizer.fit_transform(tokens)
+    tf_feature_names = vectorizer.get_feature_names_out()
+    
     # create a gensim lda model
-    lda_model = LdaModel(corpus, id2word = dictionary, num_topics = nr_topics, update_every = 1, passes = 20, alpha='auto', eval_every = None)
-
+    lda_model = LatentDirichletAllocation(n_components=nr_topics, learning_method='online', random_state=0, max_iter=10, learning_decay=0.7, learning_offset=10).fit(vect_text) 
+    
+    # extract topics and words from the scikit-learn LDA model to calculate coherence
+    topics = []
+    for topic_idx, topic in enumerate(lda_model.components_):
+        topic_words = [tf_feature_names[i] for i in topic.argsort()[:-11:-1]]
+        topics.append(topic_words)
+    
     # evaluate model coherence - the degree of semantic similarity between high scoring words in each topic
     # c_v - frequency of the top words and their degree of co-occurrence
-    coherence_model_lda = CoherenceModel(model=lda_model, texts=tokens, dictionary=dictionary, coherence='c_v')
-    coherence_lda = coherence_model_lda.get_coherence()
+    coherence_model = CoherenceModel(topics=topics, texts=tokenized_docs, dictionary=dictionary, coherence='c_v')
+    coherence_lda = coherence_model.get_coherence()
     # to improve this score, we can adjust the number of topics, the hyperparameters of the lda model (alpha and beta), or experiment with preprocessing 
 
+    # compute other metrics
+    perplexity = lda_model.perplexity(vect_text) # how well the model generalizes to unseen data, the lower the better
+    log_likelihood = lda_model.score(vect_text) # how well the model fits the data, the higher the better
+    
+    print(f"Finished topic modeling for {nr_topics} topics.\n" 
+          f"Coherence: {round(coherence_lda, 2)}; Perplexity: {round(perplexity, 2)}; Log-Likelihood: {round(log_likelihood, 2)}\n")
+    
+    # print the topics
+    for idx, topic in enumerate(lda_model.components_):
+        # get the indices of the top words for this topic
+        top_word_indices = topic.argsort()[:-8 - 1:-1]
+        top_words = [tf_feature_names[i] for i in top_word_indices]
+        print(f"Topic {idx}: {top_words}")
+    
     # associate each caption with a topic
-    topics_df = get_topic_per_caption(lda_model, corpus)
-    #TODO: need to adapt for different languages?
+    topics_df = get_topic_per_caption(lda_model, vect_text, tf_feature_names)
 
-    return lda_model, coherence_lda, topics_df
+    return lda_model, coherence_lda, perplexity, log_likelihood, topics_df
 
 
-def get_topic_per_caption(lda_model, corpus, captions = None):
+def get_topic_per_caption(lda_model, vect_text, tf_feature_names, captions = None):
     """
-    Extract the main topic per caption using a trained LDA model.
+    Extract the main topic per caption using a trained LDA model from scikit-learn.
 
-    :param lda_model: A trained LDA model.
-    :type lda_model: gensim.models.LdaModel
-    :param corpus: The corpus of documents (in Bag of Words format) used to train the LDA model.
-    :type corpus: list of list of strings
+    :param lda_model: A trained LDA model from scikit-learn.
+    :type lda_model: sklearn.decomposition.LatentDirichletAllocation
+    :param vect_text: The document-term matrix (output of the vectorizer).
+    :type vect_text: scipy.sparse.csr_matrix
+    :param tf_feature_names: The feature names (words) from the vectorizer.
+    :type tf_feature_names: numpy.ndarray or list of str
     :param captions: A Series containing the original captions (optional).
     :type captions: pandas.Series
     :return: A DataFrame containing the dominant topic, percentage contribution, topic keywords, and the original caption for each document.
     :rtype: pandas.DataFrame
     """
-    topics_df = pd.DataFrame(columns = ['dom_topic', 'perc_contr', 'topic_keywords'])
+    doc_topic_dist = lda_model.transform(vect_text)
     
-    # get main topic in each document
-    for i, row in enumerate(lda_model[corpus]):
-        row = sorted(row, key=lambda x: (x[1]), reverse=True)
-
-        # get the dominant topic, percentage contribution and keywords for each document
-        for j, (topic_num, prop_topic) in enumerate(row):
-            if j == 0:  # => dominant topic
-                wp = lda_model.show_topic(topic_num)
-                topic_keywords = ", ".join([word for word, prop in wp])
-                topics_df = pd.concat([topics_df, 
-                                        pd.DataFrame({'dom_topic': [int(topic_num)], 'perc_contr': [round(prop_topic,4)], 'topic_keywords': [topic_keywords]})], 
-                                        ignore_index=True)
-            else:
-                break
-
+    rows = []
+    
+    # iterate over each document's topic distribution
+    for i, topic_dist in enumerate(doc_topic_dist):
+        # get the dominant topic and its percentage contribution
+        dom_topic_idx = np.argmax(topic_dist)
+        perc_contr = topic_dist[dom_topic_idx]
+        
+        # get the keywords for the dominant topic
+        topic_keywords = [tf_feature_names[i] for i in lda_model.components_[dom_topic_idx].argsort()[:-11:-1]]
+        topic_keywords_str = ", ".join(topic_keywords)
+        
+        rows.append({
+            'dom_topic': dom_topic_idx,
+            'perc_contr': round(perc_contr, 4),
+            'topic_keywords': topic_keywords_str
+        })
+    
+    topics_df = pd.DataFrame(rows)
     if captions is not None:
         # add original text to the end of the output
-        captions = captions.reset_index(drop = True)
+        captions = captions.reset_index(drop=True)
         topics_df = pd.concat([topics_df, captions], axis=1)
+
     return(topics_df)
  
 
 # main function
-def start_text_analysis(text_data, topics = False):
+def start_text_analysis(text_data, column_name = "ad_creative_bodies", topics = False):
     """
     Perform text analysis including preprocessing, word frequency calculation, sentiment analysis, and topic modeling.
     If `topics = False`, the function will only return the tokens, frequency distribution, word cloud, and text sentiment, otherwise it will additionally return the LDA model, coherence and a dataframe with assigned topics to each ad.
 
     :param data: A pandas DataFrame containing an `ad_creative_bodies` column with ad captions.
     :type data: pandas.DataFrame
+    :param column_name: The name of the column in the Data Frame that contains the text data (default is "ad_creative_bodies").
+    :type column_name: str
     :param topics: If True, topic modelling will be performed in addition to the text and sentiment analysis.
     :type topics: bool
-    :return: A tuple containing the word frequency distribution, word cloud, sentiment scores using TextBlob and Vader, LDA model, and coherence score.
+    :return: A tuple containing the tokens, word frequency distribution, sentiment scores using TextBlob and Vader, the LDA model and its metrics.
     :rtype: tuple
     """
+    try:
+        text_data = text_data.dropna(subset = column_name).copy()
+    except Exception as e:
+        print(f"Error occured when processing the text: {e}.")
     
-    captions = text_data.dropna()
-    tokens = captions.apply(preprocess)
+    try:
+        text_data.loc[:, column_name] = text_data[column_name].apply(lambda x: ast.literal_eval(x)[0])
+    except:
+        pass # don't need to remove the square brackets
+    
+    tokens = text_data[column_name].apply(preprocess)
+    freq_dist = get_word_freq(tokens)
 
-    freq_dist, word_cl = get_word_freq(tokens)
-
-    textblb_sent, nltk_sent = get_sentiment(captions)
+    textblb_sent, nltk_sent = get_sentiment(text_data[column_name])
 
     if topics:
-        lda_model, coherence, topics_df = get_topics(tokens)
-        return tokens, freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence, topics_df
+        lda_model, coherence_lda, perplexity, log_likelihood, topics_df = get_topics(tokens)
+        return tokens, freq_dist, textblb_sent, nltk_sent, lda_model, coherence_lda, perplexity, log_likelihood, topics_df
     else: 
-        return tokens, freq_dist, word_cl, textblb_sent, nltk_sent
+        return tokens, freq_dist, textblb_sent, nltk_sent
 
 
 def transform_data_by_age(data):
@@ -467,31 +482,33 @@ def get_graphs(data):
     return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10
 
 
-def show_topics_top_pages(topic_data, original_data):
+def show_topics_top_pages(topics_df, original_data, n = 20):
     """
     Visualize the distribution of dominant topics for the top 20 pages by the number of ads.
 
-    :param topic_data: A pandas DataFrame containing data with dominant topics.
-    :type topic_data: pandas.DataFrame
+    :param topics_df: A pandas DataFrame containing data with dominant topics.
+    :type topics_df: pandas.DataFrame
     :param original_data: A pandas DataFrame containing the original ad data.
     :type original_data: pandas.DataFrame
+    :param n: The number of top pages to show topics for (default is 20).
+    :type n: int, optional
     :return: A Plotly figure showing the distribution of dominant topics for the top 20 pages.
     :rtype: plotly.graph_objs._figure.Figure
     """
     original_data = original_data.dropna(subset = ["ad_creative_bodies"])
     original_data = original_data.reset_index(drop=True)
-    topic_data = pd.concat([original_data, topic_data], axis=1)
+    topic_data = pd.concat([original_data, topics_df], axis=1)
     nr_ads_per_page = topic_data.groupby(["page_id", "page_name"])["id"].count().reset_index(name="nr_ads")
-    top_20_pages = nr_ads_per_page.sort_values(by="nr_ads", ascending=False)['page_id'].head(20) 
+    top_n_pages = nr_ads_per_page.sort_values(by="nr_ads", ascending=False)['page_id'].head(n) 
 
-    filtered_data = topic_data[topic_data['page_id'].isin(top_20_pages)].dropna(subset = "dom_topic")
+    filtered_data = topic_data[topic_data['page_id'].isin(top_n_pages)].dropna(subset = "dom_topic")
 
     # aggregate to count the number of ads per dominant topic for each page
     dom_topic_distribution = filtered_data.groupby(['page_name', 'dom_topic']).size().reset_index(name='nr_ads')
 
     fig = px.bar(dom_topic_distribution,
                 x='page_name', y='nr_ads', color='dom_topic',
-                title='Distribution of Dominant Topics for the Top 20 Pages by Number of Ads',
+                title=f'Distribution of Dominant Topics for the Top {len(top_n_pages)} Pages by Number of Ads',
                 labels={'nr_ads': 'Number of Ads', 'page_name': 'Page Name', 'dom_topic': 'Dominant Topic'})
 
     fig.update_xaxes(tickangle=45, tickmode='linear', categoryorder='total descending')
@@ -517,6 +534,7 @@ def blip_call(images_path, task = "image_captioning", nr_images = None, question
     :return: A pandas DataFrame containing image captions or answers to the provided questions.
     :rtype: pandas.DataFrame
     """
+    # processor = AutoProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
     processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
     model_captioning = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
     model_answering = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base")

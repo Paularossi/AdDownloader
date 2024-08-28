@@ -1,13 +1,11 @@
 from AdDownloader import adlib_api
 from AdDownloader.media_download import start_media_download
-import pandas as pd
 
 # ============================================================
 # 
 # Download ad data and media content using the AdLibAPI class.
 #
 # ============================================================
-
 access_token = input() # your fb-access-token-here
 ads_api = adlib_api.AdLibAPI(access_token, project_name = "test1")
 
@@ -15,8 +13,8 @@ ads_api = adlib_api.AdLibAPI(access_token, project_name = "test1")
 # for available parameters, visit https://developers.facebook.com/docs/graph-api/reference/ads_archive/
 
 # either search_terms OR search_pages_ids
-ads_api.add_parameters(ad_reached_countries = 'BE', ad_delivery_date_min = "2023-12-01", ad_delivery_date_max = "2023-12-31", 
-                       search_terms = "McDonald's")
+ads_api.add_parameters(ad_reached_countries = 'BE', ad_delivery_date_min = "2024-08-01", ad_delivery_date_max = "2024-08-10",
+                       search_terms = "pizza", ad_type = 'ALL')
 
 # check the parameters
 ads_api.get_parameters()
@@ -29,11 +27,13 @@ start_media_download(project_name = "test1", nr_ads = 20, data = data)
 
 # if you want to download media from an earlier project
 from AdDownloader.helpers import update_access_token
-data_path = 'output/test1/ads_data/test1_original_data.xlsx'
+import pandas as pd
+
+data_path = 'output/<project_name>/ads_data/<project_name>_processed_data.xlsx'
 new_data = pd.read_excel(data_path)
 new_data = update_access_token(data = new_data, new_access_token = access_token)
 
-start_media_download(project_name = "test1", nr_ads = 20, data = new_data)
+start_media_download(project_name = "test1", nr_ads = 30, data = new_data)
 
 # you can find all the output in the 'output/<your-project-name>' folder
 
@@ -86,9 +86,8 @@ start_gui()
 #
 # ==================================================
 from AdDownloader.analysis import *
-import matplotlib.pyplot as plt
 
-data_path = "output/test2/ads_data/test2_processed_data.xlsx" # need to use the processed data
+data_path = "output/<project_name>/ads_data/<project_name>_processed_data.xlsx" # need to use the processed data
 data = load_data(data_path)
 data.head(20)
 
@@ -97,32 +96,21 @@ fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10 = get_graphs(data)
 fig1.show() # will open a webpage with the graph, which can also be saved locally
 
 ##### TEXT AND TOPIC ANALYSIS
-data = data.dropna(subset = ["ad_creative_bodies"]) # remove missing captions
-tokens, freq_dist, word_cl, textblb_sent, nltk_sent = start_text_analysis(data['ad_creative_bodies'])
-print(f"Most common 10 keywords: {freq_dist.most_common(10)}")
-
-# show the word cloud
-plt.imshow(word_cl, interpolation='bilinear')
-plt.axis("off")
-plt.show()
+tokens, freq_dist, textblb_sent, nltk_sent = start_text_analysis(data)
+print(f"Most common 10 keywords: {freq_dist[0:10]}")
 
 # check the sentiment
 nltk_sent.head(20) # or textblb_sent
 
-lda_model, coherence, topics_df = get_topics(tokens, nr_topics=5) # change nr of topics
+lda_model, coherence, perplexity, log_likelihood, topics_df = get_topics(tokens, nr_topics=9) # change nr of topics
 topics_df.head(20)
-
-# print the topics and the coherence score
-for idx, topic in lda_model.print_topics(num_words=8):
-    print("Topic: {} \nWords: {}".format(idx, topic))
-print('Coherence Score:', coherence)
 
 fig = show_topics_top_pages(topics_df, data)
 fig.show()
 
 
 ##### IMAGE ANALYSIS
-images_path = f"output/test2/ads_images"
+images_path = f"output/<project_name>/ads_images"
 image_files = [f for f in os.listdir(images_path) if f.endswith(('jpg', 'png', 'jpeg'))]
 
 # for an individual image:
@@ -136,21 +124,21 @@ analysis_result = analyse_image(os.path.join(images_path, image_files[2]))
 print(analysis_result)
 
 # for a defined number of images
-df = analyse_image_folder(images_path)
+df = analyse_image_folder(images_path, nr_images = 100)
 df.head(5)
 
 
 ##### CAPTIONING AND QUESTION ANSWERING WITH BLIP
-img_caption = blip_call(images_path, nr_images=20)
-img_caption.head(5)
+img_captions = blip_call(images_path, nr_images=20)
+img_captions.head(5)
 
 img_content = blip_call(images_path, task="visual_question_answering", nr_images=20, questions="Are there people in this ad?")
 img_content.head(5)
 
 # then preprocess the captions and analyze the text
-tokens, freq_dist, word_cl, textblb_sent, nltk_sent = start_text_analysis(img_caption["img_caption"])
+tokens, freq_dist, textblb_sent, nltk_sent = start_text_analysis(img_captions, column_name = "img_caption")
 
-lda_model, coherence, topics_df = get_topics(tokens)
+lda_model, coherence, perplexity, log_likelihood, topics_df = get_topics(tokens, nr_topics = 2)
 topics_df.head(5)
 
 
@@ -161,7 +149,7 @@ topics_df.head(5)
 #
 # ==================================================
 import requests
-url = "https://graph.facebook.com/v19.0/branded_content_search"
+url = "https://graph.facebook.com/v20.0/branded_content_search"
 access_token = input()
 # fields from https://developers.facebook.com/docs/graph-api/reference/branded-content-search/
 params = {
@@ -176,4 +164,4 @@ response = requests.get(url, params = params)
 data = response.json()
 data_list = data.get('data', [])
 df = pd.DataFrame(data_list)
-df.head(5)
+df.to_excel(f'data/branded.xlsx', index=False)

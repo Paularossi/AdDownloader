@@ -24,12 +24,11 @@ preprocess Function
 
    Example::
    
-      >>> captions = data["ad_creative_bodies"].dropna()
-      >>> tokens = captions.apply(preprocess)
+      >>> tokens = data["ad_creative_bodies"].apply(preprocess)
       >>> tokens.head(3)  
-      0    [samedi, malin, bien, pizza, médium, prix, seu...
-      1    [profiter, lundi, gourmand, achat, cheezy, cru...
-      2    [reprise, dur, dur, aussi, heureusement, pizza...
+      0    person earli vote open soon georgia wait take ...
+      1    2020 help turn year around find vote earli person
+      2    person earli vote open soon georgia wait take ...
 
 get_word_freq Function
 ----------------------
@@ -38,13 +37,9 @@ get_word_freq Function
 
    Example::
    
-      >>> freq_dist, word_cl = get_word_freq(tokens)
-      >>> print(f"Most common 10 keywords: {freq_dist.most_common(3)}")
-      Most common 10 keywords: [('pizza', 149), ('hut', 81), ('chain', 24)]
-      >>> # show the word cloud
-      >>> plt.imshow(word_cl, interpolation='bilinear')
-      >>> plt.axis("off")
-      >>> plt.show()
+      >>> freq_dist = get_word_freq(tokens)
+      >>> print(f"Most common 3 keywords: {freq_dist[0:3]}")
+      Most common 3 keywords: [('vote', 3273), ('elect', 1155), ('earli', 1125)]
 
 get_sentiment Function
 ----------------------
@@ -53,15 +48,15 @@ get_sentiment Function
 
    Example::
    
-      >>> textblb_sent, nltk_sent = get_sentiment(captions)
+      >>> textblb_sent, nltk_sent = get_sentiment(data["ad_creative_bodies"])
       >>> nltk_sent.head(3)
-      0    {'neg': 0.0, 'neu': 1.0, 'pos': 0.0, 'compound...
-      1    {'neg': 0.0, 'neu': 0.931, 'pos': 0.069, 'comp...
-      2    {'neg': 0.0, 'neu': 1.0, 'pos': 0.0, 'compound...
+      0     {'neg': 0.0, 'neu': 0.859, 'pos': 0.141, 'comp...
+      1     {'neg': 0.0, 'neu': 1.0, 'pos': 0.0, 'compound...
+      2     {'neg': 0.098, 'neu': 0.644, 'pos': 0.258, 'co...
       >>> textblb_sent.head(3)
-      0    -0.247619
-      1     0.004167
-      2     0.000000
+      0     0.125000
+      1     0.112500
+      2     0.142857
 
 get_topics Function
 -------------------
@@ -70,15 +65,20 @@ get_topics Function
 
    Example::
    
-      >>> lda_model, coherence = get_topics(tokens)
-      >>> for idx, topic in lda_model.print_topics(num_words=5):
-      ...     print("Topic: {} \nWords: {}".format(idx + 1, topic))
+      >>> lda_model, coherence_lda, perplexity, log_likelihood, topics_df = get_topics(tokens, nr_topics=5)
+      Number of unique tokens: 435
+      Number of documents: 2000
+      Finished topic modeling for 5 topics.
+      Coherence: 0.71; Perplexity: 51.78; Log-Likelihood: -104762.56
+      
+      Topic 0: ['vote', 'elect', 'paramount', 'give', 'need', 'win', 'novemb', '3rd']
+      Topic 1: ['vote', 'earli', 'find', 'year', 'person', 'click', 'easi', 'wait']
       ...
-      Topic: 1
-      Words: 0.051*"pizza" + 0.041*"hut" + 0.024*"menu" + 0.022*"chez" + 0.020*"place"
-      ...
-      >>> print('Coherence Score:', coherence)
-      Coherence Score: 0.4461575424013203
+      >>> topics_df.head(3)
+         dom_topic  perc_contr                                     topic_keywords
+      0          1      0.6444  vote, earli, find, year, person, click, easi, ...
+      1          1      0.6567  vote, earli, find, year, person, click, easi, ...
+      2          4      0.9138  ballot, return, vote, today, click, home, demo...
 
 get_topic_per_caption Function
 ------------------------------
@@ -87,17 +87,17 @@ get_topic_per_caption Function
 
    Example::
    
-      >>> # assuming the tokens are already processed captions
-      >>> dictionary = corpora.Dictionary(tokens)
-      >>> corpus = [dictionary.doc2bow(text) for text in tokens]
-      >>> lda_model = LdaModel(corpus, id2word = dictionary, num_topics = 3, passes = 20, eval_every = None)
-      >>> sent_topics_df = get_topic_per_caption(lda_model, corpus)
-      >>> sent_topics_df.head(5)
-            dom_topic  perc_contr                                     topic_keywords                                 ad_creative_bodies
-      0          1      0.5464  would, could, one, father, like, eye, back, ge...  ["Ready to conquer your blood sugar? \nDiscove...
-      1          1      0.6054  would, could, one, father, like, eye, back, ge...  ["👀 Watch now to conquer Type 2 Diabetes! Lowe...
-      2          0      0.9734  alpha, victor, said, daisy, like, andrea, ceci...  ['Fast Food Chains: Worst to Best, Ranked (202...
+      >>> vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000, min_df = 5, max_df = 0.95)
+      >>> vect_text = vectorizer.fit_transform(tokens) # assuming the tokens are already processed captions
+      >>> tf_feature_names = vectorizer.get_feature_names_out()
 
+      >>> lda_model = LatentDirichletAllocation(n_components=5, learning_method='online', random_state=0, max_iter=10, learning_decay=0.7, learning_offset=10).fit(vect_text) 
+      >>> topics_df = get_topic_per_caption(lda_model, vect_text, tf_feature_names)
+      >>> topics_df.head(3)
+         dom_topic  perc_contr                                     topic_keywords
+      0          1      0.6444  vote, earli, find, year, person, click, easi, ...
+      1          1      0.6567  vote, earli, find, year, person, click, easi, ...
+      2          4      0.9138  ballot, return, vote, today, click, home, demo...
 
 start_text_analysis Function
 ----------------------------
@@ -106,8 +106,10 @@ start_text_analysis Function
 
    Example::
    
-      >>> text_data = data['ad_creative_bodies'].dropna() # remove missing captions
-      >>> tokens, freq_dist, word_cl, textblb_sent, nltk_sent, lda_model, coherence, topics_df = start_text_analysis(text_data, topics = True)
+      >>> # without topic modeling
+      >>> tokens, freq_dist, textblb_sent, nltk_sent = start_text_analysis(data)
+      >>> # with topic modeling
+      >>> tokens, freq_dist, textblb_sent, nltk_sent, lda_model, coherence_lda, perplexity, log_likelihood, topics_df = start_text_analysis(data)
       >>> # for output see all examples from above
 
 transform_data_by_age Function
@@ -159,7 +161,7 @@ show_topics_top_pages Function
 
    Example::
    
-      >>> # using the output from `lda_model, coherence, topics_df = analysis.get_topics(tokens)`
+      >>> # using the output from `get_topics(tokens)`
       >>> fig = show_topics_top_pages(topics_df, data)
       >>> fig.show()
 
