@@ -99,11 +99,6 @@ get_topic_per_caption Function
       1          1      0.6567  vote, earli, find, year, person, click, easi, ...
       2          4      0.9138  ballot, return, vote, today, click, home, demo...
 
-jaccard_simmilarity Function
-----------------------------
-
-.. autofunction:: jaccard_simmilarity
-
 start_text_analysis Function
 ----------------------------
 

@@ -134,6 +134,12 @@ def get_sentiment(captions):
     return textblb_sent, nltk_sent
 
 
+def jaccard_similarity(set1, set2):
+    intersection = len(set1.intersection(set2))
+    union = len(set1.union(set2))
+    return float (intersection / union)
+
+
 def get_topics(tokens, nr_topics = 3):
     """
     Perform topic modeling on a given set of tokens using Latent Dirichlet Allocation (LDA).
@@ -169,7 +175,7 @@ def get_topics(tokens, nr_topics = 3):
     
     jaccard_sims = []
     for (topic1, topic2) in combinations(topics, 2):
-        sim = jaccard_simmilarity(set(topic1), set(topic2))
+        sim = jaccard_similarity(set(topic1), set(topic2))
         jaccard_sims.append(sim)
     
     avg_similarity = np.mean(jaccard_sims)
@@ -242,22 +248,6 @@ def get_topic_per_caption(lda_model, vect_text, tf_feature_names, captions = Non
         topics_df = pd.concat([topics_df, captions], axis=1)
 
     return(topics_df)
- 
-
-def jaccard_simmilarity(set1, set2):
-    """
-    Calculate the Jaccard similarity between two sets, defined as the size of their intersection divided by the size of their union.
-
-    :param set1: The first set to compare.
-    :type set1: set
-    :param set2: The second set to compare.
-    :type set2: set
-    :return: A float representing the Jaccard similarity between the two sets, calculated as the size of the intersection divided by the size of the union.
-    :rtype: float
-    """ 
-    intersection = len(set1.intersection(set2))
-    union = len(set1.union(set2))
-    return float (intersection / union)
 
 
 # main function
