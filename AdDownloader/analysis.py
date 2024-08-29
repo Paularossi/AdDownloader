@@ -25,6 +25,7 @@ from transformers import BlipProcessor, BlipForConditionalGeneration, BlipForQue
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import CountVectorizer
 import ast
+from itertools import combinations
 
 #nltk.download('omw-1.4')s
 
@@ -158,13 +159,20 @@ def get_topics(tokens, nr_topics = 3):
     tf_feature_names = vectorizer.get_feature_names_out()
     
     # create a gensim lda model
-    lda_model = LatentDirichletAllocation(n_components=nr_topics, learning_method='online', random_state=0, max_iter=10, learning_decay=0.7, learning_offset=10).fit(vect_text) 
+    lda_model = LatentDirichletAllocation(n_components=nr_topics, learning_method='online', max_iter=10, learning_decay=0.7, learning_offset=10).fit(vect_text) 
     
-    # extract topics and words from the scikit-learn LDA model to calculate coherence
+    # extract topics and words from the scikit-learn LDA model to calculate coherence and jaccard similarity
     topics = []
     for topic_idx, topic in enumerate(lda_model.components_):
         topic_words = [tf_feature_names[i] for i in topic.argsort()[:-11:-1]]
         topics.append(topic_words)
+    
+    jaccard_sims = []
+    for (topic1, topic2) in combinations(topics, 2):
+        sim = jaccard_simmilarity(set(topic1), set(topic2))
+        jaccard_sims.append(sim)
+    
+    avg_similarity = np.mean(jaccard_sims)
     
     # evaluate model coherence - the degree of semantic similarity between high scoring words in each topic
     # c_v - frequency of the top words and their degree of co-occurrence
@@ -177,7 +185,7 @@ def get_topics(tokens, nr_topics = 3):
     log_likelihood = lda_model.score(vect_text) # how well the model fits the data, the higher the better
     
     print(f"Finished topic modeling for {nr_topics} topics.\n" 
-          f"Coherence: {round(coherence_lda, 2)}; Perplexity: {round(perplexity, 2)}; Log-Likelihood: {round(log_likelihood, 2)}\n")
+          f"Coherence: {round(coherence_lda, 2)}; Perplexity: {round(perplexity, 2)}; Log-Likelihood: {round(log_likelihood, 2)}; Similarity: {round(avg_similarity, 2)}\n")
     
     # print the topics
     for idx, topic in enumerate(lda_model.components_):
@@ -189,7 +197,7 @@ def get_topics(tokens, nr_topics = 3):
     # associate each caption with a topic
     topics_df = get_topic_per_caption(lda_model, vect_text, tf_feature_names)
 
-    return lda_model, coherence_lda, perplexity, log_likelihood, topics_df
+    return lda_model, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df
 
 
 def get_topic_per_caption(lda_model, vect_text, tf_feature_names, captions = None):
@@ -236,6 +244,22 @@ def get_topic_per_caption(lda_model, vect_text, tf_feature_names, captions = Non
     return(topics_df)
  
 
+def jaccard_simmilarity(set1, set2):
+    """
+    Calculate the Jaccard similarity between two sets, defined as the size of their intersection divided by the size of their union.
+
+    :param set1: The first set to compare.
+    :type set1: set
+    :param set2: The second set to compare.
+    :type set2: set
+    :return: A float representing the Jaccard similarity between the two sets, calculated as the size of the intersection divided by the size of the union.
+    :rtype: float
+    """ 
+    intersection = len(set1.intersection(set2))
+    union = len(set1.union(set2))
+    return float (intersection / union)
+
+
 # main function
 def start_text_analysis(text_data, column_name = "ad_creative_bodies", topics = False):
     """
@@ -267,7 +291,7 @@ def start_text_analysis(text_data, column_name = "ad_creative_bodies", topics = 
     textblb_sent, nltk_sent = get_sentiment(text_data[column_name])
 
     if topics:
-        lda_model, coherence_lda, perplexity, log_likelihood, topics_df = get_topics(tokens)
+        lda_model, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df = get_topics(tokens)
         return tokens, freq_dist, textblb_sent, nltk_sent, lda_model, coherence_lda, perplexity, log_likelihood, topics_df
     else: 
         return tokens, freq_dist, textblb_sent, nltk_sent

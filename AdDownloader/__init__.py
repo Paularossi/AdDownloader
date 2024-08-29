@@ -3,6 +3,6 @@
 # import classes and methods from the package as a whole
 
 __app_name__ = "AdDownloader"
-__version__ = "0.2.7"
+__version__ = "0.2.8"
 
 # license retrieved from: https://choosealicense.com/licenses/gpl-3.0/#

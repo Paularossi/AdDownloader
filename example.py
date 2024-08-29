@@ -102,7 +102,7 @@ print(f"Most common 10 keywords: {freq_dist[0:10]}")
 # check the sentiment
 nltk_sent.head(20) # or textblb_sent
 
-lda_model, coherence, perplexity, log_likelihood, topics_df = get_topics(tokens, nr_topics=9) # change nr of topics
+lda_model, coherence, perplexity, log_likelihood, avg_similarity, topics_df = get_topics(tokens, nr_topics=9) # change nr of topics
 topics_df.head(20)
 
 fig = show_topics_top_pages(topics_df, data)
@@ -138,7 +138,7 @@ img_content.head(5)
 # then preprocess the captions and analyze the text
 tokens, freq_dist, textblb_sent, nltk_sent = start_text_analysis(img_captions, column_name = "img_caption")
 
-lda_model, coherence, perplexity, log_likelihood, topics_df = get_topics(tokens, nr_topics = 2)
+lda_model, coherence, perplexity, log_likelihood, avg_similarity, topics_df = get_topics(tokens, nr_topics = 2)
 topics_df.head(5)
 
 

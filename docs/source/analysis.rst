@@ -65,11 +65,11 @@ get_topics Function
 
    Example::
    
-      >>> lda_model, coherence_lda, perplexity, log_likelihood, topics_df = get_topics(tokens, nr_topics=5)
+      >>> lda_model, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df = get_topics(tokens, nr_topics=5)
       Number of unique tokens: 435
       Number of documents: 2000
       Finished topic modeling for 5 topics.
-      Coherence: 0.71; Perplexity: 51.78; Log-Likelihood: -104762.56
+      Coherence: 0.71; Perplexity: 51.78; Log-Likelihood: -104762.56; Similarity: 0.07
       
       Topic 0: ['vote', 'elect', 'paramount', 'give', 'need', 'win', 'novemb', '3rd']
       Topic 1: ['vote', 'earli', 'find', 'year', 'person', 'click', 'easi', 'wait']
@@ -99,6 +99,11 @@ get_topic_per_caption Function
       1          1      0.6567  vote, earli, find, year, person, click, easi, ...
       2          4      0.9138  ballot, return, vote, today, click, home, demo...
 
+jaccard_simmilarity Function
+----------------------------
+
+.. autofunction:: jaccard_simmilarity
+
 start_text_analysis Function
 ----------------------------
 
@@ -109,7 +114,7 @@ start_text_analysis Function
       >>> # without topic modeling
       >>> tokens, freq_dist, textblb_sent, nltk_sent = start_text_analysis(data)
       >>> # with topic modeling
-      >>> tokens, freq_dist, textblb_sent, nltk_sent, lda_model, coherence_lda, perplexity, log_likelihood, topics_df = start_text_analysis(data)
+      >>> tokens, freq_dist, textblb_sent, nltk_sent, lda_model, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df = start_text_analysis(data)
       >>> # for output see all examples from above
 
 transform_data_by_age Function
