@@ -232,13 +232,16 @@ class AdLibAPI:
 
     def get_parameters(self):
         """
-        Get the parameters used for the API request.
+        Get the parameters used for the API request (without the access token).
 
         :returns: A dictionary containing the parameters for the API request.
         :rtype: dict
         """
+        params = self.request_parameters.copy()
+        # remove the access_token from the copy
+        params.pop("access_token", None)
 
-        return(self.request_parameters)
+        return(params)
 
     
     def clear_parameters(self):

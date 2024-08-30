@@ -26,8 +26,15 @@ from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import CountVectorizer
 import ast
 from itertools import combinations
+import logging
 
 #nltk.download('omw-1.4')s
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('vader_lexicon')
+nltk.download('wordnet')
+# disable gensim logging
+logging.getLogger('gensim').setLevel(logging.WARNING)
 
 DATE_MIN = 'ad_delivery_start_time'
 DATE_MAX = 'ad_delivery_stop_time'
@@ -73,6 +80,11 @@ def preprocess(text):
     :return: A list of preprocessed words.
     :rtype: list
     """
+    try:
+        text = ast.literal_eval(text)[0]
+    except:
+        pass # don't need to remove the square brackets
+    
     lemmatizer = WordNetLemmatizer()
     stemmer = SnowballStemmer(language='english')
     try:
@@ -81,29 +93,28 @@ def preprocess(text):
         tokens = [lemmatizer.lemmatize(word) for word in words if word.isalnum() and word.lower() not in stop_words]
         tokens = [stemmer.stem(token) for token in tokens]
         processed_text = " ".join(tokens)
+        return processed_text
     except Exception as e:
-        # text analysis
-        nltk.download('stopwords')
-        nltk.download('punkt')
-        nltk.download('vader_lexicon')
-        nltk.download('wordnet')
         print(f"exception {e} occured for text {text}.")
-        pass
-    
-    return processed_text
+        return ""
 
 
 def get_word_freq(tokens):
     """
-    Calculate word frequencies and generate a word cloud.
+    Calculate word frequencies from a list of tokenized words using `CountVectorizer`.
 
     :param tokens: A list of tokenized words, created using the `preprocess` function from this module.
     :type tokens: list
-    :return: A tuple containing the word frequency distribution (FreqDist).
-    :rtype: tuple
+    :return: A list of tuples, where each tuple contains a word and its corresponding frequency, sorted by frequency in descending order.
+    :rtype: list of tuple
     """
-    vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000, min_df = 5, max_df = 0.95)
-    vect_text = vectorizer.fit_transform(tokens)
+    try:
+        vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000, min_df = 5, max_df = 0.98)
+        vect_text = vectorizer.fit_transform(tokens)
+    except Exception as e: # too few tokens to prune, will consider all of them
+        vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000)
+        vect_text = vectorizer.fit_transform(tokens)
+    
     tf_feature_names = vectorizer.get_feature_names_out()
     
     # sum the occurrences of each word across all documents
@@ -149,7 +160,7 @@ def get_topics(tokens, nr_topics = 3):
     :type tokens: list
     :param nr_topics: The number of topics to extract (default is 3).
     :type nr_topics: int, optional
-    :return: A tuple containing the trained LDA model and the coherence score.
+    :return: A tuple containing the trained LDA model, the topics, the coherence score, perplexity, log-likelihood, similarity and a dataframe with a topic assigned to each ad.
     :rtype: tuple
     """    
     tokenized_docs = [doc.split() for doc in tokens]
@@ -160,8 +171,13 @@ def get_topics(tokens, nr_topics = 3):
     print(f'Number of unique tokens: {len(dictionary)}')
     print(f'Number of documents: {len(corpus)}')
     
-    vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000, min_df = 5, max_df = 0.95)
-    vect_text = vectorizer.fit_transform(tokens)
+    try:
+        vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000, min_df = 5, max_df = 0.95)
+        vect_text = vectorizer.fit_transform(tokens)
+    except Exception as e:
+        vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000) # consider all tokens
+        vect_text = vectorizer.fit_transform(tokens)
+        
     tf_feature_names = vectorizer.get_feature_names_out()
     
     # create a gensim lda model
@@ -170,7 +186,7 @@ def get_topics(tokens, nr_topics = 3):
     # extract topics and words from the scikit-learn LDA model to calculate coherence and jaccard similarity
     topics = []
     for topic_idx, topic in enumerate(lda_model.components_):
-        topic_words = [tf_feature_names[i] for i in topic.argsort()[:-11:-1]]
+        topic_words = [tf_feature_names[i] for i in topic.argsort()[:-8 -1:-1]]
         topics.append(topic_words)
     
     jaccard_sims = []
@@ -196,14 +212,14 @@ def get_topics(tokens, nr_topics = 3):
     # print the topics
     for idx, topic in enumerate(lda_model.components_):
         # get the indices of the top words for this topic
-        top_word_indices = topic.argsort()[:-8 - 1:-1]
+        top_word_indices = topic.argsort()[:-8 -1:-1]
         top_words = [tf_feature_names[i] for i in top_word_indices]
         print(f"Topic {idx}: {top_words}")
     
     # associate each caption with a topic
     topics_df = get_topic_per_caption(lda_model, vect_text, tf_feature_names)
 
-    return lda_model, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df
+    return lda_model, topics, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df
 
 
 def get_topic_per_caption(lda_model, vect_text, tf_feature_names, captions = None):
@@ -281,8 +297,8 @@ def start_text_analysis(text_data, column_name = "ad_creative_bodies", topics = 
     textblb_sent, nltk_sent = get_sentiment(text_data[column_name])
 
     if topics:
-        lda_model, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df = get_topics(tokens)
-        return tokens, freq_dist, textblb_sent, nltk_sent, lda_model, coherence_lda, perplexity, log_likelihood, topics_df
+        lda_model, topics, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df = get_topics(tokens)
+        return tokens, freq_dist, textblb_sent, nltk_sent, lda_model, topics, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df
     else: 
         return tokens, freq_dist, textblb_sent, nltk_sent
 

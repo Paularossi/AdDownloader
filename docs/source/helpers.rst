@@ -65,7 +65,7 @@ flatten_age_country_gender Function
       [{'country': 'NL', 'age_range': '18-24', 'male': 100, 'female': 50, 'unknown': 10}, ...]
 
 flatten_demographic_distribution Function
------------------------------------
+-----------------------------------------
 
 .. autofunction:: flatten_demographic_distribution
 
@@ -125,7 +125,7 @@ update_access_token Function
       >>> data = update_access_token(data, new_access_token)
 
 get_long_lived_token Function
-----------------------------
+-----------------------------
 
 .. autofunction:: get_long_lived_token
 

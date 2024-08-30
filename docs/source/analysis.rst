@@ -65,7 +65,7 @@ get_topics Function
 
    Example::
    
-      >>> lda_model, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df = get_topics(tokens, nr_topics=5)
+      >>> lda_model, topics, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df = get_topics(tokens, nr_topics=5)
       Number of unique tokens: 435
       Number of documents: 2000
       Finished topic modeling for 5 topics.
@@ -109,7 +109,7 @@ start_text_analysis Function
       >>> # without topic modeling
       >>> tokens, freq_dist, textblb_sent, nltk_sent = start_text_analysis(data)
       >>> # with topic modeling
-      >>> tokens, freq_dist, textblb_sent, nltk_sent, lda_model, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df = start_text_analysis(data)
+      >>> tokens, freq_dist, textblb_sent, nltk_sent, lda_model, topics, coherence_lda, perplexity, log_likelihood, avg_similarity, topics_df = start_text_analysis(data)
       >>> # for output see all examples from above
 
 transform_data_by_age Function

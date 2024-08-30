@@ -422,16 +422,16 @@ def start_media_captioning(n, nr_ads, project_name, data):
             img_captions = analysis.blip_call(img_path, nr_images=int(nr_ads))
 
             # processing of the captions
-            tokens, freq_dist, word_cl, textblb_sent, nltk_sent = analysis.start_text_analysis(img_captions["img_caption"])
+            tokens, freq_dist, textblb_sent, nltk_sent = analysis.start_text_analysis(img_captions, "img_caption")
 
-            top_10_words = freq_dist.most_common(10)
+            top_10_words = freq_dist[0:10]
             fig1=px.bar(x=[word for word, count in top_10_words], y=[count for word, count in top_10_words], 
                         labels={'x': 'Words', 'y': 'Frequency'}, title='Top 10 Most Frequent Words')
             fig1.update_xaxes(tickfont=dict(size=14))
             fig1.update_traces(text=[count for word, count in top_10_words], textposition='outside')
 
-            lda_model, coherence, topics_df = analysis.get_topics(tokens)
-            topics = [f"Topic {topic[0]}: {topic[1]}" for topic in lda_model.print_topics(num_words=8)]
+            lda_model, topics, coherence, perplexity, log_likelihood, avg_similarity, topics_df  = analysis.get_topics(tokens)
+            topics = [f"Topic {i}: {', '.join(topic)}" for i, topic in enumerate(topics)]
             topic_distribution = topics_df['dom_topic'].value_counts().reset_index()
 
             # gather all img features
@@ -491,12 +491,35 @@ def start_media_captioning(n, nr_ads, project_name, data):
                 dcc.Graph(id='topic-dist-captions', figure=fig2)
             ], className='six columns')
         ], className='row'),
+        
         html.Div([
-            html.H4("Topics:"),
+            html.H5("Topics:"),
             html.Ul([html.Li(topic) for topic in topics]),
-            html.H4("Coherence Score:"),
-            html.P([f"{coherence} - ", html.Span(qual, style={'color': qual_color})])
-        ]),
+        ], style={'margin-bottom': '20px'}),
+
+        html.Div([
+            html.Div([
+                html.H6("Coherence Score:"),
+                html.P([f"{coherence:.2f} - ", html.Span(qual, style={'color': qual_color})]),
+            ], style={'flex': '1', 'padding': '10px'}),
+
+            html.Div([
+                html.H6("Perplexity:"),
+                html.P(f"{perplexity:.2f}"),
+            ], style={'flex': '1', 'padding': '10px'}),
+        ], style={'display': 'flex', 'justify-content': 'space-between', 'margin-bottom': '20px'}),
+
+        html.Div([
+            html.Div([
+                html.H6("Log-Likelihood:"),
+                html.P(f"{log_likelihood:.2f}"),
+            ], style={'flex': '1', 'padding': '10px'}),
+
+            html.Div([
+                html.H6("Jaccard Similarity:"),
+                html.P(f"{avg_similarity:.2f}"),
+            ], style={'flex': '1', 'padding': '10px'}),
+        ], style={'display': 'flex', 'justify-content': 'space-between'}),
         
         dcc.Store(id='all-img-features-data', data=all_features_data.to_dict('records')),
         html.Hr(),
@@ -581,10 +604,9 @@ def make_text_analysis(n, data):
     else:
         try:
             df = pd.DataFrame(data)
-            df = df.dropna(subset = ["ad_creative_bodies"])
-            tokens, freq_dist, word_cl, textblb_sent, nltk_sent = analysis.start_text_analysis(df["ad_creative_bodies"])
+            tokens, freq_dist, textblb_sent, nltk_sent = analysis.start_text_analysis(df)
             # add these to the dataframe and save it
-            top_10_words = freq_dist.most_common(10)
+            top_10_words = freq_dist[0:10]
             fig1=px.bar(x=[word for word, count in top_10_words], y=[count for word, count in top_10_words], 
                         labels={'x': 'Words', 'y': 'Frequency'}, title='Top 10 Most Frequent Words')
             fig1.update_xaxes(tickfont=dict(size=14))
@@ -649,10 +671,10 @@ def make_topic_analysis(n, data):
     else:
         try:
             df = pd.DataFrame(data)
-            captions = df["ad_creative_bodies"].dropna()
-            tokens = captions.apply(analysis.preprocess)
-            lda_model, coherence, topics_df = analysis.get_topics(tokens)
-            topics = [f"Topic {topic[0]}: {topic[1]}" for topic in lda_model.print_topics(num_words=8)]
+            df = df.dropna(subset=["ad_creative_bodies"])
+            tokens = df["ad_creative_bodies"].apply(analysis.preprocess)
+            lda_model, topics, coherence, perplexity, log_likelihood, avg_similarity,  topics_df = analysis.get_topics(tokens)
+            topics = [f"Topic {i}: {', '.join(topic)}" for i, topic in enumerate(topics)]
             topic_distribution = topics_df['dom_topic'].value_counts().reset_index()
 
             fig1 = px.bar(topic_distribution, x='dom_topic', y='count', 
@@ -695,11 +717,33 @@ def make_topic_analysis(n, data):
         ], className='row'),
         dcc.Store(id='topic-data', data=topics_df.to_dict('records')),
         html.Div([
-            html.H4("These are the three discovered topics and their first 8 words:"),
+            html.H5("Topics:"),
             html.Ul([html.Li(topic) for topic in topics]),
-            html.H4("Coherence Score (how meaningful the topics are):"),
-            html.P([f"{coherence} - ", html.Span(qual, style={'color': qual_color})])
-        ]),        
+        ], style={'margin-bottom': '20px'}),
+        
+        html.Div([
+            html.Div([
+                html.H6("Coherence Score (how meaningful the topics are):"),
+                html.P([f"{coherence:.2f} - ", html.Span(qual, style={'color': qual_color})]),
+            ], style={'flex': '1', 'padding': '10px'}),
+
+            html.Div([
+                html.H6("Perplexity (how well the model predicts new data - the lower the better):"),
+                html.P(f"{perplexity:.2f}"),
+            ], style={'flex': '1', 'padding': '10px'}),
+        ], style={'display': 'flex', 'justify-content': 'space-between', 'margin-bottom': '20px'}),
+
+        html.Div([
+            html.Div([
+                html.H6("Log-Likelihood (how well the model fits the data - the higher the better):"),
+                html.P(f"{log_likelihood:.2f}"),
+            ], style={'flex': '1', 'padding': '10px'}),
+
+            html.Div([
+                html.H6("Jaccard Similarity (overlap between words of different topics - the lower the better):"),
+                html.P(f"{avg_similarity:.2f}"),
+            ], style={'flex': '1', 'padding': '10px'}),
+        ], style={'display': 'flex', 'justify-content': 'space-between'}),
 
         html.Button("Download Topic Data", id="btn_xlsx_topic"),
         dcc.Download(id="download-topic-dataframe"),
