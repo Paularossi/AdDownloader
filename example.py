@@ -13,7 +13,7 @@ ads_api = adlib_api.AdLibAPI(access_token, project_name = "test1")
 # for available parameters, visit https://developers.facebook.com/docs/graph-api/reference/ads_archive/
 
 # either search_terms OR search_pages_ids
-ads_api.add_parameters(ad_reached_countries = 'GB', ad_delivery_date_min = "2024-08-01", ad_delivery_date_max = "2024-08-07",
+ads_api.add_parameters(ad_reached_countries = 'BE', ad_delivery_date_min = "2024-08-01", ad_delivery_date_max = "2024-08-05",
                        search_terms = "pizza", ad_type = 'ALL')
 
 # check the parameters

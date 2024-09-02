@@ -48,10 +48,11 @@ class AdLibAPI:
         :type page_number: int
         """
         print("##### Starting reading page", page_number, "#####")
-        self.logger.info(f'Starting reading page {page_number}')
+        self.logger.info(f"Starting reading page {page_number}")
         response = requests.get(url, params = params)
         try:
             data = response.json()
+            
         except Exception as e:
             print(f"Error ({type(e).__name__} - {str(e)}) occured on page {page_number}: {response}. Retrying...")
             self.logger.error(f"Error ({type(e).__name__} - {str(e)}) occured on page {page_number}: {response}. Retrying...")
@@ -64,14 +65,20 @@ class AdLibAPI:
                 self.logger.error(f"Error ({type(e).__name__} - {str(e)}) occured on page {page_number}: {response}. Finishing the download.")
                 return
 
-        # check if the output json file is empty and return
-        if not "data" in data:
-            print(f"No data on page {page_number}: {response}.")
-            self.logger.error(f'No data on page {page_number}: {response}.')
+        # check if there was an error - print the message
+        if "error" in data:
+            print(f"No data on page {page_number}.\nError: {data['error']['message']}.")
+            self.logger.error(f"No data on page {page_number}. Error: {data['error']['message']}.")
             return
+        # no error but also no data - print the response
+        elif not "data" in data:
+            print(f"No data on page {page_number}: {response}.")
+            self.logger.error(f"No data on page {page_number}: {response}.")
+            return
+        # check if the output json file is empty and return
         if not bool(data["data"]):
             print("Page", page_number, "is empty.")
-            self.logger.warning(f'Page {page_number} is empty.')
+            self.logger.warning(f"Page {page_number} is empty.")
             return
         
         folder_path = f"output/{self.project_name}/json"
@@ -120,14 +127,24 @@ class AdLibAPI:
         if fields is None:
             fields = self.get_fields(ad_type)
             
-        # check if the dates are valid
+        # check if the dates are valid    	
+        if ad_delivery_date_min > datetime.today().strftime('%Y-%m-%d'):
+            ad_delivery_date_min = datetime.today().strftime('%Y-%m-%d')
+            print('Minimum delivery date is greater than the current date. Setting it as the current date.')
+            self.logger.warning('Minimum delivery date is greater than the current date. Setting it as the current date.')
+        
+        if ad_delivery_date_max > datetime.today().strftime('%Y-%m-%d'):
+            ad_delivery_date_max = datetime.today().strftime('%Y-%m-%d')
+            print('Maximum delivery date is greater than the current date. Setting it as the current date.')
+            self.logger.warning('Maximum delivery date is greater than the current date. Setting it as the current date.')
+            
         if ad_delivery_date_min > ad_delivery_date_max:
             print('Minimum delivery date is greater than maximum delivery date. Swithching the dates around.')
             self.logger.warning('Minimum delivery date is greater than maximum delivery date. Swithching the dates around.')
             temp_min = ad_delivery_date_min
             ad_delivery_date_min = ad_delivery_date_max
             ad_delivery_date_max = temp_min
-
+        
         params = {
             "fields": fields,
             "ad_reached_countries": ad_reached_countries,

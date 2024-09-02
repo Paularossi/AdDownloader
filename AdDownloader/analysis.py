@@ -109,10 +109,10 @@ def get_word_freq(tokens):
     :rtype: list of tuple
     """
     try:
-        vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000, min_df = 5, max_df = 0.98)
+        vectorizer = CountVectorizer(stop_words = list(stop_words), max_features = 1000, min_df = 5, max_df = 0.98)
         vect_text = vectorizer.fit_transform(tokens)
     except Exception as e: # too few tokens to prune, will consider all of them
-        vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000)
+        vectorizer = CountVectorizer(stop_words = list(stop_words), max_features = 1000)
         vect_text = vectorizer.fit_transform(tokens)
     
     tf_feature_names = vectorizer.get_feature_names_out()
@@ -172,10 +172,10 @@ def get_topics(tokens, nr_topics = 3):
     print(f'Number of documents: {len(corpus)}')
     
     try:
-        vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000, min_df = 5, max_df = 0.95)
+        vectorizer = CountVectorizer(stop_words = list(stop_words), max_features = 1000, min_df = 5, max_df = 0.95)
         vect_text = vectorizer.fit_transform(tokens)
     except Exception as e:
-        vectorizer = CountVectorizer(stop_words = stop_words, max_features = 1000) # consider all tokens
+        vectorizer = CountVectorizer(stop_words = list(stop_words), max_features = 1000) # consider all tokens
         vect_text = vectorizer.fit_transform(tokens)
         
     tf_feature_names = vectorizer.get_feature_names_out()

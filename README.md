@@ -119,12 +119,12 @@ source myenv/bin/activate
 Once you're inside your repository and the virtual environment, to install from the source file run:
 
 ```bash
-python -m pip install "dist/AdDownloader-0.2.7.tar.gz"
+python -m pip install "dist/AdDownloader-0.2.10.tar.gz"
 ```
 
 To install from the built distribution run:
 ```bash
-python -m pip install "dist/AdDownloader-0.2.7-py3-none-any.whl"
+python -m pip install "dist/AdDownloader-0.2.10-py3-none-any.whl"
 ```
 
 ### From pip
