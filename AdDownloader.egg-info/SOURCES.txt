@@ -4,9 +4,12 @@ pyproject.toml
 AdDownloader/__init__.py
 AdDownloader/__main__.py
 AdDownloader/adlib_api.py
+AdDownloader/analysis.py
+AdDownloader/app.py
 AdDownloader/cli.py
 AdDownloader/helpers.py
 AdDownloader/media_download.py
+AdDownloader/start_app.py
 AdDownloader.egg-info/PKG-INFO
 AdDownloader.egg-info/SOURCES.txt
 AdDownloader.egg-info/dependency_links.txt

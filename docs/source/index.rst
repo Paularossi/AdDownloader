@@ -12,7 +12,10 @@ based on user-defined parameters by creating an :class:`~AdDownloader.adlib_api.
 the media content of the ads using :func:`~AdDownloader.media_download.start_media_download`. Additionally, for a more user-friendly interface, the entire ad download
 process can be run as a CLI through the :func:`~AdDownloader.cli.run_analysis` call, offering a *simple* and *intuitive* API.
 Lastly, AdDownloader provides additional analysis functionalities, by performing text and image analysis of the ad creative contents,
-and creating useful visualizations inside an Analytics dashboard.
+and creating useful visualizations inside an Analytics dashboard. For a detailed tutorial on how to use AdDownloader, you can check out our 
+step-by-step video on YouTube `here <https://youtu.be/WK6eS2dXTbg?si=lR_cMcbyNkdlK915>`_.
+
+If you use AdDownloader in your research or project, please refer to and cite our paper (under review). Read the pre-print `here <https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4866619>`_.
 
 .. note::
 
@@ -177,6 +180,15 @@ This function will open an html page at http://127.0.0.1:8050/ once Dash is runn
    img_content = blip_call(images_path, task="visual_question_answering", nr_images=20, questions="Are there people in this ad?")
    img_content.head(5)
 
+
+
+Image Download (Selenium) Setup
+===============================
+On some machines it might happen that a potential binary version mismatch might occur between the installed Chrome version and the required ChromeDriver. 
+We recommend that users first try running the image download functionality of AdDownloader as it is. If an error occurs related to a version 
+mismatch, we advise downloading the appropriate version of ChromeDriver directly from the official 
+`ChromeDriver website <https://developer.chrome.com/docs/chromedriver/downloads>`_ and ensuring that it matches the version of Chrome installed on 
+their machine. Once downloaded, placing the ChromeDriver executable in a directory included in the system’s PATH should help avoid version mismatches and related errors.
 
 Indices and tables
 ==================

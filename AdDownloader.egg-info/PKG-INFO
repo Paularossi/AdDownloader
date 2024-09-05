@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: AdDownloader
-Version: 0.2.2
+Version: 0.2.10
 Summary: A cmd tool for downloading ads and their media content from the Meta Ad Library.
 Author-email: Paula-Alexandra Gitu <paula.gitu@maastrichtuniversity.nl>
 Maintainer-email: Paula-Alexandra Gitu <paula.gitu@maastrichtuniversity.nl>
@@ -682,43 +682,57 @@ Project-URL: Homepage, https://github.com/Paularossi/AdDownloader
 Project-URL: Issues, https://github.com/Paularossi/AdDownloader/issues
 Keywords: CLI tool,MetaAPI,AdLibrary,image scraping
 Classifier: Development Status :: 3 - Alpha
+Classifier: Programming Language :: Python
 Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
 Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
 Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: MacOS
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: Science/Research
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
 Classifier: Topic :: Internet :: WWW/HTTP :: Indexing/Search
-Requires-Python: ==3.9.*
+Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 License-File: LICENSE.txt
 Requires-Dist: click==8.1.3
-Requires-Dist: colorama==0.4.4
+Requires-Dist: dash==2.15.0
 Requires-Dist: datetime==5.4
+Requires-Dist: gensim==4.3.2
+Requires-Dist: inquirer3==0.4.0
 Requires-Dist: meson==1.3.1
 Requires-Dist: ninja==1.11.1.1
-Requires-Dist: numpy==1.26.3
+Requires-Dist: nltk==3.8.1
+Requires-Dist: numpy==1.26.4
 Requires-Dist: opencv-python==4.9.0.80
 Requires-Dist: openpyxl==3.1.2
 Requires-Dist: pandas==2.0.3
-Requires-Dist: prompt_toolkit==1.0.14
-Requires-Dist: PyInquirer==1.0.3
-Requires-Dist: pytest==6.2.4
+Requires-Dist: pillow==10.2.0
+Requires-Dist: pytest>=6.2.4
 Requires-Dist: requests==2.31.0
 Requires-Dist: rich==13.6.0
+Requires-Dist: scikit-image==0.22.0
+Requires-Dist: scikit-learn==1.4.1.post1
+Requires-Dist: scipy==1.12
 Requires-Dist: selenium==4.16.0
 Requires-Dist: setuptools>=43.0.0
+Requires-Dist: textblob==0.17.1
+Requires-Dist: torch==2.2.0
+Requires-Dist: transformers==4.37.2
 Requires-Dist: typer==0.9.0
 
 # AdDownloader
-AdDownloader is a Python command-line tool designed for downloading ads and their associated media content from the Meta Ad Library. This tool provides an efficient and user-friendly way to access ad data for analysis and research purposes.
+AdDownloader is a Python command-line tool designed for downloading ads and their associated media content from the Meta Ad Library. This tool provides an efficient and user-friendly way to access ad data for analysis and research purposes, offering additional analytical functionalities for the ad creatives.
 
 *Key Features:*
 
 * 🚀 Choose your fighter: easy-to-use Command-Line Interface or intuitive Python package.
 * 🔐 Access Meta Ad Library data effortlessly by only providing your access token.
 * 🔎 Answer questions based on your search target and download ads and their media content.
-* 💡 Use the downloaded ad data for research and analysis of ad campaigns.
+* 💡 Use the downloaded ad data for research and analysis of ad campaigns, embedded in a Dashboard.
+
+Below, you can find information about the installing process and basic usage of AdDownloader. For a detailed description of the full features of this package, visit the official [AdDownloader documentation](https://addownloader.readthedocs.io/en/latest/index.html).
 
 ## Table of Contents
 - [Introduction](#introduction)
@@ -761,7 +775,7 @@ Researchers are currently able to obtain the following data:
 - Targeting and reach demographic information specific to the EU (estimated)
 - Beneficiary and payer information
 
-For more information on getting access to the API, available fields, search parameters and API call examples, refer to the Meta Ad Library API <a href="https://www.facebook.com/ads/library/api/" target="_blank">Documentation</a>.
+For more information on getting access to the API, available fields, search parameters and API call examples, refer to the  <a href="https://www.facebook.com/ads/library/api/" target="_blank"> Meta Ad Library API Documentation</a>.
 
 ### AdDownloader functionalities
 The AdDownloader has two main functionalities: (1) download general ad data based on user-inputed parameters; and (2) download media content for ads
@@ -782,45 +796,59 @@ Currently, Meta doesn't provide ad media content directly from an API call, but 
 
 7. 📁 **Check Output** → Review all the downloaded media content and data inside the output folder with your `project_name`.
 
+8. 📈 **Optional - Explore Insights** → Perform ad creatives (text & image) analysis and visualize the outputs in a Dashboard.
+
 Each step in this pipeline is designed to ensure a smooth and efficient user experience, from data retrieval to processing and final output. Please note that this tool should only be used for research purposes.
 
 ## Prerequisities
-To download and run the AdDownloader, several prerequisities must be fullfilled:
+AdDownloader runs on both Windows and MacOS machines. To download and run the package, several prerequisities must be fullfilled:
 
-* Python 3.9.*
+* Python 3.9, 3.10 or 3.11
 * Verified identity and location on Facebook
 * A valid Meta developer access token
 
-
-
 ## Installation
 
-AdDownloader can be installed in three different ways: from source, from a wheel-file, or as a package.
+AdDownloader can be installed in three different ways: from source, from a built distribution, or as a package from *pip*.
 
 Open a command-line tool (or a terminal) and navigate to your folder with:
 ```bash
-cd "[path-to-your-project]/AdDownloader"
+cd [path-to-your-project]/AdDownloader
 ```
 Then, create a virtual environment (venv) with:
+
+*Windows*
 ```bash
 python -m venv venv
 ```
 
+*MacOS*
+```bash
+python3 -m venv myenv
+```
+
 And activate the venv:
+
+*Windows*
 ```bash
 venv\Scripts\activate.bat
 ```
 
-### From source or wheel-file
-Once you're inside your repository and the virtual environment, to install from the wheel-file run:
-
+*MacOS*
 ```bash
-python -m pip install "dist/AdDownloader-0.2.1.tar.gz"
+source myenv/bin/activate
 ```
 
-To install from source run:
+### From source or built distribution
+Once you're inside your repository and the virtual environment, to install from the source file run:
+
 ```bash
-python -m pip install "dist/AdDownloader-0.2.1-py3-none-any.whl"
+python -m pip install "dist/AdDownloader-0.2.10.tar.gz"
+```
+
+To install from the built distribution run:
+```bash
+python -m pip install "dist/AdDownloader-0.2.10-py3-none-any.whl"
 ```
 
 ### From pip
@@ -841,14 +869,16 @@ Once installed, AdDownloader can be run in two ways: as a command-line tool (CLI
 from AdDownloader import adlib_api
 from AdDownloader.media_download import start_media_download
  
-ads_api = adlib_api.AdLibAPI(your-fb-access-token-here)
+access_token = input() # the best way to upload your token
+ads_api = adlib_api.AdLibAPI(access_token, project_name = "test1")
 ```
 
 2. Add parameters to your search:
 ```bash
-ads_api.add_parameters(countries = 'BE', start_date = "2023-09-01", end_date = "2023-09-02", search_terms = "pizza", project_name = "test1")
+ads_api.add_parameters(ad_reached_countries = 'BE', ad_delivery_date_min = "2023-12-01", ad_delivery_date_max = "2023-12-31", 
+                       search_terms = "McDonald's")
 ```
-Note that `search_terms` and `search_pages_id` are complementary.
+Note that `search_terms` and `search_pages_id` cannot both be empty.
 
 3. Check the parameters and start the download of ads data:
 ```bash
@@ -867,12 +897,13 @@ start_media_download(project_name = "test1", nr_ads = 20, data = data)
 from AdDownloader import adlib_api
 from AdDownloader.media_download import start_media_download
  
-plt_ads_api = adlib_api.AdLibAPI(your-fb-access-token-here)
+plt_ads_api = adlib_api.AdLibAPI(access_token, project_name = "test2")
 ```
 
 2. Add parameters to your search:
 ```bash
-plt_ads_api.add_parameters(countries = 'US', start_date = "2023-09-01", end_date = "2023-09-29", search_terms = "Joe Biden", project_name = "test2", ad_type = "POLITICAL_AND_ISSUE_ADS")
+plt_ads_api.add_parameters(ad_reached_countries = 'US', ad_delivery_date_min = "2020-10-01", ad_delivery_date_max = "2020-10-03", 
+                           ad_type = "POLITICAL_AND_ISSUE_ADS", search_page_ids = "us_parties.xlsx")
 ```
 
 3. Check the parameters and start the download of ads data:
@@ -886,7 +917,22 @@ plt_data = plt_ads_api.start_download()
 start_media_download(project_name = "test2", nr_ads = 20, data = plt_data)
 ```
 
-All the ouput can be found inside the '`output/your-project-name`' folder.
+All the ouput can be found inside the '`output/<project_name>`' folder.
+
+#### Run the Analytics Dashboard:
+Create a dashboard with various graphs and statistics.
+From the cmd/terminal: (inside your folder with venv activated)
+```bash
+python -m AdDownloader.app
+```
+
+From an IDE:
+```bash
+from AdDownloader.start_app import start_gui # takes some time to load...
+start_gui()
+```
+
+Access http://127.0.0.1:8050/ once Dash is running.
 
 ### As a CLI
 #### From the cmd/terminal: (inside your folder with venv activated)
@@ -902,10 +948,18 @@ run_analysis()
 
 Once the CLI tool is running, more instructions and questions will appear in the cmd/terminal that will guide the API call.
 
-For further help see the [documentation](https://addownloader.readthedocs.io/en/latest/index.html). 
+For further help and additional functionalities see the [AdDownloader documentation](https://addownloader.readthedocs.io/en/latest/index.html). 
+
+## Image Download Setup
+On some machines it might happen that a potential binary version mismatch might occur between the installed Chrome version and the required ChromeDriver. We recommend that users first try running the image download functionality of AdDownloader as it is. If an error occurs related to a version mismatch, we advise downloading the appropriate version of ChromeDriver directly from the official [ChromeDriver website](https://developer.chrome.com/docs/chromedriver/downloads) and ensuring that it matches the version of Chrome installed on their machine. Once downloaded, placing the ChromeDriver executable in a directory included in the system’s PATH should help avoid version mismatches and related errors.
 
 ## Contributing
-To contribute to this project...
+The AdDownloader project is released with a [Contributor Code of Conduct](https://github.com/Paularossi/AdDownloader/blob/main/LICENSE.txt). By contributing to this project, you agree to abide by its terms. To contribute, follow the "forg-and-pull" Git workflow:
+1. Fork the repo on GitHub and create your branch from `master`
+2. Clone the project to your own machine
+3. Commit changes to your own branch
+4. Push your work back up to your fork
+5. Submit a Pull Request so that we can review your changes
 
 ## License
 This project is licensed under the GNU General Public License v3.0. You can read the license [here](https://github.com/Paularossi/AdDownloader/blob/main/LICENSE.txt). 
