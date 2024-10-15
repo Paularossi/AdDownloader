@@ -10,7 +10,7 @@ AdDownloader is a Python command-line tool designed for downloading ads and thei
 
 Below, you can find information about the installing process and basic usage of AdDownloader. For a *detailed description* of the full features of this package, visit the official [AdDownloader documentation](https://addownloader.readthedocs.io/en/latest/index.html). Additionally, for an *extensive tutorial* on how to use AdDownloader, check out our step-by-step [video on YouTube](https://youtu.be/WK6eS2dXTbg?si=lR_cMcbyNkdlK915).
 
-If you use AdDownloader in your research or project, please refer to and *cite our paper* (under review). Read the pre-print [here](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4866619).
+If you use AdDownloader in your research or project, please *refer to and cite* our [paper](https://doi.org/10.1016/j.softx.2024.101919).
 
 ## Table of Contents
 - [Introduction](#introduction)

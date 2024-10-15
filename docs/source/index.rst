@@ -15,7 +15,7 @@ Lastly, AdDownloader provides additional analysis functionalities, by performing
 and creating useful visualizations inside an Analytics dashboard. For a detailed tutorial on how to use AdDownloader, you can check out our 
 step-by-step video on YouTube `here <https://youtu.be/WK6eS2dXTbg?si=lR_cMcbyNkdlK915>`_.
 
-If you use AdDownloader in your research or project, please refer to and cite our paper (under review). Read the pre-print `here <https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4866619>`_.
+If you use AdDownloader in your research or project, please refer to and cite our `paper <https://doi.org/10.1016/j.softx.2024.101919>`.
 
 .. note::
 
