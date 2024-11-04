@@ -29,10 +29,10 @@ from itertools import combinations
 import logging
 
 #nltk.download('omw-1.4')s
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('vader_lexicon')
-nltk.download('wordnet')
+nltk.download('stopwords', quiet=True)
+nltk.download('punkt', quiet=True)
+nltk.download('vader_lexicon', quiet=True)
+nltk.download('wordnet', quiet=True)
 # disable gensim logging
 logging.getLogger('gensim').setLevel(logging.WARNING)
 

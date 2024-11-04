@@ -110,7 +110,7 @@ fig.show()
 
 
 ##### IMAGE ANALYSIS
-images_path = f"output/<project_name>/ads_images"
+images_path = "output/<project_name>/ads_images"
 image_files = [f for f in os.listdir(images_path) if f.endswith(('jpg', 'png', 'jpeg'))]
 
 # for an individual image:

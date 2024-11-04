@@ -3,7 +3,7 @@ name = "AdDownloader"
 # $ pip install AdDownloader
 # And where it will live on PyPI: https://pypi.org/project/AdDownloader/
 
-version = "0.2.10"
+version = "0.2.11"
 authors = [
   {name = "Paula-Alexandra Gitu", email = "paula.gitu@maastrichtuniversity.nl"},
 ]
@@ -48,7 +48,7 @@ dependencies = [
   "opencv-python==4.9.0.80",
   "openpyxl==3.1.2",
   "pandas==2.0.3",
-  "pillow==10.2.0",
+  "pillow==11.0.0",
   "pytest>=6.2.4",
   "requests==2.31.0",
   "rich==13.6.0",
