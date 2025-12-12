@@ -4,12 +4,22 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import TimeoutException
 import requests
 import os
 import cv2
 from AdDownloader.helpers import configure_logging, close_logger
 
+chrome_opts = Options()
+chrome_opts.add_argument("--disable-gpu")
+chrome_opts.add_argument("--no-sandbox")
+chrome_opts.add_argument("--enable-unsafe-swiftshader")
+chrome_opts.add_argument("--log-level=4") # suppress logs
+chrome_opts.add_argument("--disable-notifications") 
 
 def download_media(media_url, media_type, ad_id, media_folder):
     """
@@ -63,13 +73,16 @@ def accept_cookies(driver):
     """
     # accept the cookies if needed
     try:
-        # wait up to 10 seconds for the accept cookies element to be present
-        cookies = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='cookie-policy-manage-dialog-accept-button']")))
+        # wait up to 20 seconds for the accept cookies element to be present
+        cookies = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.XPATH, '//*[@id="facebook"]/body/div[3]/div[2]/div/div/div/div/div[3]/div[2]/div/div[2]/div[1]'))
+        )
         cookies.click()
         print("Cookies accepted.")
     except NoSuchElementException:
         print("Cookies already accepted.")
+    except TimeoutException:
+        print("Cookie dialog not found; maybe already dismissed.")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
@@ -118,21 +131,26 @@ def start_media_download(project_name, nr_ads, data=[]):
         os.makedirs(folder_path_vid)
     
     # define some constants for the xpaths
-    img_xpath_1 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/a/div[1]/img'
+    img_xpath_1 = '//*[@id="content"]/div/div/div/div/div/div/div/div[2]/a/div[1]/img'
     img_xpath_2 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/img'
+
     video_xpath_1 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/video'
-    video_xpath_2 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/video'
-    multpl_img_xpath = '//*[@id="content"]/div/div/div/div/div/div/div[3]/div/div/div/div[{}]/div/div/div/img'
+    video_xpath_2 = '//*[@id="content"]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/video'
+
+    multpl_img_xpath = '//*[@id="content"]/div/div/div/div/div/div/div/div[3]/div/div[2]/div/div/div[{}]/div/div/a/div[1]/img'
 
     # sample the nr_ads
     data = data.sample(nr_ads)
     data = data.reset_index(drop=True)
 
     # start the downloads here, accept cookies
-    driver = webdriver.Chrome()
+    driver = webdriver.Chrome(
+        service = Service(ChromeDriverManager().install()),
+        options = chrome_opts,
+    )
 
     driver.get(data['ad_snapshot_url'][0]) # start from here to accept cookies
-    accept_cookies(driver)    
+    accept_cookies(driver)
     
     # for each ad in the dataset download the media
     for i in range(0, nr_ads): #TODO: randomize the ads to download
