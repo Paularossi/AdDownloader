@@ -3,7 +3,7 @@ name = "AdDownloader"
 # $ pip install AdDownloader
 # And where it will live on PyPI: https://pypi.org/project/AdDownloader/
 
-version = "0.2.11"
+version = "0.2.12"
 authors = [
   {name = "Paula-Alexandra Gitu", email = "paula.gitu@maastrichtuniversity.nl"},
 ]
@@ -58,9 +58,10 @@ dependencies = [
   "selenium==4.16.0",
   "setuptools>=43.0.0",
   "textblob==0.17.1",
-  "torch==2.2.0",
-  "transformers==4.37.2",
+  "torch==2.8.0",
+  "transformers>=4.37.2",
   "typer==0.9.0"
+  "webdriver-manager==4.0.2"
 ]
 
 
@@ -78,5 +79,5 @@ requires = ["setuptools>=43.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-exclude = ["data", "dist", "docs", "tests", "myenv", "output"]
+exclude = ["data", "dist", "docs", "tests", "myenv", "output", "venv"]
 namespaces = false
