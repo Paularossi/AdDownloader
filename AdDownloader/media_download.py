@@ -17,6 +17,9 @@ from AdDownloader.helpers import configure_logging, close_logger
 chrome_opts = Options()
 chrome_opts.add_argument("--disable-gpu")
 chrome_opts.add_argument("--no-sandbox")
+chrome_opts.add_argument("--enable-unsafe-swiftshader")
+chrome_opts.add_argument("--log-level=4") # suppress logs
+chrome_opts.add_argument("--disable-notifications") 
 
 def download_media(media_url, media_type, ad_id, media_folder):
     """

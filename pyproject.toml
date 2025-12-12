@@ -25,7 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",    
     "Programming Language :: Python :: 3.11",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "License :: OSI Approved :: GNU General Public License v3.0 or later",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: MacOS",
     "Intended Audience :: Developers",
@@ -60,7 +60,7 @@ dependencies = [
   "textblob==0.17.1",
   "torch==2.8.0",
   "transformers>=4.37.2",
-  "typer==0.9.0"
+  "typer==0.9.0",
   "webdriver-manager==4.0.2"
 ]
 
