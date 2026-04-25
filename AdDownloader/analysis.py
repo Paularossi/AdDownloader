@@ -95,7 +95,7 @@ def preprocess(text):
         processed_text = " ".join(tokens)
         return processed_text
     except Exception as e:
-        print(f"exception {e} occured for text {text}.")
+        print(f"exception {e} occurred for text {text}.")
         return ""
 
 
@@ -284,7 +284,7 @@ def start_text_analysis(text_data, column_name = "ad_creative_bodies", topics = 
     try:
         text_data = text_data.dropna(subset = column_name).copy()
     except Exception as e:
-        print(f"Error occured when processing the text: {e}.")
+        print(f"Error occurred when processing the text: {e}.")
     
     try:
         text_data.loc[:, column_name] = text_data[column_name].apply(lambda x: ast.literal_eval(x)[0])
@@ -596,22 +596,20 @@ def blip_call(images_path, task = "image_captioning", nr_images = None, question
         # question answering
         if task == "visual_question_answering":
         
-            dict = {'ad_id': ad_id}
+            row_dict = {'ad_id': ad_id}
             for question in questions_all:
                 inputs_quest = processor(raw_image, question, return_tensors="pt")
 
                 out_quest = model_answering.generate(**inputs_quest, max_length = 30)
-                #print(processor.decode(out_quest[0], skip_special_tokens=True))
-                dict[question] = processor.decode(out_quest[0], skip_special_tokens=True)
+                row_dict[question] = processor.decode(out_quest[0], skip_special_tokens=True)
 
         # image_captioning
         else:
             inputs_cpt = processor(raw_image, return_tensors="pt")
             out_cpt = model_captioning.generate(**inputs_cpt, max_length = 20)
-            #print(processor.decode(out_cpt[0], skip_special_tokens=True))
-            dict = {'ad_id': ad_id, 'img_caption': processor.decode(out_cpt[0], skip_special_tokens=True)}
+            row_dict = {'ad_id': ad_id, 'img_caption': processor.decode(out_cpt[0], skip_special_tokens=True)}
 
-        rows_list.append(dict)
+        rows_list.append(row_dict)
 
         print(f'Done with {task} of ad with id {ad_id}') 
         
@@ -685,10 +683,9 @@ def assess_image_quality(image_path):
         # resolution
         width, height = img.size
         resolution = width * height
-        gray_img = img.convert('L')
 
-        # brightness
-        brightness = sum(img.getpixel((x, y))[0] for x in range(width) for y in range(height)) / (width * height)
+        # brightness – use numpy for efficiency instead of pixel-by-pixel iteration
+        brightness = float(np.array(img.convert('L')).mean())
 
         # sharpness and contrast
         opencvImage = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
@@ -737,25 +734,29 @@ def analyse_image(image_path):
     ad_ids = [match[0] for match in numbers]
     ad_id = '_'.join(ad_ids) # extract ad id
 
-    dict = {'ad_id': ad_id, 'resolution': resolution, 'brightness': brightness, 'contrast': contrast, 
+    result = {'ad_id': ad_id, 'resolution': resolution, 'brightness': brightness, 'contrast': contrast, 
             'sharpness': sharpness, 'ncorners': ncorners}
     
     for i, (color, percentage) in enumerate(zip(dominant_colors, percentages), start=1):
-        dict[f'dom_color_{i}'] = color
-        dict[f'dom_color_{i}_prop'] = percentage
-    return dict
+        result[f'dom_color_{i}'] = color
+        result[f'dom_color_{i}_prop'] = percentage
+    return result
 
 
-def analyse_image_folder(folder_path, nr_images = None):
+def analyse_image_folder(folder_path, nr_images = None, project_name = None):
     """
-    Analyzes a set of images in a specified folder and exports the results to an Excel file.
+    Analyzes a set of images in a specified folder and returns a DataFrame with the results.
+    When ``project_name`` is provided the results are also exported to an Excel file at
+    ``output/<project_name>/ads_data/<project_name>_image_analysis.xlsx``.
 
-    This function iterates over image files in the specified folder, performing an analysis on each image using the `analyse_image` function. The analysis covers extracting dominant colors, assessing image quality (resolution, brightness, contrast, sharpness), and detecting edges and corners. The results are compiled into a pandas DataFrame and then exported to an Excel file.
+    This function iterates over image files in the specified folder, performing an analysis on each image using the `analyse_image` function. The analysis covers extracting dominant colors, assessing image quality (resolution, brightness, contrast, sharpness), and detecting edges and corners. The results are compiled into a pandas DataFrame.
 
     :param folder_path: The path to the folder containing the image files to be analyzed. The folder can contain images in jpg, png, and jpeg formats.
     :type folder_path: str
     :param nr_images: The number of images to analyze from the folder. If None, all images in the folder are analyzed. This parameter allows for limiting the analysis to a subset of images.
     :type nr_images: int, optional
+    :param project_name: The name of the current project. When provided, the analysis results are saved to an Excel file inside the project's output folder.
+    :type project_name: str, optional
     :return: A pandas DataFrame containing the analysis results for each image.
     :rtype: pandas.DataFrame
     """
@@ -776,5 +777,13 @@ def analyse_image_folder(folder_path, nr_images = None):
             break
 
     df = pd.DataFrame(analysis_results)
+
+    if project_name is not None:
+        data_path = f'output/{project_name}/ads_data'
+        if not os.path.exists(data_path):
+            os.makedirs(data_path)
+        output_file = os.path.join(data_path, f'{project_name}_image_analysis.xlsx')
+        df.to_excel(output_file, index=False)
+        print(f"Image analysis results saved to {output_file}.")
 
     return df

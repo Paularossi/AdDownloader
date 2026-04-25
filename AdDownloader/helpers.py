@@ -89,6 +89,7 @@ class CountryValidator:
 class ExcelValidator:
     """A class representing a valid Excel file validator."""
     
+    @staticmethod
     def validate_excel(answers, current):
         """
         Checks whether the input is a valid Excel file.
@@ -103,12 +104,12 @@ class ExcelValidator:
         try:
             data_path = os.path.join("data", current)
             data = pd.read_excel(data_path)
-        except:
+        except Exception:
             raise errors.ValidationError('', reason='Unable to load page ids data.')
             
         try:
             data['page_id'].astype(str).tolist()
-        except:
+        except Exception:
             raise errors.ValidationError('', reason='Unable to read the page ids. Check if there exists a column `page_id` in your data.')
         
         return True
@@ -133,6 +134,31 @@ def is_valid_excel_file(file):
         pd.read_excel(path)
         return True
     except:  # catch any exception when trying to read
+        return False
+
+
+def is_valid_page_ids_file(file):
+    """
+    Checks whether the input file name is a valid Excel or CSV file for page IDs.
+
+    :param file: A file name (relative to the ``data`` folder) for an Excel or CSV file.
+    :type file: str
+    :returns: True if the path points to a readable Excel or CSV file, False otherwise.
+    :rtype: bool
+    """
+    try:
+        path = os.path.join("data", file)
+        if not os.path.exists(path):
+            return False
+        lower = path.lower()
+        if lower.endswith(('.xlsx', '.xls', '.xlsm')):
+            pd.read_excel(path, nrows=1)
+            return True
+        if lower.endswith('.csv'):
+            pd.read_csv(path, nrows=1)
+            return True
+        return False
+    except Exception:
         return False
 
 
@@ -294,7 +320,7 @@ def transform_data(project_name, country, ad_type):
         return final_data
     
     except Exception as e:
-        print(f"Error occured while transforming the data: {type(e).__name__} - {str(e)}. Only original data saved.")
+        print(f"Error occurred while transforming the data: {type(e).__name__} - {str(e)}. Only original data saved.")
         return df
         
 
@@ -461,7 +487,7 @@ def deduplicate_images(image_folder, unique_img_folder):
 
     images = os.listdir(image_folder)
     for filename in images:
-        if filename.endswith('.png'):
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
             image_path = os.path.join(image_folder, filename)
             # calculate the MD5 hash and check if it already exists
             img_hash = calculate_image_hash(image_path)
