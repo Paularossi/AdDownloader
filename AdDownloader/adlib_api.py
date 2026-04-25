@@ -60,10 +60,10 @@ class AdLibAPI:
             print("##### Starting reading page", page_number, "#####")
             self.logger.info(f"Starting reading page {page_number}")
 
-            # retry with exponential back-off
+            # retry with exponential back-off: waits 1, 2, then 4 seconds
             data = None
             max_retries = 3
-            for attempt in range(1, max_retries + 1):
+            for attempt in range(max_retries):
                 try:
                     response = requests.get(current_url, params=current_params)
                     data = response.json()
@@ -71,10 +71,10 @@ class AdLibAPI:
                 except Exception as e:
                     wait = 2 ** attempt
                     print(f"Error ({type(e).__name__} - {str(e)}) occurred on page {page_number} "
-                          f"(attempt {attempt}/{max_retries}). Retrying in {wait}s...")
+                          f"(attempt {attempt + 1}/{max_retries}). Retrying in {wait}s...")
                     self.logger.error(
                         f"Error ({type(e).__name__} - {str(e)}) occurred on page {page_number} "
-                        f"(attempt {attempt}/{max_retries}). Retrying in {wait}s..."
+                        f"(attempt {attempt + 1}/{max_retries}). Retrying in {wait}s..."
                     )
                     time.sleep(wait)
 

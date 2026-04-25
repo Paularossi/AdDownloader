@@ -684,8 +684,11 @@ def assess_image_quality(image_path):
         width, height = img.size
         resolution = width * height
 
-        # brightness – use numpy for efficiency instead of pixel-by-pixel iteration
-        brightness = float(np.array(img.convert('L')).mean())
+        # convert once and reuse for both brightness and contrast/sharpness
+        gray_array = np.array(img.convert('L'))
+
+        # brightness – mean of the grayscale pixel intensities
+        brightness = float(gray_array.mean())
 
         # sharpness and contrast
         opencvImage = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
