@@ -12,6 +12,7 @@ from selenium.common.exceptions import TimeoutException
 import requests
 import os
 import cv2
+from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, MofNCompleteColumn
 from AdDownloader.helpers import configure_logging, close_logger
 
 chrome_opts = Options()
@@ -153,23 +154,21 @@ def start_media_download(project_name, nr_ads, data=[]):
     accept_cookies(driver)
     
     # for each ad in the dataset download the media
-    for i in range(0, nr_ads): #TODO: randomize the ads to download
-        # get the target ad
-        success = False
-        driver.get(data['ad_snapshot_url'][i])
+    progress_columns = [
+        TextColumn("[bold blue]{task.description}"),
+        BarColumn(),
+        MofNCompleteColumn(),
+        TimeRemainingColumn(),
+    ]
+    with Progress(*progress_columns, transient=False) as progress:
+        task = progress.add_task(f"Downloading media for {project_name}", total=nr_ads)
+        for i in range(0, nr_ads):
+            # get the target ad
+            success = False
+            driver.get(data['ad_snapshot_url'][i])
 
-        try: # first try to get the img using first xpath
-            img_element = driver.find_element(By.XPATH, img_xpath_1)
-            # if it's found, get its url and download it
-            media_url = img_element.get_attribute('src')
-            media_type = 'image'
-            download_media(media_url, media_type, str(data['id'][i]), folder_path_img)
-            nr_ads_processed += 1
-            success = True
-
-        except NoSuchElementException: 
-            try: # otherwise try the second xpath
-                img_element = driver.find_element(By.XPATH, img_xpath_2)
+            try: # first try to get the img using first xpath
+                img_element = driver.find_element(By.XPATH, img_xpath_1)
                 # if it's found, get its url and download it
                 media_url = img_element.get_attribute('src')
                 media_type = 'image'
@@ -178,20 +177,20 @@ def start_media_download(project_name, nr_ads, data=[]):
                 success = True
 
             except NoSuchElementException: 
-                pass
+                try: # otherwise try the second xpath
+                    img_element = driver.find_element(By.XPATH, img_xpath_2)
+                    # if it's found, get its url and download it
+                    media_url = img_element.get_attribute('src')
+                    media_type = 'image'
+                    download_media(media_url, media_type, str(data['id'][i]), folder_path_img)
+                    nr_ads_processed += 1
+                    success = True
 
-        try: # if it's not an image, try to find the video with first xpath
-            video_element = driver.find_element(By.XPATH, video_xpath_2)
-            # if it's found, get its url and download it
-            media_url = video_element.get_attribute('src')
-            media_type = 'video'
-            download_media(media_url, media_type, str(data['id'][i]), folder_path_vid)
-            nr_ads_processed += 1
-            success = True
-        
-        except NoSuchElementException:
-            try: # otherwise try the second xpath
-                video_element = driver.find_element(By.XPATH, video_xpath_1)
+                except NoSuchElementException: 
+                    pass
+
+            try: # if it's not an image, try to find the video with first xpath
+                video_element = driver.find_element(By.XPATH, video_xpath_2)
                 # if it's found, get its url and download it
                 media_url = video_element.get_attribute('src')
                 media_type = 'video'
@@ -200,38 +199,42 @@ def start_media_download(project_name, nr_ads, data=[]):
                 success = True
             
             except NoSuchElementException:
+                try: # otherwise try the second xpath
+                    video_element = driver.find_element(By.XPATH, video_xpath_1)
+                    # if it's found, get its url and download it
+                    media_url = video_element.get_attribute('src')
+                    media_type = 'video'
+                    download_media(media_url, media_type, str(data['id'][i]), folder_path_vid)
+                    nr_ads_processed += 1
+                    success = True
+                
+                except NoSuchElementException:
+                    pass
+
+            try: # check if there is more than one image
+                # determine the number of images on the page
+                image_count = len(driver.find_elements(By.XPATH, multpl_img_xpath.format('*')))
+                if image_count > 0:
+                    print(f'{image_count} media content found. Trying to retrieve all of them.')
+                    
+                    # iterate over the images and download each one
+                    for img_index in range(1, image_count + 1):
+                        multpl_img_element = driver.find_element(By.XPATH, multpl_img_xpath.format(img_index))
+                        media_url = multpl_img_element.get_attribute('src')
+                        media_type = 'image'
+                        download_media(media_url, media_type, f"{str(data['id'][i])}_{img_index}", folder_path_img)
+                    nr_ads_processed += 1
+                    success = True
+            
+            except NoSuchElementException:
                 pass
 
-        try: # check if there is more than one image
-            # determine the number of images on the page
-            image_count = len(driver.find_elements(By.XPATH, multpl_img_xpath.format('*')))
-            if image_count > 0:
-                print(f'{image_count} media content found. Trying to retrieve all of them.')
-                
-                # iterate over the images and download each one
-                for img_index in range(1, image_count + 1):
-                    multpl_img_element = driver.find_element(By.XPATH, multpl_img_xpath.format(img_index))
-                    media_url = multpl_img_element.get_attribute('src')
-                    media_type = 'image'
-                    download_media(media_url, media_type, f"{str(data['id'][i])}_{img_index}", folder_path_img)
-                nr_ads_processed += 1
-                success = True
-        
-        except NoSuchElementException:
-            pass
+            if not success:
+                nr_ads_failed += 1
+                print(f"No media were downloaded for ad {data['id'][i]}.")
+                logger.error(f"No media were downloaded for ad {data['id'][i]}")
 
-        if not success:
-            nr_ads_failed += 1
-            print(f"No media were downloaded for ad {data['id'][i]}.")
-            logger.error(f"No media were downloaded for ad {data['id'][i]}")
-        
-        if (i+1)/nr_ads == 0.25:
-            print("===== 25% done =====")
-        elif (i+1)/nr_ads == 0.5:
-            print("===== 50% done =====")
-        elif (i+1)/nr_ads == 0.75:
-            print("===== 75% done =====")
-
+            progress.advance(task)
 
     print(f'Finished saving media content for {nr_ads_processed} ads for project {project_name}.')
     logger.info(f'Finished saving media content for {nr_ads_processed} ads for project {project_name}.')

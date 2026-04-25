@@ -701,7 +701,7 @@ def make_topic_analysis(n, data):
     topic_children = html.Div([
         html.H2('Ad Creative Analysis - Topic Modeling.'),
         html.H6("""This section analyses the text content of the ads in terms of topics. 
-                To peform a topic analysis, the ad captions must be preprocessed and passed as tokens. Tokens that occured in less than 5 ad captions, or tokens that occured in more than 90% of the captions were removed.
+                To peform a topic analysis, the ad captions must be preprocessed and passed as tokens. Tokens that occurred in less than 5 ad captions, or tokens that occurred in more than 90% of the captions were removed.
                 A dictionary is created out of the processed tokens, and then a corpus is created from the dictionary. Next, using the Latent Dirichlet Allocation model, 
                 three topics are found across all ads. Finally, a coherence score is computed for the discovered topics, that represents the semantic similarity and 
                 co-occurrence patterns of high scoring words within each topic."""),
