@@ -118,15 +118,23 @@ source myenv/bin/activate
 ```
 
 ### From source or built distribution
-Once you're inside your repository and the virtual environment, to install from the source file run:
+If you cloned the repository (e.g. via `git clone`), install it and all its dependencies by running, from the repository root (where `pyproject.toml` is located):
 
 ```bash
-python -m pip install "dist/AdDownloader-0.2.10.tar.gz"
+python -m pip install .
 ```
 
-To install from the built distribution run:
+> Note: simply cloning the repo and running `python -m AdDownloader.cli` **without** this install step will fail with `ModuleNotFoundError`, since none of the required packages (typer, pandas, selenium, etc.) get installed that way.
+
+Alternatively, to install from one of the pre-built files in `dist/` (replace the version number with the one you have):
+
 ```bash
-python -m pip install "dist/AdDownloader-0.2.10-py3-none-any.whl"
+python -m pip install "dist/AdDownloader-<version>.tar.gz"
+```
+
+or from the built distribution:
+```bash
+python -m pip install "dist/AdDownloader-<version>-py3-none-any.whl"
 ```
 
 ### From pip
@@ -183,6 +191,7 @@ plt_ads_api = adlib_api.AdLibAPI(access_token, project_name = "test2")
 plt_ads_api.add_parameters(ad_reached_countries = 'US', ad_delivery_date_min = "2020-10-01", ad_delivery_date_max = "2020-10-03", 
                            ad_type = "POLITICAL_AND_ISSUE_ADS", search_page_ids = "us_parties.xlsx")
 ```
+`search_page_ids` accepts either an `.xlsx`/`.xls`/`.xlsm` or a `.csv` file (with a `page_id` column), placed inside the `data` folder.
 
 3. Check the parameters and start the download of ads data:
 ```bash
@@ -230,6 +239,10 @@ For further help and additional functionalities see the [AdDownloader documentat
 
 ## Image Download Setup
 On some machines it might happen that a potential binary version mismatch might occur between the installed Chrome version and the required ChromeDriver. We recommend that users first try running the image download functionality of AdDownloader as it is. If an error occurs related to a version mismatch, we advise downloading the appropriate version of ChromeDriver directly from the official [ChromeDriver website](https://developer.chrome.com/docs/chromedriver/downloads) and ensuring that it matches the version of Chrome installed on their machine. Once downloaded, placing the ChromeDriver executable in a directory included in the system’s PATH should help avoid version mismatches and related errors.
+
+Meta occasionally redesigns the ad snapshot page, which can change the page structure that AdDownloader relies on to locate the image/video element. If media downloads that used to work suddenly report `No media were downloaded` for most ads, this is usually the cause - please open an issue so the selectors in `media_download.py` can be updated.
+
+Not every ad has media to download: Meta removes ad creatives that don't follow their advertising policies, and some ads are text-only to begin with. After a media download run, check `output/<project_name>/ads_data/<project_name>_media_status.xlsx` - it lists, per ad `id`, whether media was downloaded (`image`, `video`, `image_and_video`, `multiple_images`), was `removed_policy_violation` (Meta took the creative down), or `no_media_detected` (no known media element was found and no removal message was detected either - this can mean a genuinely text-only ad, but can also mean the page layout changed again, see above).
 
 ## Contributing
 The AdDownloader project is released with a [Contributor Code of Conduct](https://github.com/Paularossi/AdDownloader/blob/main/LICENSE.txt). By contributing to this project, you agree to abide by its terms. To contribute, follow the "forg-and-pull" Git workflow:

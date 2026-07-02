@@ -68,7 +68,7 @@ def request_params_task_AC():
         ),
         inquirer3.Text(
             "pages_id_path",
-            message="Please provide the name of your Excel file with pages ID (needs to be inside the data folder)",
+            message="Please provide the name of your Excel or CSV file with pages ID (needs to be inside the data folder)",
             ignore=lambda answers: answers['search_by'] == 'Search Terms',
             validate=ExcelValidator.validate_excel,
         ),

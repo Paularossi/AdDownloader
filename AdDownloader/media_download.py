@@ -12,6 +12,8 @@ from selenium.common.exceptions import TimeoutException
 import requests
 import os
 import cv2
+import pandas as pd
+from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, MofNCompleteColumn
 from AdDownloader.helpers import configure_logging, close_logger
 
 chrome_opts = Options()
@@ -19,7 +21,81 @@ chrome_opts.add_argument("--disable-gpu")
 chrome_opts.add_argument("--no-sandbox")
 chrome_opts.add_argument("--enable-unsafe-swiftshader")
 chrome_opts.add_argument("--log-level=4") # suppress logs
-chrome_opts.add_argument("--disable-notifications") 
+chrome_opts.add_argument("--disable-notifications")
+# a fixed, "desktop-sized" window keeps Facebook from serving a narrower responsive layout (which uses a different DOM structure and breaks the xpaths below)
+chrome_opts.add_argument("--window-size=1920,1080")
+chrome_opts.add_argument("--start-maximized")
+# force English so the removed-ad text detection below matches reliably regardless of the account/browser locale
+chrome_opts.add_argument("--lang=en-US")
+chrome_opts.add_experimental_option("prefs", {"intl.accept_languages": "en-US,en"})
+
+# xpaths Facebook has used for the media elements on an ad snapshot page, tried in order.
+# Meta redesigns/A-B-tests this page periodically, which changes the number of wrapping <div>s and breaks purely positional xpaths.
+# when media stops being found for ads that clearly have it, open a snapshot page manually, inspect the element, and append the new xpath here
+IMG_XPATHS = [
+    '//*[@id="content"]/div/div/div/div/div/div/div/div[2]/a/div[1]/img',
+    '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/img',
+    '//*[@id="content"]/div/div/div/div/div/div/div/div/div[2]/div/a/div[1]/img',
+]
+
+VIDEO_XPATHS = [
+    '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/video',
+    '//*[@id="content"]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/video',
+    '//*[@id="content"]/div/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/video',
+]
+
+MULTI_IMG_XPATH = '//*[@id="content"]/div/div/div/div/div/div/div/div[3]/div/div[2]/div/div/div[{}]/div/div/a/div[1]/img'
+
+# substrings (case-insensitive) Meta shows on a snapshot page when the ad creative itself was taken down for a policy violation, as opposed to an ad that never had an image/video.
+# This list is a best-effort starting point - if you find ads being mislabelled, inspect the actual page text with detect_removed_ad() disabled and add the missing phrase here.
+REMOVED_AD_PHRASES = [
+    "ad has been removed",
+    "ad has been taken down",
+    "ad is no longer available",
+    "ad isn't available",
+    "ad is not available",
+    "this content isn't available",
+    "doesn't comply with",
+    "violat", # matches "violates"/"violation" of advertising standards/policies
+    "advertising standards",
+]
+
+
+def find_media_element(driver, xpaths):
+    """
+    Try a list of candidate xpaths in order and return the first matching element.
+
+    :param driver: A running Chrome webdriver, already navigated to the target page.
+    :type driver: webdriver.Chrome
+    :param xpaths: Candidate xpaths to try, in order.
+    :type xpaths: list[str]
+    :returns: The first matching WebElement, or None if none of the xpaths matched.
+    :rtype: WebElement | None
+    """
+    for xpath in xpaths:
+        try:
+            return driver.find_element(By.XPATH, xpath)
+        except NoSuchElementException:
+            continue
+    return None
+
+
+def detect_removed_ad(driver):
+    """
+    Check whether the current ad snapshot page indicates the ad creative was removed by Meta
+    for not following advertising policies (as opposed to the ad simply being text-only).
+
+    :param driver: A running Chrome webdriver, already navigated to the target page.
+    :type driver: webdriver.Chrome
+    :returns: True if a known "removed" message was found on the page.
+    :rtype: bool
+    """
+    try:
+        page_text = driver.page_source.lower()
+    except Exception:
+        return False
+    return any(phrase in page_text for phrase in REMOVED_AD_PHRASES)
+
 
 def download_media(media_url, media_type, ad_id, media_folder):
     """
@@ -27,7 +103,7 @@ def download_media(media_url, media_type, ad_id, media_folder):
 
     :param media_url: The url address for accessing the media content.
     :type media_url: str
-    :param media_type: The type of the media content to download, can be 'image' or 'videos'.
+    :param media_type: The type of the media content to download, can be 'image' or 'video'.
     :type media_type: str
     :param ad_id: The ID of the ad for which media content is downloaded.
     :type ad_id: str
@@ -46,6 +122,7 @@ def download_media(media_url, media_type, ad_id, media_folder):
             file_path = f"{media_folder}/ad_{ad_id}_video.mp4"
         else:
             print("Wrong media type.")
+            return
 
         # save the media file
         with open(file_path, 'wb') as media_file:
@@ -87,7 +164,7 @@ def accept_cookies(driver):
         print(f"An unexpected error occurred: {e}")
 
 
-def start_media_download(project_name, nr_ads, data=[]):
+def start_media_download(project_name, nr_ads, data=None):
     """
     Start media content download for a given project and desired number of ads. 
     The ads media are saved in the output folder with the project_name.
@@ -130,18 +207,10 @@ def start_media_download(project_name, nr_ads, data=[]):
     if not os.path.exists(folder_path_vid):
         os.makedirs(folder_path_vid)
     
-    # define some constants for the xpaths
-    img_xpath_1 = '//*[@id="content"]/div/div/div/div/div/div/div/div[2]/a/div[1]/img'
-    img_xpath_2 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/img'
-
-    video_xpath_1 = '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/video'
-    video_xpath_2 = '//*[@id="content"]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/video'
-
-    multpl_img_xpath = '//*[@id="content"]/div/div/div/div/div/div/div/div[3]/div/div[2]/div/div/div[{}]/div/div/a/div[1]/img'
-
     # sample the nr_ads
     data = data.sample(nr_ads)
     data = data.reset_index(drop=True)
+    media_statuses = [] # one entry per ad: {"id": ..., "media_status": ...}
 
     # start the downloads here, accept cookies
     driver = webdriver.Chrome(
@@ -149,99 +218,94 @@ def start_media_download(project_name, nr_ads, data=[]):
         options = chrome_opts,
     )
 
-    driver.get(data['ad_snapshot_url'][0]) # start from here to accept cookies
-    accept_cookies(driver)
-    
-    # for each ad in the dataset download the media
-    for i in range(0, nr_ads): #TODO: randomize the ads to download
-        # get the target ad
-        success = False
-        driver.get(data['ad_snapshot_url'][i])
+    # wrap the whole run in try/finally so the driver always quits, even if a page crashes or raises an unexpected exception
+    try:
+        driver.get(data['ad_snapshot_url'][0]) # start from here to accept cookies
+        accept_cookies(driver)
 
-        try: # first try to get the img using first xpath
-            img_element = driver.find_element(By.XPATH, img_xpath_1)
-            # if it's found, get its url and download it
-            media_url = img_element.get_attribute('src')
-            media_type = 'image'
-            download_media(media_url, media_type, str(data['id'][i]), folder_path_img)
-            nr_ads_processed += 1
-            success = True
+        progress_columns = [
+            TextColumn("[bold blue]{task.description}"),
+            BarColumn(),
+            MofNCompleteColumn(),
+            TimeRemainingColumn(),
+        ]
+        with Progress(*progress_columns) as progress:
+            task = progress.add_task(f"Downloading media for {project_name}", total=nr_ads)
 
-        except NoSuchElementException: 
-            try: # otherwise try the second xpath
-                img_element = driver.find_element(By.XPATH, img_xpath_2)
-                # if it's found, get its url and download it
-                media_url = img_element.get_attribute('src')
-                media_type = 'image'
-                download_media(media_url, media_type, str(data['id'][i]), folder_path_img)
-                nr_ads_processed += 1
-                success = True
+            # for each ad in the dataset download the media
+            for i in range(0, nr_ads):
+                ad_id = str(data['id'][i]) # get the target ad
+                success = False
+                media_status = "no_media_detected" # overwritten below once we know more
 
-            except NoSuchElementException: 
-                pass
+                driver.get(data['ad_snapshot_url'][i])
 
-        try: # if it's not an image, try to find the video with first xpath
-            video_element = driver.find_element(By.XPATH, video_xpath_2)
-            # if it's found, get its url and download it
-            media_url = video_element.get_attribute('src')
-            media_type = 'video'
-            download_media(media_url, media_type, str(data['id'][i]), folder_path_vid)
-            nr_ads_processed += 1
-            success = True
-        
-        except NoSuchElementException:
-            try: # otherwise try the second xpath
-                video_element = driver.find_element(By.XPATH, video_xpath_1)
-                # if it's found, get its url and download it
-                media_url = video_element.get_attribute('src')
-                media_type = 'video'
-                download_media(media_url, media_type, str(data['id'][i]), folder_path_vid)
-                nr_ads_processed += 1
-                success = True
-            
-            except NoSuchElementException:
-                pass
+                # try to find a single image
+                img_element = find_media_element(driver, IMG_XPATHS)
+                if img_element is not None:
+                    media_url = img_element.get_attribute('src')
+                    download_media(media_url, 'image', ad_id, folder_path_img)
+                    success = True
+                    media_status = 'image'
 
-        try: # check if there is more than one image
-            # determine the number of images on the page
-            image_count = len(driver.find_elements(By.XPATH, multpl_img_xpath.format('*')))
-            if image_count > 0:
-                print(f'{image_count} media content found. Trying to retrieve all of them.')
-                
-                # iterate over the images and download each one
-                for img_index in range(1, image_count + 1):
-                    multpl_img_element = driver.find_element(By.XPATH, multpl_img_xpath.format(img_index))
-                    media_url = multpl_img_element.get_attribute('src')
-                    media_type = 'image'
-                    download_media(media_url, media_type, f"{str(data['id'][i])}_{img_index}", folder_path_img)
-                nr_ads_processed += 1
-                success = True
-        
-        except NoSuchElementException:
-            pass
+                # try to find a single video (independent of whether an image was found, since a small number of ads carry both)
+                video_element = find_media_element(driver, VIDEO_XPATHS)
+                if video_element is not None:
+                    media_url = video_element.get_attribute('src')
+                    download_media(media_url, 'video', ad_id, folder_path_vid)
+                    media_status = 'image_and_video' if success else 'video'
+                    success = True
 
-        if not success:
-            nr_ads_failed += 1
-            print(f"No media were downloaded for ad {data['id'][i]}.")
-            logger.error(f"No media were downloaded for ad {data['id'][i]}")
-        
-        if (i+1)/nr_ads == 0.25:
-            print("===== 25% done =====")
-        elif (i+1)/nr_ads == 0.5:
-            print("===== 50% done =====")
-        elif (i+1)/nr_ads == 0.75:
-            print("===== 75% done =====")
+                # check if there is more than one image (carousel-style ad)
+                image_count = len(driver.find_elements(By.XPATH, MULTI_IMG_XPATH.format('*')))
+                if image_count > 0:
+                    print(f'{image_count} media content found. Trying to retrieve all of them.')
+                    for img_index in range(1, image_count + 1):
+                        multpl_img_element = driver.find_element(By.XPATH, MULTI_IMG_XPATH.format(img_index))
+                        media_url = multpl_img_element.get_attribute('src')
+                        download_media(media_url, 'image', f"{ad_id}_{img_index}", folder_path_img)
+                    success = True
+                    media_status = 'multiple_images'
 
+                if not success:
+                    # no media element matched any known xpath - figure out why before giving up
+                    if detect_removed_ad(driver):
+                        media_status = 'removed_policy_violation'
+                        logger.info(f"Ad {ad_id} media was removed by Meta for policy violation.")
+                    else:
+                        media_status = 'no_media_detected'
+                        nr_ads_failed += 1
+                        print(f"No media were downloaded for ad {ad_id}.")
+                        logger.error(f"No media were downloaded for ad {ad_id}")
+                else:
+                    nr_ads_processed += 1
 
-    print(f'Finished saving media content for {nr_ads_processed} ads for project {project_name}.')
-    logger.info(f'Finished saving media content for {nr_ads_processed} ads for project {project_name}.')
-    logger.info(f'Media failed to download for {nr_ads_failed} ads. Success rate: {nr_ads_processed / nr_ads}')
+                media_statuses.append({"id": data['id'][i], "media_status": media_status})
+                progress.advance(task)
 
-    # close the driver once it's done downloading
-    driver.quit()
+        print(f'Finished saving media content for {nr_ads_processed} ads for project {project_name}.')
+        logger.info(f'Finished saving media content for {nr_ads_processed} ads for project {project_name}.')
+        logger.info(f'Media failed to download for {nr_ads_failed} ads. Success rate: {nr_ads_processed / nr_ads}')
 
-    # close the logger
-    close_logger(logger)
+    finally:
+        # close the driver once it's done downloading, even on failure
+        driver.quit()
+
+    try:
+        # save a media_status column for this batch, so ads with no image/video can be told apart:
+        # 'removed_policy_violation' (Meta took the creative down), 'no_media_detected' (a new page layout the xpaths above don't cover yet),
+        # or one of 'image' / 'video' / 'image_and_video' / 'multiple_images' for successful downloads.
+        status_path = f"output/{project_name}/ads_data"
+        if not os.path.exists(status_path):
+            os.makedirs(status_path)
+        status_df = pd.DataFrame(media_statuses)
+        status_df.to_excel(f"{status_path}/{project_name}_media_status.xlsx", index=False)
+        removed_count = (status_df['media_status'] == 'removed_policy_violation').sum()
+        print(f"{removed_count} of {nr_ads} ads had media removed by Meta for policy violations (see {project_name}_media_status.xlsx).")
+        logger.info(f'Saved media status for {nr_ads} ads to {project_name}_media_status.xlsx ({removed_count} removed for policy violation).')
+    finally:
+        # close the logger, even if saving the media status excel above failed
+        close_logger(logger)
 
 
 def extract_frames(video, project_name, interval = None, num_frames = None):
