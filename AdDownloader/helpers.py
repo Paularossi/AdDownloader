@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from inquirer3 import errors
 import logging
 import ast
-from collections.abc import Mapping
 import requests
 import hashlib
 from PIL import Image
@@ -166,8 +165,8 @@ def load_json_from_folder(folder_path):
     """
     Load all the JSON files from the specified folder and merge then into a dataframe.
 
-    :param file: A path to a folder containing JSON files with ad data.
-    :type file: str
+    :param folder_path: A path to a folder containing JSON files with ad data.
+    :type folder_path: str
     :returns: A dataframe containing information retrieved from all JSON files of the folder.
     :rtype: pandas.DataFrame
     """
@@ -403,7 +402,7 @@ def update_access_token(data, new_access_token=None):
     return data_copy
 
 
-def get_long_lived_token(access_token = None, app_id = None, app_secret = None, version = "v20.0"):
+def get_long_lived_token(access_token = None, app_id = None, app_secret = None, version = "v25.0"):
     """
     Generate a Meta long-lived access token, that lasts around 60 days, given a valid short-lived access token.
     The long-lived access token and the expiration time will be saved in a `meta_long_lived_token.txt` file. The `app_id` and `app_secret` can be found inside your app at https://developers.facebook.com/apps/.
@@ -470,7 +469,7 @@ def deduplicate_images(image_folder, unique_img_folder):
     """
     Deduplicate images in a folder and save unique images to a specified folder.
 
-    This function scans a folder for PNG images, calculates the MD5 hash of each image,
+    This function scans a folder for PNG/JPG/JPEG images, calculates the MD5 hash of each image,
     identifies duplicates, and saves only the unique images to a separate folder.
 
     :param image_folder: The path to the folder containing the original images.

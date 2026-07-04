@@ -11,6 +11,8 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 import requests
 import os
+import random
+import time
 import cv2
 import pandas as pd
 from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, MofNCompleteColumn
@@ -29,19 +31,22 @@ chrome_opts.add_argument("--start-maximized")
 chrome_opts.add_argument("--lang=en-US")
 chrome_opts.add_experimental_option("prefs", {"intl.accept_languages": "en-US,en"})
 
-# xpaths Facebook has used for the media elements on an ad snapshot page, tried in order.
-# Meta redesigns/A-B-tests this page periodically, which changes the number of wrapping <div>s and breaks purely positional xpaths.
-# when media stops being found for ads that clearly have it, open a snapshot page manually, inspect the element, and append the new xpath here
+# xpaths Facebook has used for the media elements on an ad snapshot page, tried in order
+# Meta redesigns this page periodically changing the div nesting and breaking these 
+# adding a new xpath here is optional (the fallback still catches it)
 IMG_XPATHS = [
     '//*[@id="content"]/div/div/div/div/div/div/div/div[2]/a/div[1]/img',
     '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/img',
     '//*[@id="content"]/div/div/div/div/div/div/div/div/div[2]/div/a/div[1]/img',
+    '//*[@id="content"]/div/div/div/div/div/div/div/div/div[2]/a/div[1]/img',
+    '//*[@id="content"]/div/div/div/div/div/div/div/div/div[2]/div[2]/img'
 ]
 
 VIDEO_XPATHS = [
     '//*[@id="content"]/div/div/div/div/div/div/div[2]/div[2]/video',
     '//*[@id="content"]/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/video',
     '//*[@id="content"]/div/div/div/div/div/div/div/div/div[2]/div[2]/div/div/div/div/div/video',
+    '//*[@id="content"]/div/div/div/div/div/div/div/div/div[2]/div/div[2]/div/div/div/div/div/video',
 ]
 
 MULTI_IMG_XPATH = '//*[@id="content"]/div/div/div/div/div/div/div/div[3]/div/div[2]/div/div/div[{}]/div/div/a/div[1]/img'
@@ -78,6 +83,48 @@ def find_media_element(driver, xpaths):
         except NoSuchElementException:
             continue
     return None
+
+
+# JS run in-browser by find_fallback_media() below: gathers every <img>/<video> anywhere inside
+# #content in one pass, in one round-trip, rather than the multiple Selenium calls it'd take to
+# fetch and measure each element individually through find_elements() + .size.
+_FALLBACK_MEDIA_JS = """
+    return Array.from(document.querySelectorAll('#content img, #content video')).map(el => ({
+        tag: el.tagName.toLowerCase(),
+        src: el.currentSrc || el.src,
+        width: el.offsetWidth,
+        height: el.offsetHeight
+    })).filter(el => el.src && el.width >= arguments[0] && el.height >= arguments[0]);
+"""
+
+
+def find_fallback_media(driver, min_dimension=100):
+    """
+    Structure-agnostic fallback for when none of the known positional xpaths above matched:
+    instead of guessing another exact div path, look for any <img>/<video> anywhere inside
+    #content that's at least `min_dimension` px on each side (filtering out small icons like
+    the page avatar). This costs one query total (a single execute_script call) and, unlike the
+    xpath lists, keeps working across page redesigns without needing a manual update - it's only
+    used as a last resort, so it adds no overhead for ads that already match a known xpath.
+
+    :param driver: A running Chrome webdriver, already navigated to the target page.
+    :type driver: webdriver.Chrome
+    :param min_dimension: Minimum width/height (px) for an element to count as real media rather
+        than an icon/avatar.
+    :type min_dimension: int
+    :returns: A tuple (images, video). images is a list of {'src', 'width', 'height'} dicts for
+        every large enough <img> found, largest first (empty if none). video is the largest
+        matching <video> dict, or None.
+    :rtype: tuple(list[dict], dict | None)
+    """
+    try:
+        candidates = driver.execute_script(_FALLBACK_MEDIA_JS, min_dimension)
+    except Exception:
+        return [], None
+
+    images = sorted((c for c in candidates if c['tag'] == 'img'), key=lambda c: c['width'] * c['height'], reverse=True)
+    videos = sorted((c for c in candidates if c['tag'] == 'video'), key=lambda c: c['width'] * c['height'], reverse=True)
+    return images, (videos[0] if videos else None)
 
 
 def detect_removed_ad(driver):
@@ -164,9 +211,9 @@ def accept_cookies(driver):
         print(f"An unexpected error occurred: {e}")
 
 
-def start_media_download(project_name, nr_ads, data=None):
+def start_media_download(project_name, nr_ads, data=None, random_state=None):
     """
-    Start media content download for a given project and desired number of ads. 
+    Start media content download for a given project and desired number of ads.
     The ads media are saved in the output folder with the project_name.
 
     :param project_name: The name of the current project.
@@ -175,6 +222,10 @@ def start_media_download(project_name, nr_ads, data=None):
     :type nr_ads: int
     :param data: A dataframe containing an `ad_snapshot_url` column.
     :type data: pandas.DataFrame
+    :param random_state: Seed used to sample `nr_ads` ads out of `data`, for reproducibility. Default is
+        None, in which case a seed is generated automatically and printed/logged so the exact same
+        sample of ads can be reproduced later by passing it back in.
+    :type random_state: int, optional
     """
 
     # configure logger
@@ -207,8 +258,14 @@ def start_media_download(project_name, nr_ads, data=None):
     if not os.path.exists(folder_path_vid):
         os.makedirs(folder_path_vid)
     
-    # sample the nr_ads
-    data = data.sample(nr_ads)
+    # sample the nr_ads - use a fixed seed so the exact same sample can be reproduced later,
+    # e.g. for a paper's replication package; if none was given, generate and report one
+    if random_state is None:
+        random_state = random.randint(0, 2**32 - 1)
+    print(f"Sampling {nr_ads} ads using random_state={random_state}. Pass this value as `random_state` to reproduce this exact sample.")
+    logger.info(f'Sampling {nr_ads} ads using random_state={random_state}.')
+
+    data = data.sample(nr_ads, random_state=random_state)
     data = data.reset_index(drop=True)
     media_statuses = [] # one entry per ad: {"id": ..., "media_status": ...}
 
@@ -239,6 +296,9 @@ def start_media_download(project_name, nr_ads, data=None):
                 media_status = "no_media_detected" # overwritten below once we know more
 
                 driver.get(data['ad_snapshot_url'][i])
+                # the ad snapshot page renders its media asynchronously via JS and the image xpaths
+                # can fire before the <img> exists yet, so wait a bit before trying to find the image
+                time.sleep(1.5)
 
                 # try to find a single image
                 img_element = find_media_element(driver, IMG_XPATHS)
@@ -268,7 +328,22 @@ def start_media_download(project_name, nr_ads, data=None):
                     media_status = 'multiple_images'
 
                 if not success:
-                    # no media element matched any known xpath - figure out why before giving up
+                    # none of the known positional xpaths matched (e.g. a page layout we haven't
+                    # seen yet) - try a generic, size-filtered search before giving up
+                    fallback_images, fallback_video = find_fallback_media(driver)
+                    if fallback_images:
+                        for idx, img in enumerate(fallback_images, start=1):
+                            suffix = ad_id if len(fallback_images) == 1 else f"{ad_id}_{idx}"
+                            download_media(img['src'], 'image', suffix, folder_path_img)
+                        success = True
+                        media_status = 'image' if len(fallback_images) == 1 else 'multiple_images'
+                    if fallback_video is not None:
+                        download_media(fallback_video['src'], 'video', ad_id, folder_path_vid)
+                        media_status = 'image_and_video' if success else 'video'
+                        success = True
+
+                if not success:
+                    # still nothing found - figure out why before giving up
                     if detect_removed_ad(driver):
                         media_status = 'removed_policy_violation'
                         logger.info(f"Ad {ad_id} media was removed by Meta for policy violation.")
@@ -293,12 +368,14 @@ def start_media_download(project_name, nr_ads, data=None):
 
     try:
         # save a media_status column for this batch, so ads with no image/video can be told apart:
-        # 'removed_policy_violation' (Meta took the creative down), 'no_media_detected' (a new page layout the xpaths above don't cover yet),
+        # 'removed_policy_violation' (Meta took the creative down), 'no_media_detected' (neither the
+        # known xpaths nor the generic fallback found anything - likely a genuinely text-only ad),
         # or one of 'image' / 'video' / 'image_and_video' / 'multiple_images' for successful downloads.
         status_path = f"output/{project_name}/ads_data"
         if not os.path.exists(status_path):
             os.makedirs(status_path)
         status_df = pd.DataFrame(media_statuses)
+        status_df['random_state'] = random_state # so the sample used for this run can be reproduced later
         status_df.to_excel(f"{status_path}/{project_name}_media_status.xlsx", index=False)
         removed_count = (status_df['media_status'] == 'removed_policy_violation').sum()
         print(f"{removed_count} of {nr_ads} ads had media removed by Meta for policy violations (see {project_name}_media_status.xlsx).")

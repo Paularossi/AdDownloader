@@ -24,7 +24,7 @@ AdLibAPI.fetch_data Method
    :no-index:
 
    Example::
-      >>> url = "https://graph.facebook.com/v18.0/ads_archive"
+      >>> url = "https://graph.facebook.com/v25.0/ads_archive"
       >>> params = ads_api.get_parameters()
       >>> ads_api.fetch_data(url, params)
 
@@ -63,7 +63,7 @@ AdLibAPI.get_parameters Method
 
    Example::
       >>> ads_api.get_parameters()
-      {'fields': 'id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown', 'ad_reached_countries': 'BE', 'search_page_ids': None, 'search_terms': 'pizza', 'ad_delivery_date_min': '2023-09-01', 'ad_delivery_date_max': '2023-09-02', 'limit': '300', 'access_token': 'XX'}
+      {'fields': 'id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, beneficiary_payers, bylines, languages, page_id, page_name, publisher_platforms, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown, total_reach_by_location', 'ad_reached_countries': 'BE', 'search_page_ids': None, 'search_terms': 'pizza', 'ad_delivery_date_min': '2023-09-01', 'ad_delivery_date_max': '2023-09-02', 'limit': '300', 'access_token': 'XX'}
 
 AdLibAPI.get_fields Method
 --------------------------
@@ -73,5 +73,6 @@ AdLibAPI.get_fields Method
 
    Example::
       >>> ads_api.get_fields(ad_type = "ALL")
-      'id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, 
-      page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown'
+      'id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url,
+      beneficiary_payers, bylines, languages, page_id, page_name, publisher_platforms, target_ages, target_gender, target_locations, eu_total_reach,
+      age_country_gender_reach_breakdown, total_reach_by_location'

@@ -36,8 +36,18 @@ is_valid_excel_file Function
 .. autofunction:: is_valid_excel_file
 
    Example::
-   
+
       >>> is_valid_excel_file("example.xlsx")
+      True
+
+is_valid_page_ids_file Function
+--------------------------------
+
+.. autofunction:: is_valid_page_ids_file
+
+   Example::
+
+      >>> is_valid_page_ids_file("example.csv")
       True
 
 load_json_from_folder Function

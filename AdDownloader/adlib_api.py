@@ -1,7 +1,6 @@
 """This module provides the call to the Meta Ad Library API for ad data retrieval."""
 
 import pandas as pd
-from collections.abc import Mapping
 import requests
 import os
 import time
@@ -12,13 +11,13 @@ from AdDownloader.helpers import *
 class AdLibAPI:
     """A class representing the Meta Online Ad Library API connection point."""
 
-    def __init__(self, access_token, version = "v20.0", project_name = datetime.now().strftime("%Y%m%d%H%M%S")):
+    def __init__(self, access_token, version = "v25.0", project_name = datetime.now().strftime("%Y%m%d%H%M%S")):
         """
         Initialize the AdLibAPI object by providing a valid Meta developer token and a project name.
 
         :param access_token: The access token for authentication.
         :type access_token: str
-        :param version: The version of the Meta Ad Library API. Default is "v18.0".
+        :param version: The version of the Meta Ad Library API. Default is "v25.0".
         :type version: str
         :param project_name: The name of the project. Default is the current date and time.
         :type project_name: str
@@ -277,10 +276,10 @@ class AdLibAPI:
     
     def clear_parameters(self):
         """
-        Clear the current list of search parameters.]
+        Clear the current list of search parameters.
         """
         self.request_parameters = {}
-        self.logger.warning('Seach parameters removed.')
+        self.logger.warning('Search parameters removed.')
     
 
     def get_fields(self, ad_type):

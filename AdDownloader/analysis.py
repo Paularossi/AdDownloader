@@ -28,7 +28,6 @@ import ast
 from itertools import combinations
 import logging
 
-#nltk.download('omw-1.4')s
 nltk.download('stopwords', quiet=True)
 nltk.download('punkt', quiet=True)
 nltk.download('vader_lexicon', quiet=True)
@@ -82,7 +81,7 @@ def preprocess(text):
     """
     try:
         text = ast.literal_eval(text)[0]
-    except:
+    except Exception:
         pass # don't need to remove the square brackets
     
     lemmatizer = WordNetLemmatizer()
@@ -288,7 +287,7 @@ def start_text_analysis(text_data, column_name = "ad_creative_bodies", topics = 
     
     try:
         text_data.loc[:, column_name] = text_data[column_name].apply(lambda x: ast.literal_eval(x)[0])
-    except:
+    except Exception:
         pass # don't need to remove the square brackets
     
     tokens = text_data[column_name].apply(preprocess)

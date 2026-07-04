@@ -184,11 +184,26 @@ This function will open an html page at http://127.0.0.1:8050/ once Dash is runn
 
 Image Download (Selenium) Setup
 ===============================
-On some machines it might happen that a potential binary version mismatch might occur between the installed Chrome version and the required ChromeDriver. 
-We recommend that users first try running the image download functionality of AdDownloader as it is. If an error occurs related to a version 
-mismatch, we advise downloading the appropriate version of ChromeDriver directly from the official 
-`ChromeDriver website <https://developer.chrome.com/docs/chromedriver/downloads>`_ and ensuring that it matches the version of Chrome installed on 
+On some machines it might happen that a potential binary version mismatch might occur between the installed Chrome version and the required ChromeDriver.
+We recommend that users first try running the image download functionality of AdDownloader as it is. If an error occurs related to a version
+mismatch, we advise downloading the appropriate version of ChromeDriver directly from the official
+`ChromeDriver website <https://developer.chrome.com/docs/chromedriver/downloads>`_ and ensuring that it matches the version of Chrome installed on
 their machine. Once downloaded, placing the ChromeDriver executable in a directory included in the system’s PATH should help avoid version mismatches and related errors.
+
+Meta occasionally redesigns the ad snapshot page, which can change the page structure that AdDownloader relies on to locate the image/video element.
+``media_download.py`` has a generic, size-based fallback search (:func:`~AdDownloader.media_download.find_fallback_media`) for when none of the known
+selectors match, so a redesign shouldn't require an immediate fix - but if media downloads that used to work suddenly report ``No media were downloaded``
+for most ads, please open an issue anyway so the fast-path selectors can be updated.
+
+Not every ad has media to download: Meta removes ad creatives that don't follow their advertising policies, and some ads are text-only to begin with.
+After a media download run, check ``output/<project_name>/ads_data/<project_name>_media_status.xlsx`` - it lists, per ad ``id``, whether media was
+downloaded (``image``, ``video``, ``image_and_video``, ``multiple_images``), was ``removed_policy_violation`` (Meta took the creative down), or
+``no_media_detected`` (neither the known selectors nor the fallback search found anything - most likely a genuinely text-only ad).
+
+:func:`~AdDownloader.media_download.start_media_download` downloads media for a random sample of ``nr_ads`` ads out of your data. For reproducibility
+(e.g. for a paper's replication package), pass a ``random_state`` (an integer seed); if you don't, one is generated automatically and printed/logged,
+and also saved in the ``random_state`` column of ``<project_name>_media_status.xlsx``, so any run can be reproduced afterwards even if you didn't set
+a seed upfront.
 
 Indices and tables
 ==================
