@@ -12,17 +12,21 @@ from selenium.common.exceptions import TimeoutException
 import requests
 import os
 import random
+import subprocess
 import time
 import cv2
 import pandas as pd
 from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, MofNCompleteColumn
 from AdDownloader.helpers import configure_logging, close_logger
 
+# silence webdriver_manager's console output 
+os.environ.setdefault("WDM_LOG", "0")
+
 chrome_opts = Options()
 chrome_opts.add_argument("--disable-gpu")
 chrome_opts.add_argument("--no-sandbox")
 chrome_opts.add_argument("--enable-unsafe-swiftshader")
-chrome_opts.add_argument("--log-level=4") # suppress logs
+chrome_opts.add_argument("--log-level=3") # only FATAL browser logs
 chrome_opts.add_argument("--disable-notifications")
 # a fixed, "desktop-sized" window keeps Facebook from serving a narrower responsive layout (which uses a different DOM structure and breaks the xpaths below)
 chrome_opts.add_argument("--window-size=1920,1080")
@@ -269,9 +273,9 @@ def start_media_download(project_name, nr_ads, data=None, random_state=None):
     data = data.reset_index(drop=True)
     media_statuses = [] # one entry per ad: {"id": ..., "media_status": ...}
 
-    # start the downloads here, accept cookies
+    # log_output=DEVNULL suppresses chromedriver/browser console noise (it's the browser's own stderr, unrelated to this project's own logging)
     driver = webdriver.Chrome(
-        service = Service(ChromeDriverManager().install()),
+        service = Service(ChromeDriverManager().install(), log_output=subprocess.DEVNULL),
         options = chrome_opts,
     )
 
