@@ -2,7 +2,7 @@
 
 ########
 # to build new distributions (new versions), in the cmd inside the venv run 'python -m build'
-# to upload to PyPi, run 'python -m twine upload dist/AdDownloader-0.2.8-py3-none-any.whl'
+# to upload to PyPi, run 'python -m twine upload dist/AdDownloader-<version>-py3-none-any.whl'
 # to install the package, inside the directory with venv run: 'python -m pip install AdDownloader'
 ########
 
@@ -13,8 +13,8 @@ from rich import print as rprint
 import time
 import pandas as pd
 
-from AdDownloader.adlib_api import *
-from AdDownloader.media_download import *
+from AdDownloader.adlib_api import AdLibAPI
+from AdDownloader.media_download import start_media_download
 from AdDownloader.helpers import NumberValidator, DateValidator, CountryValidator, ExcelValidator, update_access_token
 
 default_style = load_theme_from_dict(
@@ -68,7 +68,7 @@ def request_params_task_AC():
         ),
         inquirer3.Text(
             "pages_id_path",
-            message="Please provide the name of your Excel file with pages ID (needs to be inside the data folder)",
+            message="Please provide the name of your Excel or CSV file with pages ID (needs to be inside the data folder)",
             ignore=lambda answers: answers['search_by'] == 'Search Terms',
             validate=ExcelValidator.validate_excel,
         ),
@@ -106,10 +106,10 @@ def run_task_A(project_name, answers):
         ad_type = "ALL" if ad_type == 'All' else "POLITICAL_AND_ISSUE_ADS"
     )
         
-    rprint("[yellow]Let's check the parameters you provided:[yellow]")
-    rprint(f"[green bold]{ads.get_parameters()}.[green bold]")
+    rprint("[yellow]Let's check the parameters you provided:[/yellow]")
+    rprint(f"[green bold]{ads.get_parameters()}.[/green bold]")
 
-    rprint("[yellow]Ad data download will begin now.[yellow]")
+    rprint("[yellow]Ad data download will begin now.[/yellow]")
     start_time = time.time()
     ads.start_download()
     end_time = time.time()
@@ -127,8 +127,6 @@ def run_task_B(project_name, answers):
     :type project_name: str
     :param answers: User's answers from the initial questions for tasks A/C regarding desired parameters.
     :type answers: dict
-    :param file_name: Name of the Excel file containing ads data. If none is provided data is taken from 'output/project_name/ads/data/original_data.xlsx'
-    :type file_name: str
     """
     try:
         file_path = f'output/{project_name}/ads_data/{project_name}_original_data.xlsx'
@@ -165,7 +163,7 @@ def run_task_B(project_name, answers):
             nr_ads = int(answers_down["custom_ads_nr"])
         start_media_download(project_name, nr_ads=nr_ads, data=data)
     except Exception as e:
-        print(e)
+        print(f"{type(e).__name__}: {e}")
 
 
 def intro_messages():
@@ -190,31 +188,31 @@ def intro_messages():
 
     answers = inquirer3.prompt(questions, theme=default_style)
 
-    rprint(f"[green bold]You have chosen task {answers['task']}.[green bold]")
+    rprint(f"[green bold]You have chosen task {answers['task']}.[/green bold]")
 
     if answers['task'] == 'A - download ads data only':
-        rprint("[yellow]Please enter a name for your project. All created folders will use this name:[yellow]")
+        rprint("[yellow]Please enter a name for your project. All created folders will use this name:[/yellow]")
         project_name = input()
         run_task_A(project_name, answers)
-    
+
     elif answers['task'] == 'B - download ads media content only':
-        rprint("[yellow]Please enter the project_name you have ads data for.\n The data needs to be in the output/<project_name>/ads_data folder.[yellow]")
+        rprint("[yellow]Please enter the project_name you have ads data for.\n The data needs to be in the output/<project_name>/ads_data folder.[/yellow]")
         project_name = input()
         run_task_B(project_name, answers)
 
     elif answers['task'] == 'C - download both ads data and media content':
-        rprint("[yellow]Please enter a name for your project. All created folders will use this name:[yellow]")
+        rprint("[yellow]Please enter a name for your project. All created folders will use this name:[/yellow]")
         project_name = input()
         run_task_A(project_name, answers)
         run_task_B(project_name, answers)
 
     elif answers['task'] == 'D - open dashboard (using existing data)':
-        rprint("[yellow]The link to open the dashboard will appear below. Click Ctrl+C to close the dashboard.[yellow]")
+        rprint("[yellow]The link to open the dashboard will appear below. Click Ctrl+C to close the dashboard.[/yellow]")
         from AdDownloader.start_app import start_gui # takes some time to load...
         start_gui()
-        
 
-    rprint("[yellow]=============================================[yello]")
+
+    rprint("[yellow]=============================================[/yellow]")
     rprint("Finished.")
 
 app = typer.Typer() # create the app
@@ -232,11 +230,11 @@ def run_analysis():
         # ask if the user wants to perform another analysis
         rerun = typer.confirm("Do you want to perform a new analysis?")
         if not rerun:
-            rprint("[yellow]=============================================[yello]")
-            rprint("[yellow]Analysis completed. Thank you for using AdDownloader! [yello]")
+            rprint("[yellow]=============================================[/yellow]")
+            rprint("[yellow]Analysis completed. Thank you for using AdDownloader! [/yellow]")
             break
 
 
 # need this to run the app
 if __name__ == "__main__":
-    app()   
+    app()

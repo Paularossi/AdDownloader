@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from inquirer3 import errors
 import logging
 import ast
-from collections.abc import Mapping
 import requests
 import hashlib
 from PIL import Image
@@ -87,33 +86,34 @@ class CountryValidator:
 
 
 class ExcelValidator:
-    """A class representing a valid Excel file validator."""
-    
+    """A class representing a valid Excel/CSV page-ids file validator."""
+
+    @staticmethod
     def validate_excel(answers, current):
         """
-        Checks whether the input is a valid Excel file.
+        Checks whether the input is a valid Excel or CSV file.
 
-        :param document: A document representing user's Excel file name input.
+        :param document: A document representing user's Excel/CSV file name input.
         :type document: document
-        :returns: True if the text of the document represents a valid Excel file containing a column `page_id`, False otherwise.
+        :returns: True if the text of the document represents a valid Excel/CSV file containing a column `page_id`, False otherwise.
         :rtype: bool
         """
-        if (not is_valid_excel_file(current)):
-            raise errors.ValidationError('', reason='Excel file not found.')
+        if (not is_valid_page_ids_file(current)):
+            raise errors.ValidationError('', reason='Excel/CSV file not found.')
         try:
             data_path = os.path.join("data", current)
-            data = pd.read_excel(data_path)
-        except:
+            data = pd.read_csv(data_path) if current.lower().endswith('.csv') else pd.read_excel(data_path)
+        except Exception:
             raise errors.ValidationError('', reason='Unable to load page ids data.')
-            
+
         try:
             data['page_id'].astype(str).tolist()
-        except:
+        except Exception:
             raise errors.ValidationError('', reason='Unable to read the page ids. Check if there exists a column `page_id` in your data.')
-        
+
         return True
-            
-        
+
+
 
 def is_valid_excel_file(file):
     """
@@ -132,7 +132,32 @@ def is_valid_excel_file(file):
         # try to read the excel file
         pd.read_excel(path)
         return True
-    except:  # catch any exception when trying to read
+    except Exception:  # catch any exception when trying to read
+        return False
+
+
+def is_valid_page_ids_file(file):
+    """
+    Checks whether the input file name is a valid Excel or CSV file for page IDs.
+
+    :param file: A path to an Excel or CSV file, relative to the `data` folder.
+    :type file: str
+    :returns: True if the string represents a valid, readable Excel or CSV file, False otherwise.
+    :rtype: bool
+    """
+    try:
+        path = os.path.join("data", file)
+        if not os.path.exists(path):
+            return False
+        lower = path.lower()
+        if lower.endswith(('.xlsx', '.xls', '.xlsm')):
+            pd.read_excel(path, nrows=1)
+            return True
+        if lower.endswith('.csv'):
+            pd.read_csv(path, nrows=1)
+            return True
+        return False
+    except Exception:  # catch any exception when trying to read
         return False
 
 
@@ -140,8 +165,8 @@ def load_json_from_folder(folder_path):
     """
     Load all the JSON files from the specified folder and merge then into a dataframe.
 
-    :param file: A path to a folder containing JSON files with ad data.
-    :type file: str
+    :param folder_path: A path to a folder containing JSON files with ad data.
+    :type folder_path: str
     :returns: A dataframe containing information retrieved from all JSON files of the folder.
     :rtype: pandas.DataFrame
     """
@@ -294,7 +319,7 @@ def transform_data(project_name, country, ad_type):
         return final_data
     
     except Exception as e:
-        print(f"Error occured while transforming the data: {type(e).__name__} - {str(e)}. Only original data saved.")
+        print(f"Error occurred while transforming the data: {type(e).__name__} - {str(e)}. Only original data saved.")
         return df
         
 
@@ -377,7 +402,7 @@ def update_access_token(data, new_access_token=None):
     return data_copy
 
 
-def get_long_lived_token(access_token = None, app_id = None, app_secret = None, version = "v20.0"):
+def get_long_lived_token(access_token = None, app_id = None, app_secret = None, version = "v25.0"):
     """
     Generate a Meta long-lived access token, that lasts around 60 days, given a valid short-lived access token.
     The long-lived access token and the expiration time will be saved in a `meta_long_lived_token.txt` file. The `app_id` and `app_secret` can be found inside your app at https://developers.facebook.com/apps/.
@@ -444,7 +469,7 @@ def deduplicate_images(image_folder, unique_img_folder):
     """
     Deduplicate images in a folder and save unique images to a specified folder.
 
-    This function scans a folder for PNG images, calculates the MD5 hash of each image,
+    This function scans a folder for PNG/JPG/JPEG images, calculates the MD5 hash of each image,
     identifies duplicates, and saves only the unique images to a separate folder.
 
     :param image_folder: The path to the folder containing the original images.
@@ -461,7 +486,7 @@ def deduplicate_images(image_folder, unique_img_folder):
 
     images = os.listdir(image_folder)
     for filename in images:
-        if filename.endswith('.png'):
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
             image_path = os.path.join(image_folder, filename)
             # calculate the MD5 hash and check if it already exists
             img_hash = calculate_image_hash(image_path)

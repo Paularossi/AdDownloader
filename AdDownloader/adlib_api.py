@@ -1,9 +1,9 @@
 """This module provides the call to the Meta Ad Library API for ad data retrieval."""
 
 import pandas as pd
-from collections.abc import Mapping
 import requests
 import os
+import time
 
 from datetime import datetime
 from AdDownloader.helpers import *
@@ -11,13 +11,13 @@ from AdDownloader.helpers import *
 class AdLibAPI:
     """A class representing the Meta Online Ad Library API connection point."""
 
-    def __init__(self, access_token, version = "v20.0", project_name = datetime.now().strftime("%Y%m%d%H%M%S")):
+    def __init__(self, access_token, version = "v25.0", project_name = datetime.now().strftime("%Y%m%d%H%M%S")):
         """
         Initialize the AdLibAPI object by providing a valid Meta developer token and a project name.
 
         :param access_token: The access token for authentication.
         :type access_token: str
-        :param version: The version of the Meta Ad Library API. Default is "v18.0".
+        :param version: The version of the Meta Ad Library API. Default is "v25.0".
         :type version: str
         :param project_name: The name of the project. Default is the current date and time.
         :type project_name: str
@@ -37,6 +37,9 @@ class AdLibAPI:
     def fetch_data(self, url, params, page_ids = None, page_number = 1):
         """
         Fetch and process data based on the provided URL and parameters.
+        Pagination is handled iteratively (rather than via recursion) so it doesn't hit
+        Python's recursion limit on searches spanning many pages. Each page is retried up
+        to three times with exponential back-off before the download stops.
 
         :param url: The URL for making the API request.
         :type url: str
@@ -44,61 +47,72 @@ class AdLibAPI:
         :type params: dict
         :param page_ids: Page IDs for naming output files. Default is None.
         :type page_ids: str
-        :param page_number: The page number for tracking the progress. Default is 1.
+        :param page_number: The page number to start from (used for file naming). Default is 1.
         :type page_number: int
         """
-        print("##### Starting reading page", page_number, "#####")
-        self.logger.info(f"Starting reading page {page_number}")
-        response = requests.get(url, params = params)
-        try:
-            data = response.json()
-            
-        except Exception as e:
-            print(f"Error ({type(e).__name__} - {str(e)}) occured on page {page_number}: {response}. Retrying...")
-            self.logger.error(f"Error ({type(e).__name__} - {str(e)}) occured on page {page_number}: {response}. Retrying...")
-            try:
-                # retry calling the API one more time
-                response = requests.get(url, params = params)
-                data = response.json()
-            except Exception as e:
-                print(f"Error ({type(e).__name__} - {str(e)}) occured on page {page_number}: {response}. Finishing the download.")
-                self.logger.error(f"Error ({type(e).__name__} - {str(e)}) occured on page {page_number}: {response}. Finishing the download.")
+        folder_path = f"output/{self.project_name}/json"
+        current_url = url
+        current_params = params
+
+        while current_url:
+            print("##### Starting reading page", page_number, "#####")
+            self.logger.info(f"Starting reading page {page_number}")
+
+            data = None
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    response = requests.get(current_url, params = current_params)
+                    data = response.json()
+                    break
+                except Exception as e:
+                    wait = 2 ** attempt
+                    print(f"Error ({type(e).__name__} - {str(e)}) occurred on page {page_number} (attempt {attempt + 1}/{max_retries}). Retrying in {wait}s...")
+                    self.logger.error(f"Error ({type(e).__name__} - {str(e)}) occurred on page {page_number} (attempt {attempt + 1}/{max_retries}). Retrying in {wait}s...")
+                    time.sleep(wait)
+
+            if data is None:
+                print(f"All retries exhausted on page {page_number}. Finishing the download.")
+                self.logger.error(f"All retries exhausted on page {page_number}. Finishing the download.")
                 return
 
-        # check if there was an error - print the message
-        if "error" in data:
-            print(f"No data on page {page_number}.\nError: {data['error']['message']}.")
-            self.logger.error(f"No data on page {page_number}. Error: {data['error']['message']}.")
-            return
-        # no error but also no data - print the response
-        elif not "data" in data:
-            print(f"No data on page {page_number}: {response}.")
-            self.logger.error(f"No data on page {page_number}: {response}.")
-            return
-        # check if the output json file is empty and return
-        if not bool(data["data"]):
-            print("Page", page_number, "is empty.")
-            self.logger.warning(f"Page {page_number} is empty.")
-            return
-        
-        folder_path = f"output/{self.project_name}/json"
-        # check if the folder exists
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+            # check if there was an error - print the message
+            if "error" in data:
+                print(f"No data on page {page_number}.\nError: {data['error']['message']}.")
+                self.logger.error(f"No data on page {page_number}. Error: {data['error']['message']}.")
+                return
+            # no error but also no data - print the response
+            if "data" not in data:
+                print(f"No data on page {page_number}: {response}.")
+                self.logger.error(f"No data on page {page_number}: {response}.")
+                return
+            # check if the output json file is empty and stop
+            if not bool(data["data"]):
+                print("Page", page_number, "is empty.")
+                self.logger.warning(f"Page {page_number} is empty.")
+                return
 
-        # save the data to a JSON file
-        if page_ids is None:
-            with open(f"{folder_path}/{page_number}.json", "w") as json_file:
-                json.dump(data, json_file, indent = 4)
-        else:
-            with open(f"{folder_path}/{page_ids}_{page_number}.json", "w") as json_file:
-                json.dump(data, json_file, indent = 4)
-        
+            # check if the folder exists
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
 
-        # check if there is a next page and retrieve further data
-        if "paging" in data and "next" in data["paging"]:
-            next_page_url = data["paging"]["next"]
-            self.fetch_data(next_page_url, params, page_ids, page_number + 1)
+            # save the data to a JSON file
+            if page_ids is None:
+                file_name = f"{folder_path}/{page_number}.json"
+            else:
+                file_name = f"{folder_path}/{page_ids}_{page_number}.json"
+
+            with open(file_name, "w") as json_file:
+                json.dump(data, json_file, indent = 4)
+
+            # advance to the next page if one exists; the "next" URL already contains all
+            # query args, so params must be cleared to avoid overriding it
+            if "paging" in data and "next" in data["paging"]:
+                current_url = data["paging"]["next"]
+                current_params = None
+                page_number += 1
+            else:
+                break
 
 
     def add_parameters(self, fields = None, ad_reached_countries = 'NL', ad_delivery_date_min = "2023-01-01", ad_delivery_date_max = datetime.today().strftime('%Y-%m-%d'),
@@ -115,7 +129,7 @@ class AdLibAPI:
         :type ad_delivery_date_min: str
         :param ad_delivery_date_max: The maximum start date of ad delivery. Default is the current date.
         :type ad_delivery_date_max: str
-        :param search_page_ids: The name of the file containing page IDs. Default is None. Complementary with search_terms.
+        :param search_page_ids: The name of an Excel or CSV file (with a `page_id` column) containing page IDs, located inside the `data` folder. Default is None. Complementary with search_terms.
         :type search_page_ids: str
         :param search_terms: The search terms for ad filtering, in one string separated by a comma. Default is None. Complementary with search_page_ids.
         :type search_terms: str
@@ -139,8 +153,8 @@ class AdLibAPI:
             self.logger.warning('Maximum delivery date is greater than the current date. Setting it as the current date.')
             
         if ad_delivery_date_min > ad_delivery_date_max:
-            print('Minimum delivery date is greater than maximum delivery date. Swithching the dates around.')
-            self.logger.warning('Minimum delivery date is greater than maximum delivery date. Swithching the dates around.')
+            print('Minimum delivery date is greater than maximum delivery date. Switching the dates around.')
+            self.logger.warning('Minimum delivery date is greater than maximum delivery date. Switching the dates around.')
             temp_min = ad_delivery_date_min
             ad_delivery_date_min = ad_delivery_date_max
             ad_delivery_date_max = temp_min
@@ -162,25 +176,22 @@ class AdLibAPI:
 
         # search page ids - the file must contain at least one column called page_id
         if search_page_ids is not None:
-            if is_valid_excel_file(search_page_ids):
+            if is_valid_page_ids_file(search_page_ids):
                 path = os.path.join("data", search_page_ids)
                 try:
-                    data = pd.read_excel(path)
-                except:
-                    try:
-                        data = pd.read_csv(path)
-                    except:
-                        print('Unable to load page ids data.')
-                        self.logger.error('Unable to load page ids data.')
+                    data = pd.read_csv(path) if search_page_ids.lower().endswith('.csv') else pd.read_excel(path)
+                except Exception as e:
+                    print(f'Unable to load page ids data: {e}')
+                    self.logger.error(f'Unable to load page ids data: {e}')
                 try:
                     search_page_ids_list = data['page_id'].astype(str).tolist()
                     params["search_page_ids"] = search_page_ids_list
                     self.request_parameters = params
-                except:
+                except Exception:
                     print('Unable to read the page ids. Check if there exists a column `page_id` in your data.')
                     self.logger.error('Unable to read the page ids. Check if there exists a column `page_id` in your data.')
             else:
-                print(f"Excel file not found.")
+                print(f"Page IDs file not found.")
 
         elif search_terms is not None:
             params["search_terms"] = search_terms
@@ -222,6 +233,7 @@ class AdLibAPI:
         if not os.path.exists(f"output/{self.project_name}/json"):
             print("JSON files were not downloaded. Try a new request.")
             self.logger.info("JSON files were not downloaded. Try a new request.")
+            close_logger(self.logger)
             return None
             
         nr_json_files = len([file for file in os.listdir(f"output/{self.project_name}/json") if file.endswith('.json')])
@@ -239,12 +251,13 @@ class AdLibAPI:
 
             return(final_data)
 
-        except Exception:
-            print("No data was downloaded. Please try a new request.")
-            self.logger.warning('No data was downloaded. Please try a new request.')
-            
-        # close the logger
-        close_logger(self.logger)
+        except Exception as e:
+            print(f"No data was downloaded ({type(e).__name__}: {e}). Please try a new request.")
+            self.logger.error(f"No data was downloaded. Please try a new request.", exc_info=True)
+
+        finally:
+            # always close the logger, including on the successful `return` above
+            close_logger(self.logger)
 
 
     def get_parameters(self):
@@ -263,10 +276,10 @@ class AdLibAPI:
     
     def clear_parameters(self):
         """
-        Clear the current list of search parameters.]
+        Clear the current list of search parameters.
         """
         self.request_parameters = {}
-        self.logger.warning('Seach parameters removed.')
+        self.logger.warning('Search parameters removed.')
     
 
     def get_fields(self, ad_type):
@@ -279,6 +292,6 @@ class AdLibAPI:
         :rtype: str
         """
         if ad_type == "ALL":
-            return("id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, beneficiary_payers, languages, page_id, page_name, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown")
+            return("id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, beneficiary_payers, bylines, languages, page_id, page_name, publisher_platforms, target_ages, target_gender, target_locations, eu_total_reach, age_country_gender_reach_breakdown, total_reach_by_location")
         else:
-            return("id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, bylines, currency, delivery_by_region, demographic_distribution, estimated_audience_size, impressions, languages, spend, page_id, page_name, target_ages, target_gender, target_locations")
+            return("id, ad_delivery_start_time, ad_delivery_stop_time, ad_creative_bodies, ad_creative_link_captions, ad_creative_link_descriptions, ad_creative_link_titles, ad_snapshot_url, bylines, currency, delivery_by_region, demographic_distribution, estimated_audience_size, impressions, languages, spend, page_id, page_name, publisher_platforms, target_ages, target_gender, target_locations")

@@ -74,14 +74,14 @@ def parse_contents(contents, filename):
             # df = pd.read_excel(io.BytesIO(decoded))
             df = analysis.load_data(io.BytesIO(decoded))
     except Exception as e:
-        print(e)
+        print(f"{type(e).__name__}: {e}")
         return html.Div([
-            'There was an error processing this file.'
+            f'There was an error processing this file: {e}'
         ])
     
     try:
         project_name = filename.split('_')[0]
-    except:
+    except Exception:
         project_name = filename
 
     table_children = html.Div([
@@ -169,7 +169,7 @@ def download_sent_data(n_clicks, sent_data, project_name):
     try:
         df = pd.DataFrame(sent_data)
         return dcc.send_data_frame(df.to_excel, f"{project_name}_sentiment_data.xlsx", index=False)
-    except:
+    except Exception:
         print('Unable to save sentiment data.')
 
 
@@ -182,7 +182,7 @@ def download_topic_data(n_clicks, topic_data, project_name):
     try:
         df = pd.DataFrame(topic_data)
         return dcc.send_data_frame(df.to_excel, f"{project_name}_topic_data.xlsx", index=False)
-    except:
+    except Exception:
         print('Unable to save topic data.')
 
 
@@ -195,7 +195,7 @@ def download_img_features_data(n_clicks, data, project_name):
     try:
         df = pd.DataFrame(data)
         return dcc.send_data_frame(df.to_excel, f"{project_name}_img_features_data.xlsx", index=False)
-    except:
+    except Exception:
         print('Unable to save image features data.')
 
 
@@ -208,7 +208,7 @@ def download_blip_answers_data(n_clicks, data, project_name):
     try:
         df = pd.DataFrame(data)
         return dcc.send_data_frame(df.to_excel, f"{project_name}_blip_answers_data.xlsx", index=False)
-    except:
+    except Exception:
         print('Unable to save BLIP question answers data.')
 
 
@@ -701,7 +701,7 @@ def make_topic_analysis(n, data):
     topic_children = html.Div([
         html.H2('Ad Creative Analysis - Topic Modeling.'),
         html.H6("""This section analyses the text content of the ads in terms of topics. 
-                To peform a topic analysis, the ad captions must be preprocessed and passed as tokens. Tokens that occured in less than 5 ad captions, or tokens that occured in more than 90% of the captions were removed.
+                To peform a topic analysis, the ad captions must be preprocessed and passed as tokens. Tokens that occurred in less than 5 ad captions, or tokens that occurred in more than 90% of the captions were removed.
                 A dictionary is created out of the processed tokens, and then a corpus is created from the dictionary. Next, using the Latent Dirichlet Allocation model, 
                 three topics are found across all ads. Finally, a coherence score is computed for the discovered topics, that represents the semantic similarity and 
                 co-occurrence patterns of high scoring words within each topic."""),

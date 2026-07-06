@@ -6,6 +6,34 @@ Media Download Module
 
    This module provides functionality for media content download using Selenium, given ads data urls and a valid access token.
 
+find_media_element Function
+---------------------------
+
+.. autofunction:: find_media_element
+
+    Example::
+
+        >>> img_element = find_media_element(driver, IMG_XPATHS)
+
+find_fallback_media Function
+-----------------------------
+
+.. autofunction:: find_fallback_media
+
+    Example::
+
+        >>> images, video = find_fallback_media(driver)
+
+detect_removed_ad Function
+---------------------------
+
+.. autofunction:: detect_removed_ad
+
+    Example::
+
+        >>> if detect_removed_ad(driver):
+        ...     print("Ad media was removed by Meta for a policy violation.")
+
 download_media Function
 -----------------------
 
@@ -14,7 +42,7 @@ download_media Function
     Example::
 
         >>> driver.get(data['ad_snapshot_url'][0])
-        >>> img_element = driver.find_element(By.XPATH, img_xpath)
+        >>> img_element = find_media_element(driver, IMG_XPATHS)
         >>> media_url = img_element.get_attribute('src')
         >>> media_type = 'image'
         >>> download_media(media_url, media_type, str(data['id'][i]), folder_path_img)
@@ -38,6 +66,8 @@ start_media_download Function
     Example::
 
         >>> start_media_download(project_name = "test1", nr_ads = 20, data = data)
+        >>> # for a reproducible sample, pass a seed - if omitted, one is generated and reported
+        >>> start_media_download(project_name = "test1", nr_ads = 20, data = data, random_state = 42)
 
 extract_frames Function
 -----------------------
